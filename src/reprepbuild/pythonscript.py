@@ -1,0 +1,99 @@
+# RepRepBuild is the build tool for Reproducible Reporting.
+# Copyright (C) 2023 Toon Verstraelen
+#
+# This file is part of RepRepBuild.
+#
+# RepRepBuild is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+#
+# RepRepBuild is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, see <http://www.gnu.org/licenses/>
+#
+# --
+r"""Execute the main function of a Python script.
+
+Reproducible matplotlib figures:
+https://matplotlib.org/stable/users/prev_whats_new/whats_new_2.1.0.html#reproducible-ps-pdf-and-svg-output
+
+This script checks whether SOURCE_DATE_EPOCH is 0.
+
+"""
+
+import argparse
+import importlib
+import os
+import sys
+
+from .utils import write_depfile
+
+
+def main():
+    """Main program."""
+    run_script(parse_args().fn_py)
+
+
+def parse_args():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser("rr-python-script")
+    parser.add_argument("fn_py", help="The python script whose main function will be executed.")
+    return parser.parse_args()
+
+
+def run_script(fn_py):
+    """Run the python script and collected module dependencies."""
+    workdir, filename = os.path.split(fn_py)
+    if not filename.endswith(".py"):
+        print(f"Source must have py extension. Got {workdir}/{filename}")
+        sys.exit(2)
+
+    if os.environ.get("SOURCE_DATE_EPOCH") != "0":
+        print("SOURCE_DATE_EPOCH is not set to 0.")
+        sys.exit(1)
+
+    orig_workdir = os.getcwd()
+    workdir = os.path.dirname(fn_py)
+    reprepbuild_info = {"outputs": []}
+
+    try:
+        # Import the script and execute the main and reprepbuild_info functions.
+        spec = importlib.util.spec_from_file_location("<pythonscript>", fn_py)
+        pythonscript = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(pythonscript)
+        if not hasattr(pythonscript, "main"):
+            print(f"The script {fn_py} has no main function.")
+            sys.exit(1)
+        if not hasattr(pythonscript, "reprepbuild_info"):
+            print(f"The script {fn_py} has no reprepbuild_info function.")
+            sys.exit(1)
+
+        # Execute the functions as if the script is running inside its own dir.
+        os.chdir(workdir)
+        reprepbuild_info = pythonscript.reprepbuild_info()
+        pythonscript.main()
+    finally:
+        os.chdir(orig_workdir)
+
+        # Analyze the imported modules for the depfile.
+        imported_paths = set()
+        for module in sys.modules.values():
+            module_path = getattr(module, "__file__", None)
+            if module_path is None:
+                continue
+            imported_paths.add(module_path)
+
+        # Get the outputs, needed for the depfile.
+        outputs = [os.path.join(workdir, opath) for opath in reprepbuild_info["outputs"]]
+
+        # Write the depfile.
+        write_depfile(fn_py + ".depfile", outputs, imported_paths)
+
+
+if __name__ == "__main__":
+    main()

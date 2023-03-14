@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=65.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "RepRepBuild"
+version = "0.1.2"
+authors = [
+  { name="Toon Verstraelen", email="toon.verstraelen@ugent.be" },
+]
+description = "Build tool for Reproducible Reporting"
+readme = "README.md"
+license = {file = "COPYING"}
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "Framework :: Matplotlib",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Natural Language :: English",
+    "Operating System :: POSIX",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Text Processing",
+    "Topic :: Text Processing :: Markup :: LaTeX",
+]
+dependencies = [
+    "ninja",
+    "pymupdf",
+    "watchdog",
+]
+
+[project.urls]
+Issues = "https://github.com/reproducible-reporting/reprepbuild/issues"
+Source = "https://github.com/reproducible-reporting/reprepbuild/"
+Changelog = "https://github.com/reproducible-reporting/reprepbuild/blob/main/CHANGELOG.md"
+
+[project.scripts]
+rr = "reprepbuild.__main__:main"
+rrr = "reprepbuild.repeat:main"
+rr-zip = "reprepbuild.zip:main"
+rr-article-zip = "reprepbuild.articlezip:main"
+rr-latex = "reprepbuild.latex:main"
+rr-python-script = "reprepbuild.pythonscript:main"
+rr-normalize-pdf = "reprepbuild.normalizepdf:main"
