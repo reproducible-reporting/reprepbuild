@@ -20,3 +20,5 @@ The first kind type of reproducibility helps with the second.
 When a file changes in the Git commit history,
 RepRepBuild tries to ensure that this is not the side effect of something irrelevant.
 This makes it easier to trace the origin of (changes to) results.
+
+If you would like to contribute, please read [CONTRIBUTING.md](https://github.com/reproducible-reporting/.github/blob/main/CONTRIBUTING.md).
