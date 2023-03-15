@@ -53,8 +53,9 @@ def run_script(fn_py):
         print(f"Source must have py extension. Got {workdir}/{filename}")
         sys.exit(2)
 
-    if os.environ.get("SOURCE_DATE_EPOCH") != "0":
-        print("SOURCE_DATE_EPOCH is not set to 0.")
+    # Check whether we're already in the eighties. (compatibility with ZIP)
+    if os.environ.get("SOURCE_DATE_EPOCH") != "315532800":
+        print("SOURCE_DATE_EPOCH is not set to 315532800.")
         sys.exit(1)
 
     orig_workdir = os.getcwd()

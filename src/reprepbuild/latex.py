@@ -63,8 +63,9 @@ def compile_tex(fn_tex):
         sys.exit(2)
     prefix = filename[:-4]
 
-    if os.environ.get("SOURCE_DATE_EPOCH") != "0":
-        print("SOURCE_DATE_EPOCH is not set to 0.")
+    # Check whether we're already in the eighties. (compatibility with ZIP)
+    if os.environ.get("SOURCE_DATE_EPOCH") != "315532800":
+        print("SOURCE_DATE_EPOCH is not set to 315532800.")
         sys.exit(1)
 
     # Compile the LaTeX source with latexmk
