@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Assume `SOURCE_DATE_EPOCH=315532800` (Jan 1, 1980) for compatibility with ZIP files.
+- When writing a build.ninja file, change directory before importing a python script.
 
 ### Changed
 

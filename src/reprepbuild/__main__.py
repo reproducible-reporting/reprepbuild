@@ -155,20 +155,20 @@ def python_script_pattern(path):
     if not re.match("(?P<name>[a-z/-]*).py$", path):
         return
 
-    # Try to call the function reprebbuild_info.
-    # If it is not present, the script is ignored.
-    spec = importlib.util.spec_from_file_location("<pythonscript>", path)
-    pythonscript = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(pythonscript)
-    if not hasattr(pythonscript, "reprepbuild_info"):
-        return
-
-    # Call the function as if the script is running in its own directory.
+    # Call reprepbuild_info as if the script is running in its own directory.
     orig_workdir = os.getcwd()
-    workdir = os.path.dirname(path)
+    workdir, fn_py = os.path.split(path)
     try:
         os.chdir(workdir)
-        info = pythonscript.reprepbuild_info()
+        # Try to call the function reprebbuild_info.
+        # If it is not present, the script is ignored.
+        spec = importlib.util.spec_from_file_location("<pythonscript>", fn_py)
+        pythonscript = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(pythonscript)
+        reprepbuild_info = getattr(pythonscript, "reprepbuild_info", None)
+        if reprepbuild_info is None:
+            return
+        info = reprepbuild_info()
     finally:
         os.chdir(orig_workdir)
 

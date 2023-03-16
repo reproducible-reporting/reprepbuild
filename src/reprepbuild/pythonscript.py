@@ -36,19 +36,19 @@ from .utils import write_depfile
 
 def main():
     """Main program."""
-    run_script(parse_args().fn_py)
+    run_script(parse_args().path_py)
 
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser("rr-python-script")
-    parser.add_argument("fn_py", help="The python script whose main function will be executed.")
+    parser.add_argument("path_py", help="The python script whose main function will be executed.")
     return parser.parse_args()
 
 
-def run_script(fn_py):
+def run_script(path):
     """Run the python script and collected module dependencies."""
-    workdir, filename = os.path.split(fn_py)
+    workdir, filename = os.path.split(path)
     if not filename.endswith(".py"):
         print(f"Source must have py extension. Got {workdir}/{filename}")
         sys.exit(2)
@@ -59,25 +59,28 @@ def run_script(fn_py):
         sys.exit(1)
 
     orig_workdir = os.getcwd()
-    workdir = os.path.dirname(fn_py)
-    reprepbuild_info = {"outputs": []}
+    workdir, fn_py = os.path.split(path)
+    info = {"outputs": []}
 
     try:
+        os.chdir(workdir)
+
         # Import the script and execute the main and reprepbuild_info functions.
         spec = importlib.util.spec_from_file_location("<pythonscript>", fn_py)
         pythonscript = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(pythonscript)
-        if not hasattr(pythonscript, "main"):
-            print(f"The script {fn_py} has no main function.")
+        script_main = getattr(pythonscript, "main", None)
+        if script_main is None:
+            print(f"The script {path} has no main function.")
             sys.exit(1)
-        if not hasattr(pythonscript, "reprepbuild_info"):
-            print(f"The script {fn_py} has no reprepbuild_info function.")
+        reprepbuild_info = getattr(pythonscript, "reprepbuild_info", None)
+        if reprepbuild_info is None:
+            print(f"The script {path} has no reprepbuild_info function.")
             sys.exit(1)
 
         # Execute the functions as if the script is running inside its own dir.
-        os.chdir(workdir)
-        reprepbuild_info = pythonscript.reprepbuild_info()
-        pythonscript.main()
+        info = reprepbuild_info()
+        script_main()
     finally:
         os.chdir(orig_workdir)
 
@@ -90,10 +93,10 @@ def run_script(fn_py):
             imported_paths.add(module_path)
 
         # Get the outputs, needed for the depfile.
-        outputs = [os.path.join(workdir, opath) for opath in reprepbuild_info["outputs"]]
+        outputs = [os.path.join(workdir, opath) for opath in info["outputs"]]
 
         # Write the depfile.
-        write_depfile(fn_py + ".depfile", outputs, imported_paths)
+        write_depfile(path + ".depfile", outputs, imported_paths)
 
 
 if __name__ == "__main__":
