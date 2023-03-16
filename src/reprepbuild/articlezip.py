@@ -47,7 +47,7 @@ def article_zip(fn_zip, fn_pdf):
     """Zip the sources of the article."""
     workdir, filename = os.path.split(fn_pdf)
     if not filename.endswith(".pdf"):
-        print(f"Article pdf must have pdf extension. Got {workdir}/{filename}")
+        print(f"An article must have a pdf extension. Got {workdir}/{filename}")
         sys.exit(2)
     prefix = filename[:-4]
 
@@ -68,9 +68,6 @@ def article_zip(fn_zip, fn_pdf):
 
     # Write zip
     reprozip(fn_zip, list(paths))
-
-    # Write depfile
-    write_depfile(fn_zip + ".depfile", [fn_zip], paths)
 
 
 if __name__ == "__main__":

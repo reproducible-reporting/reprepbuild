@@ -44,15 +44,16 @@ __all__ = ("main",)
 
 
 DEFAULT_RULES = {
-    "latex": {"command": "rr-latex $in", "depfile": "$out.depfile"},
+    "latex": {"command": "rr-latex $in"},
+    "latexdep": {"command": "rr-latex -s $in"},
     "copy": {"command": "cp $in $out"},
     "latexdiff": {"command": "latexdiff $in > $out"},
     "reprozip": {"command": "rr-zip $out $in"},
-    "reproarticlezip": {"command": "rr-article-zip $out $in", "depfile": "$out.depfile"},
+    "reproarticlezip": {"command": "rr-article-zip $out $in"},
     "svgtopdf": {
         "command": "inkscape $in --export-filename=$out --export-type=pdf; rr-normalize-pdf $out"
     },
-    "pythonscript": {"command": "rr-python-script $script", "depfile": "$script.depfile"},
+    "pythonscript": {"command": "rr-python-script $in", "depfile": "$script.depfile"},
 }
 
 
@@ -62,11 +63,18 @@ def latex_pattern(path):
         return
     prefix = result.group("prefix")
     workdir = f"latex-{prefix}"
-    return [
+    builds = [
+        {
+            "outputs": f"{workdir}/{prefix}.pdf.dd",
+            "rule": "latexdep",
+            "inputs": f"{workdir}/{prefix}.tex",
+        },
         {
             "outputs": f"{workdir}/{prefix}.pdf",
             "rule": "latex",
             "inputs": f"{workdir}/{prefix}.tex",
+            "order_only": f"{workdir}/{prefix}.pdf.dd",
+            "dyndep": f"{workdir}/{prefix}.pdf.dd",
         },
         {
             "outputs": f"uploads/{prefix}.pdf",
@@ -74,6 +82,15 @@ def latex_pattern(path):
             "inputs": f"{workdir}/{prefix}.pdf",
         },
     ]
+    if prefix == "article":
+        builds.append(
+            {
+                "outputs": f"uploads/article.zip",
+                "rule": "reproarticlezip",
+                "inputs": f"latex-article/article.pdf",
+            }
+        )
+    return builds
 
 
 def latexdiff_pattern(path):
@@ -104,19 +121,6 @@ def latexdiff_pattern(path):
             },
         ]
     return builds
-
-
-def latex_article_pattern(path):
-    result = re.match("latex-article/article.tex$", path)
-    if not result:
-        return
-    return [
-        {
-            "outputs": f"uploads/article.zip",
-            "rule": "reproarticlezip",
-            "inputs": f"latex-article/article.pdf",
-        }
-    ]
 
 
 def dataset_pattern(path):
@@ -178,10 +182,10 @@ def python_script_pattern(path):
 
     return [
         {
-            "inputs": [fixpath(ipath) for ipath in info["inputs"]] + [path],
+            "inputs": [path],
+            "implicit": [fixpath(ipath) for ipath in info["inputs"]],
             "rule": "pythonscript",
             "outputs": [fixpath(opath) for opath in info["outputs"]],
-            "variables": {"script": path},
         }
     ]
 
@@ -214,7 +218,6 @@ def write_ninja(patterns, rules):
 
 DEFAULT_PATTERNS = [
     latex_pattern,
-    latex_article_pattern,
     latexdiff_pattern,
     dataset_pattern,
     svg_pattern,

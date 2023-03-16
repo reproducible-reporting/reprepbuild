@@ -85,6 +85,8 @@ def run_script(path):
         os.chdir(orig_workdir)
 
         # Analyze the imported modules for the depfile.
+        # Note that a depfile is sufficient as we do not expect this
+        # list to be affected by other steps in the build process.
         imported_paths = set()
         for module in sys.modules.values():
             module_path = getattr(module, "__file__", None)

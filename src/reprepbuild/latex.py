@@ -40,22 +40,30 @@ import os
 import subprocess
 import sys
 
-from .utils import write_depfile
+from .utils import write_dyndep
 
 
 def main():
     """Main program."""
-    compile_tex(parse_args().fn_tex)
+    args = parse_args()
+    return compile_latex(args.fn_tex, args.silent_fail)
 
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser("rr-latex")
     parser.add_argument("fn_tex", help="The top-level tex file.")
+    parser.add_argument(
+        "-s",
+        "--silent-fail",
+        default=False,
+        action="store_true",
+        help="Do not complain when latex fails.",
+    )
     return parser.parse_args()
 
 
-def compile_tex(fn_tex):
+def compile_latex(fn_tex, silent_fail=False):
     """Compile the tex file with minimal output."""
     workdir, filename = os.path.split(fn_tex)
     if not filename.endswith(".tex"):
@@ -69,10 +77,19 @@ def compile_tex(fn_tex):
         sys.exit(1)
 
     # Compile the LaTeX source with latexmk
+    fn_log = os.path.join(workdir, prefix + ".log")
+    result = 0
     try:
+        args = [
+            "latexmk",
+            "-pdf",
+            "-pdflatex=pdflatex -interaction=batchmode -file-line-error",
+            "-g",
+            prefix,
+        ]
         with open(os.path.join(workdir, prefix + ".latexmk"), "w") as f:
             subprocess.run(
-                ["latexmk", "-pdf", "-g", prefix],
+                args,
                 cwd=workdir,
                 check=True,
                 stdin=subprocess.DEVNULL,
@@ -80,38 +97,52 @@ def compile_tex(fn_tex):
                 stderr=f,
             )
     except subprocess.CalledProcessError:
+        # Say what was tried.
+        if not silent_fail:
+            print("    Command failed:", args)
+
         # Print minimal output explaining the error, if possible.
-        fn_log = os.path.join(workdir, prefix + ".log")
         found_error = False
         fn_source = "<unknown source>"
+        if os.path.isfile(fn_log):
+            with open(fn_log) as f:
+                for line in f:
+                    if line.startswith("**"):
+                        fn_source = line[2:-1]
+                    if line.startswith("!"):
+                        found_error = True
+                        break
+                if found_error:
+                    print("   ", fn_source)
+                    print("   ", line[:-1])
+                    for line, _ in zip(f, range(2)):
+                        print("   ", line[:-1])
+            print(f"    See {fn_log} for more details.")
+        else:
+            print(f"    File {fn_log} was not created.")
+        result = 0 if silent_fail else -1
+
+    # Convert the log and fls files into a depfile
+    inputs = []
+    if os.path.isfile(fn_log):
         with open(fn_log) as f:
             for line in f:
-                if line.startswith("**"):
-                    fn_source = line[2:-1]
-                if line.startswith("!"):
-                    found_error = True
-                    break
-            if found_error:
-                print("   ", fn_source)
-                print("   ", line[:-1])
-                for line, _ in zip(f, range(2)):
-                    print("   ", line[:-1])
-        print(f"    See {fn_log} for more details.")
-        sys.exit(1)
-
-    # Convert the fls file into a depfile
-    inputs = []
-    with open(os.path.join(workdir, prefix + ".fls")) as f:
-        for line in f:
-            if line.startswith("INPUT "):
-                ipath = line[6:].strip()
-                ipath = os.path.normpath(ipath)
-                ipath = os.path.join(workdir, ipath)
-                inputs.append(ipath)
+                if line.startswith("LaTeX Warning: File `"):
+                    line = line[21:]
+                    line = line[: line.find("'")]
+                    inputs.append(os.path.join(workdir, line))
+    fn_fls = os.path.join(workdir, prefix + ".fls")
+    if os.path.isfile(fn_fls):
+        with open(fn_fls) as f:
+            for line in f:
+                if line.startswith("INPUT "):
+                    line = line[6:].strip()
+                    inputs.append(os.path.join(workdir, line))
 
     fn_pdf = os.path.join(workdir, prefix + ".pdf")
-    fn_depfile = os.path.join(workdir, prefix + ".pdf.depfile")
-    write_depfile(fn_depfile, [fn_pdf], inputs)
+    fn_dd = os.path.join(workdir, prefix + ".pdf.dd")
+    write_dyndep(fn_dd, fn_pdf, [], inputs)
+    return result
 
 
 if __name__ == "__main__":
