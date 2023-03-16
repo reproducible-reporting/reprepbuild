@@ -33,6 +33,7 @@ import argparse
 import importlib
 import os
 import re
+import subprocess
 import sys
 from collections import namedtuple
 from glob import glob
@@ -222,15 +223,12 @@ DEFAULT_PATTERNS = [
 
 
 def parse_args():
-    parser = argparse.ArgumentParser("rr", "Build the publication")
-    parser.add_argument(
-        "-n",
-        "--dry-run",
-        default=False,
-        action="store_true",
-        help="Generate the build.ninja file and dry-run ninja.",
-    )
-    return parser.parse_args()
+    args = sys.argv[1:]
+    if any(arg in ["-?", "-h", "--help"] for arg in args):
+        print("All command-line arguments are passed on to the ninja subprocess.")
+        print("Run `ninja -h` for details.")
+        sys.exit(2)
+    return args
 
 
 def sanity_check():
@@ -244,10 +242,7 @@ def main():
     sanity_check()
     args = parse_args()
     write_ninja(DEFAULT_PATTERNS, DEFAULT_RULES)
-    if args.dry_run:
-        os.system("ninja -nv")
-    else:
-        os.system("ninja -v")
+    subprocess.run(["ninja"] + args)
 
 
 if __name__ == "__main__":

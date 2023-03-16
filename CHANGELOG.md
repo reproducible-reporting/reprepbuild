@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Alpha status
 - Aim for Python 3.6
+- All command-line arguments of `rr` and `rrr` are given to the `ninja` subprocess.
 
 ## [0.1.2] - 2023-03-15
 

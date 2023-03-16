@@ -20,12 +20,13 @@
 """Continuously repeat the RepRepBuild driver, using inotify events."""
 
 import os
+import subprocess
 import time
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from .__main__ import DEFAULT_PATTERNS, DEFAULT_RULES, write_ninja
+from .__main__ import DEFAULT_PATTERNS, DEFAULT_RULES, parse_args, write_ninja
 
 
 class AnyChangeHandler(FileSystemEventHandler):
@@ -65,6 +66,7 @@ class AnyChangeHandler(FileSystemEventHandler):
 
 
 def main():
+    args = parse_args()
     observer = Observer()
     event_handler = AnyChangeHandler()
     observer.schedule(event_handler, ".", True)
@@ -76,7 +78,7 @@ def main():
                 continue
             event_handler.snooze()
             write_ninja(DEFAULT_PATTERNS, DEFAULT_RULES)
-            os.system("ninja -v")
+            subprocess.run(["ninja"] + args)
             time.sleep(0.1)
             event_handler.reset()
             print("  Waiting for new changes.")
