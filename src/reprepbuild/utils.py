@@ -26,6 +26,7 @@ __all__ = ("write_depfile", "write_dyndep")
 
 
 def filter_local_files(paths):
+    """Return paths, only those under the cwd, without duplicates, sorted and normalized."""
     local = set()
     for path in paths:
         path = os.path.normpath(os.path.relpath(path))

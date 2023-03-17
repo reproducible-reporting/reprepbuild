@@ -36,7 +36,7 @@ from .utils import write_depfile
 
 def main():
     """Main program."""
-    run_script(parse_args().path_py)
+    return run_script(parse_args().path_py)
 
 
 def parse_args():
@@ -51,12 +51,12 @@ def run_script(path):
     workdir, filename = os.path.split(path)
     if not filename.endswith(".py"):
         print(f"Source must have py extension. Got {workdir}/{filename}")
-        sys.exit(2)
+        return 2
 
     # Check whether we're already in the eighties. (compatibility with ZIP)
     if os.environ.get("SOURCE_DATE_EPOCH") != "315532800":
         print("SOURCE_DATE_EPOCH is not set to 315532800.")
-        sys.exit(1)
+        return 3
 
     orig_workdir = os.getcwd()
     workdir, fn_py = os.path.split(path)
@@ -72,11 +72,11 @@ def run_script(path):
         script_main = getattr(pythonscript, "main", None)
         if script_main is None:
             print(f"The script {path} has no main function.")
-            sys.exit(1)
+            return 1
         reprepbuild_info = getattr(pythonscript, "reprepbuild_info", None)
         if reprepbuild_info is None:
             print(f"The script {path} has no reprepbuild_info function.")
-            sys.exit(1)
+            return 1
 
         # Execute the functions as if the script is running inside its own dir.
         info = reprepbuild_info()
@@ -99,6 +99,8 @@ def run_script(path):
 
         # Write the depfile.
         write_depfile(path + ".depfile", outputs, imported_paths)
+
+    return 0
 
 
 if __name__ == "__main__":

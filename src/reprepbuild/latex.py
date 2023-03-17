@@ -38,7 +38,6 @@ See https://tex.stackexchange.com/questions/229605/reproducible-latex-builds-com
 import argparse
 import os
 import subprocess
-import sys
 
 from .utils import write_dyndep
 
@@ -68,13 +67,13 @@ def compile_latex(fn_tex, silent_fail=False):
     workdir, filename = os.path.split(fn_tex)
     if not filename.endswith(".tex"):
         print(f"Source must have tex extension. Got {workdir}/{filename}")
-        sys.exit(2)
+        return 2
     prefix = filename[:-4]
 
     # Check whether we're already in the eighties. (compatibility with ZIP)
     if os.environ.get("SOURCE_DATE_EPOCH") != "315532800":
         print("SOURCE_DATE_EPOCH is not set to 315532800.")
-        sys.exit(1)
+        return 3
 
     # Compile the LaTeX source with latexmk
     fn_log = os.path.join(workdir, prefix + ".log")
@@ -120,7 +119,7 @@ def compile_latex(fn_tex, silent_fail=False):
             print(f"    See {fn_log} for more details.")
         else:
             print(f"    File {fn_log} was not created.")
-        result = 0 if silent_fail else -1
+        result = 0 if silent_fail else 1
 
     # Convert the log and fls files into a depfile
     inputs = []

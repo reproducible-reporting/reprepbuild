@@ -29,13 +29,11 @@ This is by design, to have only one (reproducible) way to build the publication
 from the source, for which all the settings and details are stored in files.
 """
 
-import argparse
 import importlib
 import os
 import re
 import subprocess
 import sys
-from collections import namedtuple
 from glob import glob
 
 from ninja.ninja_syntax import Writer
@@ -58,9 +56,10 @@ DEFAULT_RULES = {
 
 
 def latex_pattern(path):
+    """Make ninja build commands to compile latex with latexmk."""
     result = re.match("latex-(?P<prefix>[a-z]*)/(?P=prefix).tex$", path)
     if not result:
-        return
+        return []
     prefix = result.group("prefix")
     workdir = f"latex-{prefix}"
     builds = [
@@ -85,18 +84,19 @@ def latex_pattern(path):
     if prefix == "article":
         builds.append(
             {
-                "outputs": f"uploads/article.zip",
+                "outputs": "uploads/article.zip",
                 "rule": "reproarticlezip",
-                "inputs": f"latex-article/article.pdf",
+                "inputs": "latex-article/article.pdf",
             }
         )
     return builds
 
 
 def latexdiff_pattern(path):
+    """Make ninja build commands to generate a latex diff."""
     result = re.match("latex-(?P<prefix>[a-z]*)/(?P=prefix)-old.(?P<ext>)$", path)
     if not result:
-        return
+        return []
     prefix = result.group("prefix")
     ext = result.group("ext")
     workdir = f"latex_{prefix}"
@@ -124,9 +124,10 @@ def latexdiff_pattern(path):
 
 
 def dataset_pattern(path):
+    """Make ninja build commands to ZIP datasets."""
     result = re.match("dataset-(?P<name>[a-z-]*)/$", path)
     if not result:
-        return
+        return []
     name = result.group("name")
     return [
         {
@@ -142,9 +143,10 @@ def dataset_pattern(path):
 
 
 def svg_pattern(path):
+    """Make ninja build commands to convert SVG to PDF files."""
     result = re.match("(?P<name>[a-z/-]*).svg$", path)
     if not result:
-        return
+        return []
     name = result.group("name")
     return [
         {
@@ -156,8 +158,9 @@ def svg_pattern(path):
 
 
 def python_script_pattern(path):
+    """Make ninja build commands for python scripts."""
     if not re.match("(?P<name>[a-z/-]*).py$", path):
-        return
+        return []
 
     # Call reprepbuild_info as if the script is running in its own directory.
     orig_workdir = os.getcwd()
@@ -171,7 +174,7 @@ def python_script_pattern(path):
         spec.loader.exec_module(pythonscript)
         reprepbuild_info = getattr(pythonscript, "reprepbuild_info", None)
         if reprepbuild_info is None:
-            return
+            return []
         info = reprepbuild_info()
     finally:
         os.chdir(orig_workdir)
@@ -191,16 +194,16 @@ def python_script_pattern(path):
 
 
 def write_ninja(patterns, rules):
+    """Search through the source for patterns that can be translated into build commands for ninja."""
     # Loop over all files and create rules and builds for them
     rule_names = set()
     builds = []
     for path in glob("**", recursive=True):
         for pattern in patterns:
             result = pattern(path)
-            if result is not None:
-                for build in result:
-                    rule_names.add(build["rule"])
-                    builds.append(build)
+            for build in result:
+                rule_names.add(build["rule"])
+                builds.append(build)
 
     # Sanity check
     if len(builds) == 0:
@@ -226,6 +229,7 @@ DEFAULT_PATTERNS = [
 
 
 def parse_args():
+    """Parse command-line arguments."""
     args = sys.argv[1:]
     if any(arg in ["-?", "-h", "--help"] for arg in args):
         print("All command-line arguments are passed on to the ninja subprocess.")
@@ -235,13 +239,14 @@ def parse_args():
 
 
 def sanity_check():
-    """Is there any latex-* folder?"""
+    """Is there any latex-* folder with tex files?"""
     if len(glob("latex-*/*.tex")) == 0:
         print("Wrong directory? No file matching latex-*/*.tex")
         sys.exit(1)
 
 
 def main():
+    """Main program."""
     sanity_check()
     args = parse_args()
     write_ninja(DEFAULT_PATTERNS, DEFAULT_RULES)

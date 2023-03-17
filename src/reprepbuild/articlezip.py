@@ -22,17 +22,14 @@
 import argparse
 import os
 import re
-import subprocess
-import sys
 
-from .utils import write_depfile
 from .zip import reprozip
 
 
 def main():
     """Main program."""
     args = parse_args()
-    article_zip(args.fn_zip, args.fn_pdf)
+    return article_zip(args.fn_zip, args.fn_pdf)
 
 
 def parse_args():
@@ -48,7 +45,7 @@ def article_zip(fn_zip, fn_pdf):
     workdir, filename = os.path.split(fn_pdf)
     if not filename.endswith(".pdf"):
         print(f"An article must have a pdf extension. Got {workdir}/{filename}")
-        sys.exit(2)
+        return 2
     prefix = filename[:-4]
 
     # Collect files to be zipped
@@ -68,6 +65,7 @@ def article_zip(fn_zip, fn_pdf):
 
     # Write zip
     reprozip(fn_zip, list(paths))
+    return 0
 
 
 if __name__ == "__main__":

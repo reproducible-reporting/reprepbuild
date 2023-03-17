@@ -38,16 +38,20 @@ class AnyChangeHandler(FileSystemEventHandler):
 
     @property
     def changed(self):
+        """True when at least one file has changed."""
         return self._changed
 
     def reset(self):
+        """Forget about changes and start watching again."""
         self._changed = False
         self._watching = True
 
     def snooze(self):
+        """Stop watching."""
         self._watching = False
 
     def dispatch(self, event):
+        """Process a file event."""
         # print(event)
         if not self._watching:
             return
@@ -66,6 +70,7 @@ class AnyChangeHandler(FileSystemEventHandler):
 
 
 def main():
+    """Main program."""
     args = parse_args()
     observer = Observer()
     event_handler = AnyChangeHandler()
