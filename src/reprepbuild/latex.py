@@ -78,14 +78,14 @@ def compile_latex(fn_tex, silent_fail=False):
     # Compile the LaTeX source with latexmk
     fn_log = os.path.join(workdir, prefix + ".log")
     result = 0
+    args = [
+        "latexmk",
+        "-pdf",
+        "-pdflatex=pdflatex -interaction=batchmode -file-line-error",
+        "-g",
+        prefix,
+    ]
     try:
-        args = [
-            "latexmk",
-            "-pdf",
-            "-pdflatex=pdflatex -interaction=batchmode -file-line-error",
-            "-g",
-            prefix,
-        ]
         with open(os.path.join(workdir, prefix + ".latexmk"), "w") as f:
             subprocess.run(
                 args,
@@ -99,26 +99,25 @@ def compile_latex(fn_tex, silent_fail=False):
         # Say what was tried.
         if not silent_fail:
             print("    Command failed:", args)
-
-        # Print minimal output explaining the error, if possible.
-        found_error = False
-        fn_source = "<unknown source>"
-        if os.path.isfile(fn_log):
-            with open(fn_log) as f:
-                for line in f:
-                    if line.startswith("**"):
-                        fn_source = line[2:-1]
-                    if line.startswith("!"):
-                        found_error = True
-                        break
-                if found_error:
-                    print("   ", fn_source)
-                    print("   ", line[:-1])
-                    for line, _ in zip(f, range(2)):
+            # Print minimal output explaining the error, if possible.
+            found_error = False
+            fn_source = "<unknown source>"
+            if os.path.isfile(fn_log):
+                with open(fn_log) as f:
+                    for line in f:
+                        if line.startswith("**"):
+                            fn_source = line[2:-1]
+                        if line.startswith("!"):
+                            found_error = True
+                            break
+                    if found_error:
+                        print("   ", fn_source)
                         print("   ", line[:-1])
-            print(f"    See {fn_log} for more details.")
-        else:
-            print(f"    File {fn_log} was not created.")
+                        for line, _ in zip(f, range(2)):
+                            print("   ", line[:-1])
+                print(f"    See {fn_log} for more details.")
+            else:
+                print(f"    File {fn_log} was not created.")
         result = 0 if silent_fail else 1
 
     # Convert the log and fls files into a depfile
@@ -138,8 +137,8 @@ def compile_latex(fn_tex, silent_fail=False):
                     line = line[6:].strip()
                     inputs.append(os.path.join(workdir, line))
 
-    fn_pdf = os.path.join(workdir, prefix + ".pdf")
-    fn_dd = os.path.join(workdir, prefix + ".pdf.dd")
+    fn_pdf = os.path.join(workdir, f"{prefix}.pdf")
+    fn_dd = os.path.join(workdir, f"{prefix}.dd")
     write_dyndep(fn_dd, fn_pdf, [], inputs)
     return result
 

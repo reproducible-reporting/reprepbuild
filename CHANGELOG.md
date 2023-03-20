@@ -2,13 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
 ### Changed
 
+- `rr` implemenetation
+  - Many cleanups in `__main__` (simpler and safer code, more reuse)
+- Improvements to `rr-python-script`
+  - Parallel executions of parameterized scripts.
+  - Logging of script output, compatible with pytest.
+  - Allow underscores in script names.
+- Improvements to `rr-latex`: improved output and code cleanups.
 - Minor cleanups after linting
 
 ## [0.2.0] - 2023-03-16

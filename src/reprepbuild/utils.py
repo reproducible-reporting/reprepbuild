@@ -17,12 +17,29 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Utilities used in other parts of RepRepBuild."""
+"""Utilities used in other parts of RepRepBuild.
+
+The `write_depfile` and `write_dyndep` are used to specify *implicit* dependencies
+which are not known when preparing the `build.ninja` file.
+The adjective implicit means that these files are not command-line arguments of the build software.
+Instead, they are determined on the fly by the build software or related tools.
+The two mechanisms are subtly different:
+
+- A `depfile` is used for dependencies on user-provided files only.
+  These dependencies are already sitting in the source tree before ninja is called.
+- A `dyndep` is used for dependencies on user-provided files and outputs of other build statements.
+  The latter category of files can be the result of other build statements.
+  Furthermore, a `dyndep` may also specify additional outputs besides the one that is hardwired
+  in the `build.ninja` file.
+
+A `dyndep` is more powerful and general, but also a bit more complicated to set up.
+"""
 
 
+import importlib.util
 import os
 
-__all__ = ("write_depfile", "write_dyndep")
+__all__ = ("write_depfile", "write_dyndep", "import_python_path", "check_script_args")
 
 
 def filter_local_files(paths):
@@ -65,3 +82,21 @@ def write_dyndep(fn_dd, fn_out, imp_outputs, imp_inputs):
             f.write(" | ")
             f.write(" ".join(imp_inputs))
         f.write("\n")
+
+
+def import_python_path(path):
+    """Return a module by importing a Python file at a given path."""
+    spec = importlib.util.spec_from_file_location("<pythonscript>", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def check_script_args(script_args):
+    for script_arg in script_args:
+        if isinstance(script_arg, str):
+            if not re.match(r"^[a-zA-Z_-]*$", script_args):
+                raise ValueError("A string script args must match ^[a-zA-Z_-]*$.")
+        elif not isinstance(script_arg, (int, float)):
+            raise TypeError("A script argument must be int, float or str.")
+    return "".join(f"_{script_arg}" for script_arg in script_args)

@@ -29,7 +29,6 @@ This is by design, to have only one (reproducible) way to build the publication
 from the source, for which all the settings and details are stored in files.
 """
 
-import importlib
 import os
 import re
 import subprocess
@@ -37,6 +36,8 @@ import sys
 from glob import glob
 
 from ninja.ninja_syntax import Writer
+
+from .utils import check_script_args, import_python_path
 
 __all__ = ("main",)
 
@@ -51,7 +52,10 @@ DEFAULT_RULES = {
     "svgtopdf": {
         "command": "inkscape $in --export-filename=$out --export-type=pdf; rr-normalize-pdf $out"
     },
-    "pythonscript": {"command": "rr-python-script $in", "depfile": "$script.depfile"},
+    "pythonscript": {
+        "command": "rr-python-script $in -- $args > $out",
+        "depfile": "$depfile",
+    },
 }
 
 
@@ -59,149 +63,153 @@ def latex_pattern(path):
     """Make ninja build commands to compile latex with latexmk."""
     result = re.match("latex-(?P<prefix>[a-z]*)/(?P=prefix).tex$", path)
     if not result:
-        return []
+        return
     prefix = result.group("prefix")
     workdir = f"latex-{prefix}"
-    builds = [
-        {
-            "outputs": f"{workdir}/{prefix}.pdf.dd",
-            "rule": "latexdep",
-            "inputs": f"{workdir}/{prefix}.tex",
-        },
-        {
-            "outputs": f"{workdir}/{prefix}.pdf",
-            "rule": "latex",
-            "inputs": f"{workdir}/{prefix}.tex",
-            "order_only": f"{workdir}/{prefix}.pdf.dd",
-            "dyndep": f"{workdir}/{prefix}.pdf.dd",
-        },
-        {
-            "outputs": f"uploads/{prefix}.pdf",
-            "rule": "copy",
-            "inputs": f"{workdir}/{prefix}.pdf",
-        },
-    ]
+
+    def fixpath(local_path):
+        return os.path.normpath(os.path.join(workdir, local_path))
+
+    yield {
+        "outputs": fixpath(f"{prefix}.dd"),
+        "rule": "latexdep",
+        "inputs": fixpath(f"{prefix}.tex"),
+    }
+    yield {
+        "outputs": fixpath(f"{prefix}.pdf"),
+        "rule": "latex",
+        "inputs": fixpath(f"{prefix}.tex"),
+        "order_only": fixpath(f"{prefix}.dd"),
+        "dyndep": fixpath(f"{prefix}.dd"),
+    }
+    yield {
+        "outputs": os.path.join("uploads", f"{prefix}.pdf"),
+        "rule": "copy",
+        "inputs": fixpath(f"{prefix}.pdf"),
+    }
     if prefix == "article":
-        builds.append(
-            {
-                "outputs": "uploads/article.zip",
-                "rule": "reproarticlezip",
-                "inputs": "latex-article/article.pdf",
-            }
-        )
-    return builds
+        yield {
+            "outputs": os.path.join("uploads", "article.zip"),
+            "rule": "reproarticlezip",
+            "inputs": "latex-article/article.pdf",
+        }
 
 
 def latexdiff_pattern(path):
     """Make ninja build commands to generate a latex diff."""
-    result = re.match("latex-(?P<prefix>[a-z]*)/(?P=prefix)-old.(?P<ext>)$", path)
+    result = re.match("latex-(?P<prefix>[a-z]*)/(?P=prefix)-old.(?P<ext>.*)$", path)
     if not result:
-        return []
+        return
     prefix = result.group("prefix")
     ext = result.group("ext")
     workdir = f"latex_{prefix}"
-    builds = [
-        {
-            "outputs": f"{workdir}/{prefix}-diff.{ext}",
-            "rule": "latexdiff",
-            "inputs": f"{workdir}/{prefix}-old.{ext} {workdir}/{prefix}.{ext}",
-        }
-    ]
+
+    def fixpath(local_path):
+        return os.path.normpath(os.path.join(workdir, local_path))
+
+    yield {
+        "outputs": fixpath(f"{prefix}-diff.{ext}"),
+        "rule": "latexdiff",
+        "inputs": [fixpath(f"{prefix}-old.{ext}"), fixpath(f"{prefix}.{ext}")],
+    }
     if ext == "tex":
-        builds += [
-            {
-                "outputs": f"{workdir}/{prefix}-diff.pdf",
-                "rule": "latex",
-                "inputs": f"{workdir}/{prefix}-diff.tex",
-            },
-            {
-                "outputs": f"uploads/{prefix}-diff.pdf",
-                "rule": "copy",
-                "inputs": f"{workdir}/{prefix}-diff.pdf",
-            },
-        ]
-    return builds
+        yield {
+            "outputs": fixpath(f"{prefix}-diff.pdf"),
+            "rule": "latex",
+            "inputs": fixpath(f"{prefix}-diff.tex"),
+        }
+        yield {
+            "outputs": os.path.join("uploads", f"{prefix}-diff.pdf"),
+            "rule": "copy",
+            "inputs": fixpath(f"{prefix}-diff.pdf"),
+        }
 
 
 def dataset_pattern(path):
     """Make ninja build commands to ZIP datasets."""
     result = re.match("dataset-(?P<name>[a-z-]*)/$", path)
     if not result:
-        return []
+        return
     name = result.group("name")
-    return [
-        {
-            "outputs": f"uploads/dataset-{name}.zip",
-            "rule": "reprozip",
-            "inputs": " ".join(
-                path
-                for path in glob(f"dataset-{name}/**", recursive=True)
-                if not path.endswith("/")
-            ),
-        }
-    ]
+    yield {
+        "outputs": f"uploads/dataset-{name}.zip",
+        "rule": "reprozip",
+        "inputs": [
+            path for path in glob(f"dataset-{name}/**", recursive=True) if not path.endswith("/")
+        ],
+    }
 
 
 def svg_pattern(path):
     """Make ninja build commands to convert SVG to PDF files."""
     result = re.match("(?P<name>[a-z/-]*).svg$", path)
     if not result:
-        return []
+        return
     name = result.group("name")
-    return [
-        {
-            "outputs": f"{name}.pdf",
-            "rule": "svgtopdf",
-            "inputs": f"{name}.svg",
-        }
-    ]
+    yield {
+        "outputs": f"{name}.pdf",
+        "rule": "svgtopdf",
+        "inputs": f"{name}.svg",
+    }
 
 
 def python_script_pattern(path):
     """Make ninja build commands for python scripts."""
-    if not re.match("(?P<name>[a-z/-]*).py$", path):
-        return []
+    if not re.match("(?P<name>[a-z/_-]*).py$", path):
+        return
 
     # Call reprepbuild_info as if the script is running in its own directory.
     orig_workdir = os.getcwd()
     workdir, fn_py = os.path.split(path)
+    prefix = fn_py[:-3]
     try:
+        # Load the script in its own directory
         os.chdir(workdir)
-        # Try to call the function reprebbuild_info.
-        # If it is not present, the script is ignored.
-        spec = importlib.util.spec_from_file_location("<pythonscript>", fn_py)
-        pythonscript = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(pythonscript)
+        pythonscript = import_python_path(fn_py)
+
+        # Get the relevant functions
         reprepbuild_info = getattr(pythonscript, "reprepbuild_info", None)
         if reprepbuild_info is None:
-            return []
-        info = reprepbuild_info()
+            return
+        reprepbuild_cases = getattr(pythonscript, "reprepbuild_cases", None)
+        if reprepbuild_cases is None:
+            build_cases = [[]]
+        else:
+            build_cases = reprepbuild_cases()
+
+        def fixpath(local_path):
+            return os.path.normpath(os.path.join(workdir, local_path))
+
+        # Loop over all cases to make build records
+        for script_args in build_cases:
+            build_info = reprepbuild_info(*script_args)
+            strargs = check_script_args(script_args)
+            fn_log = fixpath(f"{prefix}{strargs}.log")
+            fn_depfile = fixpath(f"{prefix}{strargs}.depfile")
+            yield {
+                "inputs": path,
+                "implicit": [fixpath(ipath) for ipath in build_info.get("inputs", [])],
+                "rule": "pythonscript",
+                "implicit_outputs": [fixpath(opath) for opath in build_info.get("outputs", [])],
+                "outputs": fn_log,
+                "variables": {
+                    "args": " ".join(str(arg) for arg in script_args),
+                    "strargs": strargs,
+                    "depfile": fn_depfile,
+                },
+            }
     finally:
         os.chdir(orig_workdir)
 
-    # Prepare a build record
-    def fixpath(local_path):
-        return os.path.normpath(os.path.join(workdir, local_path))
-
-    return [
-        {
-            "inputs": [path],
-            "implicit": [fixpath(ipath) for ipath in info["inputs"]],
-            "rule": "pythonscript",
-            "outputs": [fixpath(opath) for opath in info["outputs"]],
-        }
-    ]
-
 
 def write_ninja(patterns, rules):
-    """Search through the source for patterns that can be translated into build commands for ninja."""
+    """Search through the source for patterns that can be translated into ninja build commands."""
     # Loop over all files and create rules and builds for them
     rule_names = set()
     builds = []
     for path in glob("**", recursive=True):
         for pattern in patterns:
-            result = pattern(path)
-            for build in result:
+            for build in pattern(path):
                 rule_names.add(build["rule"])
                 builds.append(build)
 

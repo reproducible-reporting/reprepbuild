@@ -27,80 +27,97 @@ This script checks whether SOURCE_DATE_EPOCH is 0.
 """
 
 import argparse
-import importlib
 import os
 import sys
 
-from .utils import write_depfile
+from .utils import check_script_args, import_python_path, write_depfile
 
 
 def main():
     """Main program."""
-    return run_script(parse_args().path_py)
+    args = parse_args()
+    script_args = [convert(script_arg) for script_arg in args.script_args]
+    return run_script(args.path_py, script_args)
 
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser("rr-python-script")
     parser.add_argument("path_py", help="The python script whose main function will be executed.")
+    parser.add_argument(
+        "script_args", nargs="*", help="Command-line arguments for the script, if any"
+    )
     return parser.parse_args()
 
 
-def run_script(path):
+def convert(script_arg):
+    """Try to convert to int, then float, fallback to string."""
+    for dtype in int, float:
+        try:
+            return dtype(script_arg)
+        except ValueError:
+            pass
+    return script_arg
+
+
+def run_script(path, script_args):
     """Run the python script and collected module dependencies."""
     workdir, filename = os.path.split(path)
     if not filename.endswith(".py"):
         print(f"Source must have py extension. Got {workdir}/{filename}")
-        return 2
+        return -2
 
     # Check whether we're already in the eighties. (compatibility with ZIP)
     if os.environ.get("SOURCE_DATE_EPOCH") != "315532800":
         print("SOURCE_DATE_EPOCH is not set to 315532800.")
-        return 3
+        return -3
 
     orig_workdir = os.getcwd()
     workdir, fn_py = os.path.split(path)
-    info = {"outputs": []}
+    prefix = fn_py[:-3]
+    result = -1
 
     try:
+        # Load the script in its own directory
         os.chdir(workdir)
+        pythonscript = import_python_path(fn_py)
 
-        # Import the script and execute the main and reprepbuild_info functions.
-        spec = importlib.util.spec_from_file_location("<pythonscript>", fn_py)
-        pythonscript = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(pythonscript)
-        script_main = getattr(pythonscript, "main", None)
-        if script_main is None:
-            print(f"The script {path} has no main function.")
-            return 1
+        # Get the relevant functions
         reprepbuild_info = getattr(pythonscript, "reprepbuild_info", None)
         if reprepbuild_info is None:
             print(f"The script {path} has no reprepbuild_info function.")
-            return 1
+            return -1
+        script_main = getattr(pythonscript, "main", None)
+        if script_main is None:
+            print(f"The script {path} has no main function.")
+            return -1
 
         # Execute the functions as if the script is running inside its own dir.
-        info = reprepbuild_info()
-        script_main()
+        build_info = reprepbuild_info(*script_args)
+        result = script_main(**build_info)
     finally:
         os.chdir(orig_workdir)
 
-        # Analyze the imported modules for the depfile.
-        # Note that a depfile is sufficient as we do not expect this
-        # list to be affected by other steps in the build process.
-        imported_paths = set()
-        for module in sys.modules.values():
-            module_path = getattr(module, "__file__", None)
-            if module_path is None:
-                continue
-            imported_paths.add(module_path)
+    # Analyze the imported modules for the depfile.
+    # Note that a depfile is sufficient and no dyndep is needed
+    # because imported Python modules are not the output of previous build tasks.
+    imported_paths = set()
+    for module in sys.modules.values():
+        module_path = getattr(module, "__file__", None)
+        if module_path is None:
+            continue
+        imported_paths.add(module_path)
 
-        # Get the outputs, needed for the depfile.
-        outputs = [os.path.join(workdir, opath) for opath in info["outputs"]]
+    # Write the depfile.
+    def fixpath(local_path):
+        return os.path.normpath(os.path.join(workdir, local_path))
 
-        # Write the depfile.
-        write_depfile(path + ".depfile", outputs, imported_paths)
+    outputs = [fixpath(opath) for opath in build_info.get("outputs", [])]
+    strargs = check_script_args(script_args)
+    outputs.append(fixpath(f"{prefix}{strargs}.log"))
+    write_depfile(fixpath(f"{prefix}{strargs}.depfile"), outputs, imported_paths)
 
-    return 0
+    return result
 
 
 if __name__ == "__main__":
