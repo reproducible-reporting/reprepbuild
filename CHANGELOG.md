@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improvements to `rr-latex`: improved output and code cleanups.
 - Minor cleanups after linting
 
+### Fixed
+
+- Sort files inside ZIP to make their order reproducible.
+
 ## [0.2.0] - 2023-03-16
 
 ### Fixed

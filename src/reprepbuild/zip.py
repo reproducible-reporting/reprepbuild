@@ -47,7 +47,7 @@ def reprozip(fn_zip, filenames):
     if os.path.isfile(fn_zip):
         os.remove(fn_zip)
     # Clean up list of filenames
-    filenames = list({os.path.normpath(filename) for filename in filenames})
+    filenames = sorted({os.path.normpath(filename) for filename in filenames})
     # Prepare to trim leading directories
     if len(filenames) == 1:
         common = os.path.dirname(filenames[0])
