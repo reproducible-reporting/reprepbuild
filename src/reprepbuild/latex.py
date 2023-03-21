@@ -37,7 +37,9 @@ See https://tex.stackexchange.com/questions/229605/reproducible-latex-builds-com
 
 import argparse
 import os
+import re
 import subprocess
+import sys
 
 from .utils import write_dyndep
 
@@ -95,20 +97,19 @@ def compile_latex(fn_tex, silent_fail=False):
             print("    Command failed:", args)
             # Print minimal output explaining the error, if possible.
             found_error = False
-            fn_source = "<unknown source>"
             if os.path.isfile(fn_log):
+                # The encoding is unpredictable, so read as binary.
                 with open(fn_log, "rb") as f:
                     for line in f:
-                        if line.startswith(b"**"):
-                            fn_source = line[2:-1]
-                        if line.startswith(b"!"):
+                        if re.match(rb".*\.tex:[0-9]+: ", line) is not None:
                             found_error = True
                             break
                     if found_error:
-                        print("   ", fn_source)
-                        print("   ", line[:-1])
-                        for line, _ in zip(f, range(2)):
-                            print("   ", line[:-1])
+                        # stdout tricks to dump the raw contents on the terminal.
+                        sys.stdout.flush()
+                        sys.stdout.buffer.write(b"        " + line)
+                        for line, _ in zip(f, range(4)):
+                            sys.stdout.buffer.write(b"        " + line)
                 print(f"    See {fn_log} for more details.")
             else:
                 print(f"    File {fn_log} was not created.")
@@ -122,7 +123,7 @@ def compile_latex(fn_tex, silent_fail=False):
                 if line.startswith(b"LaTeX Warning: File `"):
                     line = line[21:]
                     line = line[: line.find(b"'")]
-                    inputs.append(os.path.join(workdir, line.encode("utf8")))
+                    inputs.append(os.path.join(workdir, line.decode("utf8")))
     fn_fls = os.path.join(workdir, prefix + ".fls")
     if os.path.isfile(fn_fls):
         with open(fn_fls) as f:
