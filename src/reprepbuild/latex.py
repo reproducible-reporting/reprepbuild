@@ -80,7 +80,7 @@ def compile_latex(fn_tex, silent_fail=False):
     # Compile the LaTeX source with latexmk
     fn_log = os.path.join(workdir, prefix + ".log")
     result = 0
-    args = ["latexmk", "-g", prefix]
+    args = ["latexmk", "-gg", prefix]
     try:
         with open(os.path.join(workdir, prefix + ".latexmk"), "w") as f:
             subprocess.run(
@@ -115,7 +115,7 @@ def compile_latex(fn_tex, silent_fail=False):
                 print(f"    File {fn_log} was not created.")
         result = 0 if silent_fail else 1
 
-    # Convert the log and fls files into a depfile
+    # Convert the log and fls files into a depfile.
     inputs = []
     if os.path.isfile(fn_log):
         with open(fn_log, "rb") as f:
@@ -131,6 +131,8 @@ def compile_latex(fn_tex, silent_fail=False):
                 if line.startswith("INPUT "):
                     line = line[6:].strip()
                     inputs.append(os.path.join(workdir, line))
+
+    # Use aux files to get the input bib files.
     fns_aux = [ipath for ipath in inputs if ipath.endswith(".aux")]
     for fn_aux in fns_aux:
         with open(fn_aux) as f:
@@ -144,6 +146,9 @@ def compile_latex(fn_tex, silent_fail=False):
                         if not fn_bib.endswith(".bib"):
                             fn_bib += ".bib"
                         inputs.append(os.path.join(workdir, fn_bib))
+
+    # Finally, filter the aux files, as they are more like output files for us.
+    inputs = [ipath for ipath in inputs if not ipath.endswith(".aux")]
 
     fn_pdf = os.path.join(workdir, f"{prefix}.pdf")
     fn_dd = os.path.join(workdir, f"{prefix}.dd")
