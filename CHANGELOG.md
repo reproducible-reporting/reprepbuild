@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Add BibTeX files to the dynamic dependencies.
 - Allow (and require) configuration of `latexmk` through `latexmkrc`.
 - Fix printing of relevant part of pdflatex log.
 - Load LaTeX log file as binary, because its encoding is unpredictable.

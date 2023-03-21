@@ -131,6 +131,19 @@ def compile_latex(fn_tex, silent_fail=False):
                 if line.startswith("INPUT "):
                     line = line[6:].strip()
                     inputs.append(os.path.join(workdir, line))
+    fns_aux = [ipath for ipath in inputs if ipath.endswith(".aux")]
+    for fn_aux in fns_aux:
+        with open(fn_aux) as f:
+            for line in f:
+                if line.startswith(r"\bibdata{"):
+                    assert line.endswith("}\n")
+                    assert line.count("{") == 1
+                    assert line.count("}") == 1
+                    fbs_bib = line[line.find("{") + 1 : -2].split(",")
+                    for fn_bib in fbs_bib:
+                        if not fn_bib.endswith(".bib"):
+                            fn_bib += ".bib"
+                        inputs.append(os.path.join(workdir, fn_bib))
 
     fn_pdf = os.path.join(workdir, f"{prefix}.pdf")
     fn_dd = os.path.join(workdir, f"{prefix}.dd")
