@@ -4,7 +4,7 @@ RepRepBuild is the build tool for [Reproducible Reporting](https://github.com/re
 Run `rr` in a source directory, and the publication will be rebuilt from its source.
 
 To get started, follow the [documentation](https://github.com/reproducible-reporting/templates/blob/main/DOCUMENTATION.md) of the [templates](https://github.com/reproducible-reporting/templates) repository.
-RepRepBuild will be intalled in your instance of the template, as part of the setup.
+RepRepBuild will be installed in your instance of the template, as part of the setup.
 (There is little point in installing RepRepBuild separately.)
 
 RepRepBuild emphasizes two kinds of reproducibility:

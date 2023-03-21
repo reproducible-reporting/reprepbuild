@@ -78,13 +78,7 @@ def compile_latex(fn_tex, silent_fail=False):
     # Compile the LaTeX source with latexmk
     fn_log = os.path.join(workdir, prefix + ".log")
     result = 0
-    args = [
-        "latexmk",
-        "-pdf",
-        "-pdflatex=pdflatex -interaction=batchmode -file-line-error",
-        "-g",
-        prefix,
-    ]
+    args = ["latexmk", "-g", prefix]
     try:
         with open(os.path.join(workdir, prefix + ".latexmk"), "w") as f:
             subprocess.run(

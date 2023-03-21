@@ -79,6 +79,7 @@ def latex_pattern(path):
         "outputs": fixpath(f"{prefix}.pdf"),
         "rule": "latex",
         "inputs": fixpath(f"{prefix}.tex"),
+        "implicit": fixpath("latexmkrc"),
         "order_only": fixpath(f"{prefix}.dd"),
         "dyndep": fixpath(f"{prefix}.dd"),
     }
@@ -117,6 +118,7 @@ def latexdiff_pattern(path):
             "outputs": fixpath(f"{prefix}-diff.pdf"),
             "rule": "latex",
             "inputs": fixpath(f"{prefix}-diff.tex"),
+            "implicit": fixpath("latexmkrc"),
         }
         yield {
             "outputs": os.path.join("uploads", f"{prefix}-diff.pdf"),
