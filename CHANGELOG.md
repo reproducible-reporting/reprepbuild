@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Load LaTeX log file as binary, because its encoding is unpredictable.
 - Sort files inside ZIP to make their order reproducible.
 
 ## [0.2.0] - 2023-03-16

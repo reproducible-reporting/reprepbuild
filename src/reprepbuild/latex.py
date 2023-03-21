@@ -103,11 +103,11 @@ def compile_latex(fn_tex, silent_fail=False):
             found_error = False
             fn_source = "<unknown source>"
             if os.path.isfile(fn_log):
-                with open(fn_log) as f:
+                with open(fn_log, "rb") as f:
                     for line in f:
-                        if line.startswith("**"):
+                        if line.startswith(b"**"):
                             fn_source = line[2:-1]
-                        if line.startswith("!"):
+                        if line.startswith(b"!"):
                             found_error = True
                             break
                     if found_error:
@@ -123,12 +123,12 @@ def compile_latex(fn_tex, silent_fail=False):
     # Convert the log and fls files into a depfile
     inputs = []
     if os.path.isfile(fn_log):
-        with open(fn_log) as f:
+        with open(fn_log, "rb") as f:
             for line in f:
-                if line.startswith("LaTeX Warning: File `"):
+                if line.startswith(b"LaTeX Warning: File `"):
                     line = line[21:]
-                    line = line[: line.find("'")]
-                    inputs.append(os.path.join(workdir, line))
+                    line = line[: line.find(b"'")]
+                    inputs.append(os.path.join(workdir, line.encode("utf8")))
     fn_fls = os.path.join(workdir, prefix + ".fls")
     if os.path.isfile(fn_fls):
         with open(fn_fls) as f:
