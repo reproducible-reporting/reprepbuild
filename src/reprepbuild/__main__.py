@@ -158,7 +158,7 @@ def svg_pattern(path):
 def python_script_pattern(path):
     """Make ninja build commands for python scripts."""
     # for any valid python file
-    if not re.match("(?P<name>[a-zA-Z0-9/_-]*).py$", path):
+    if not re.match(r"(?P<name>[a-zA-Z0-9/_-]*[a-zA-Z][a-zA-Z0-9_-]*).py$", path):
         return
 
     # Call reprepbuild_info as if the script is running in its own directory.
