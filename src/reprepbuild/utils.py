@@ -38,6 +38,7 @@ A `dyndep` is more powerful and general, but also a bit more complicated to set 
 
 import importlib.util
 import os
+import re
 
 __all__ = ("write_depfile", "write_dyndep", "import_python_path", "check_script_args")
 
@@ -95,8 +96,10 @@ def import_python_path(path):
 def check_script_args(script_args):
     for script_arg in script_args:
         if isinstance(script_arg, str):
-            if not re.match(r"^[a-zA-Z_-]*$", script_args):
-                raise ValueError("A string script args must match ^[a-zA-Z_-]*$.")
+            if not re.match(r"^[a-zA-Z0-9_-]*$", script_arg):
+                raise ValueError(
+                    "Script argument must only contain letters, numbers, underscores, and hyphens."
+                )  # E:lin101
         elif not isinstance(script_arg, (int, float)):
             raise TypeError("A script argument must be int, float or str.")
     return "".join(f"_{script_arg}" for script_arg in script_args)
