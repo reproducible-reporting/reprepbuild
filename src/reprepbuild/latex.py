@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-r"""Compile a reproducible PDF from a latex source.
+r"""Compile a reproducible PDF from a latex source, and repeat until converged.
 
 To make reproducibility work, put the following in your tex source:
 
@@ -41,26 +41,17 @@ import re
 import subprocess
 import sys
 
-from .utils import write_dyndep
-
 
 def main():
     """Main program."""
     args = parse_args()
-    return compile_latex(args.fn_tex, args.silent_fail)
+    return compile_latex(args.fn_tex)
 
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser("rr-latex")
     parser.add_argument("fn_tex", help="The top-level tex file.")
-    parser.add_argument(
-        "-s",
-        "--silent-fail",
-        default=False,
-        action="store_true",
-        help="Do not complain when latex fails.",
-    )
     return parser.parse_args()
 
 
@@ -68,7 +59,7 @@ def compile_latex(fn_tex, silent_fail=False):
     """Compile the tex file with minimal output."""
     workdir, filename = os.path.split(fn_tex)
     if not filename.endswith(".tex"):
-        print(f"Source must have tex extension. Got {workdir}/{filename}")
+        print(f"Source must have tex extension. Got {fn_tex}")
         return 2
     prefix = filename[:-4]
 
@@ -77,26 +68,29 @@ def compile_latex(fn_tex, silent_fail=False):
         print("SOURCE_DATE_EPOCH is not set to 315532800.")
         return 3
 
-    # Compile the LaTeX source with latexmk
+    # Save the old aux file.
+    fn_aux = os.path.join(workdir, f"{prefix}.aux")
+    os.rename(fn_aux, fn_aux + "bib")
+
+    # Compile the LaTeX source with pdflatex, until converged, max three times
+    args = ["pdflatex", "-interaction=nonstopmode", "-recorder", "-file-line-error", filename]
     fn_log = os.path.join(workdir, prefix + ".log")
-    result = 0
-    args = ["latexmk", "-gg", prefix]
-    try:
-        with open(os.path.join(workdir, prefix + ".latexmk"), "w") as f:
+    for irep in range(3):
+        found_error = False
+        rerun = False
+        try:
             subprocess.run(
                 args,
                 cwd=workdir,
                 check=True,
                 stdin=subprocess.DEVNULL,
-                stdout=f,
-                stderr=f,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
             )
-    except subprocess.CalledProcessError:
-        # Say what was tried.
-        if not silent_fail:
-            print("    Command failed:", args)
+        except subprocess.CalledProcessError:
+            # Say what was tried.
+            print(f"    Error running `pdflatex {filename}` in `{workdir}`")
             # Print minimal output explaining the error, if possible.
-            found_error = False
             if os.path.isfile(fn_log):
                 # The encoding is unpredictable, so read as binary.
                 with open(fn_log, "rb") as f:
@@ -104,56 +98,26 @@ def compile_latex(fn_tex, silent_fail=False):
                         if re.match(rb".*\.tex:[0-9]+: ", line) is not None:
                             found_error = True
                             break
+                        if b"rerun" in line.lower():
+                            rerun = True
+                            break
                     if found_error:
                         # stdout tricks to dump the raw contents on the terminal.
                         sys.stdout.flush()
                         sys.stdout.buffer.write(b"        " + line)
                         for line, _ in zip(f, range(4)):
                             sys.stdout.buffer.write(b"        " + line)
-                print(f"    See {fn_log} for more details.")
+                        print(f"    See {fn_log} for more details.")
+                        return 1
             else:
                 print(f"    File {fn_log} was not created.")
-        result = 0 if silent_fail else 1
 
-    # Convert the log and fls files into a depfile.
-    inputs = []
-    if os.path.isfile(fn_log):
-        with open(fn_log, "rb") as f:
-            for line in f:
-                if line.startswith(b"LaTeX Warning: File `"):
-                    line = line[21:]
-                    line = line[: line.find(b"'")]
-                    inputs.append(os.path.join(workdir, line.decode("utf8")))
-    fn_fls = os.path.join(workdir, prefix + ".fls")
-    if os.path.isfile(fn_fls):
-        with open(fn_fls) as f:
-            for line in f:
-                if line.startswith("INPUT "):
-                    line = line[6:].strip()
-                    inputs.append(os.path.join(workdir, line))
+        if not rerun:
+            break
 
-    # Use aux files to get the input bib files.
-    fns_aux = [ipath for ipath in inputs if ipath.endswith(".aux")]
-    for fn_aux in fns_aux:
-        with open(fn_aux) as f:
-            for line in f:
-                if line.startswith(r"\bibdata{"):
-                    assert line.endswith("}\n")
-                    assert line.count("{") == 1
-                    assert line.count("}") == 1
-                    fbs_bib = line[line.find("{") + 1 : -2].split(",")
-                    for fn_bib in fbs_bib:
-                        if not fn_bib.endswith(".bib"):
-                            fn_bib += ".bib"
-                        inputs.append(os.path.join(workdir, fn_bib))
-
-    # Finally, filter the aux files, as they are more like output files for us.
-    inputs = [ipath for ipath in inputs if not ipath.endswith(".aux")]
-
-    fn_pdf = os.path.join(workdir, f"{prefix}.pdf")
-    fn_dd = os.path.join(workdir, f"{prefix}.dd")
-    write_dyndep(fn_dd, fn_pdf, [], inputs)
-    return result
+    # Move the old aux file back.
+    os.remove(fn_aux)
+    os.rename(fn_aux + "bib", fn_aux)
 
 
 if __name__ == "__main__":

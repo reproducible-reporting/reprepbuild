@@ -40,7 +40,40 @@ import importlib.util
 import os
 import re
 
-__all__ = ("write_depfile", "write_dyndep", "import_python_path", "check_script_args")
+__all__ = (
+    "parse_inputs_fls",
+    "write_depfile",
+    "write_dyndep",
+    "import_python_path",
+    "check_script_args",
+)
+
+
+def parse_inputs_fls(fn_fls):
+    """Get local inputs from an fls file."""
+    # Collect inputs and outputs
+    workdir = os.path.dirname(fn_fls)
+    inputs = set()
+    outputs = set()
+    with open(fn_fls) as f:
+        for line in f:
+            if line.startswith("INPUT "):
+                select = inputs
+                path = line[6:].strip()
+            elif line.startswith("OUTPUT "):
+                select = outputs
+                path = line[7:].strip()
+            else:
+                continue
+            path = os.path.normpath(path)
+            if path.startswith("/"):
+                continue
+            path = os.path.join(workdir, path)
+            select.add(path)
+    # When files are both inputs and outputs, skip them.
+    # These are usually aux and out.
+    inputs -= outputs
+    return sorted(inputs)
 
 
 def filter_local_files(paths):

@@ -43,8 +43,9 @@ __all__ = ("main",)
 
 
 DEFAULT_RULES = {
+    "latexdep": {"command": "rr-latexdep $in"},
+    "bibtex": {"command": "rr-bibtex $in"},
     "latex": {"command": "rr-latex $in"},
-    "latexdep": {"command": "rr-latex -s $in"},
     "copy": {"command": "cp $in $out"},
     "latexdiff": {"command": "latexdiff $in > $out"},
     "reprozip": {"command": "rr-zip $out $in"},
@@ -60,7 +61,7 @@ DEFAULT_RULES = {
 
 
 def latex_pattern(path):
-    """Make ninja build commands to compile latex with latexmk."""
+    """Make ninja build commands to compile latex with pdflatex."""
     result = re.match("latex-(?P<prefix>[a-z]*)/(?P=prefix).tex$", path)
     if not result:
         return
@@ -72,14 +73,24 @@ def latex_pattern(path):
 
     yield {
         "outputs": fixpath(f"{prefix}.dd"),
+        "implicit_outputs": [
+            fixpath(f"{prefix}.aux"),
+            fixpath(f"{prefix}.fls"),
+            fixpath(f"{prefix}.log"),
+        ],
         "rule": "latexdep",
         "inputs": fixpath(f"{prefix}.tex"),
+    }
+    yield {
+        "outputs": fixpath(f"{prefix}.bbl"),
+        "implicit_outputs": fixpath(f"{prefix}.blg"),
+        "rule": "bibtex",
+        "inputs": fixpath(f"{prefix}.aux"),
     }
     yield {
         "outputs": fixpath(f"{prefix}.pdf"),
         "rule": "latex",
         "inputs": fixpath(f"{prefix}.tex"),
-        "implicit": fixpath("latexmkrc"),
         "order_only": fixpath(f"{prefix}.dd"),
         "dyndep": fixpath(f"{prefix}.dd"),
     }
@@ -87,12 +98,14 @@ def latex_pattern(path):
         "outputs": os.path.join("uploads", f"{prefix}.pdf"),
         "rule": "copy",
         "inputs": fixpath(f"{prefix}.pdf"),
+        "default": True,
     }
     if prefix == "article":
         yield {
             "outputs": os.path.join("uploads", "article.zip"),
             "rule": "reproarticlezip",
             "inputs": "latex-article/article.pdf",
+            "default": True,
         }
 
 
@@ -118,12 +131,12 @@ def latexdiff_pattern(path):
             "outputs": fixpath(f"{prefix}-diff.pdf"),
             "rule": "latex",
             "inputs": fixpath(f"{prefix}-diff.tex"),
-            "implicit": fixpath("latexmkrc"),
         }
         yield {
             "outputs": os.path.join("uploads", f"{prefix}-diff.pdf"),
             "rule": "copy",
             "inputs": fixpath(f"{prefix}-diff.pdf"),
+            "default": True,
         }
 
 
@@ -139,6 +152,7 @@ def dataset_pattern(path):
         "inputs": [
             path for path in glob(f"dataset-{name}/**", recursive=True) if not path.endswith("/")
         ],
+        "default": True,
     }
 
 
@@ -152,6 +166,7 @@ def svg_pattern(path):
         "outputs": f"{name}.pdf",
         "rule": "svgtopdf",
         "inputs": f"{name}.svg",
+        "default": True,
     }
 
 
@@ -200,6 +215,7 @@ def python_script_pattern(path):
                     "strargs": strargs,
                     "depfile": fn_depfile,
                 },
+                "default": True,
             }
     finally:
         os.chdir(orig_workdir)
@@ -210,9 +226,13 @@ def write_ninja(patterns, rules):
     # Loop over all files and create rules and builds for them
     rule_names = set()
     builds = []
+    defaults = []
     for path in glob("**", recursive=True):
         for pattern in patterns:
             for build in pattern(path):
+                if build.get("default", False):
+                    defaults.append(build["outputs"])
+                    del build["default"]
                 rule_names.add(build["rule"])
                 builds.append(build)
 
@@ -228,6 +248,8 @@ def write_ninja(patterns, rules):
             writer.rule(name=rule_name, **rules[rule_name])
         for build in builds:
             writer.build(**build)
+        for default in defaults:
+            writer.default(default)
 
 
 DEFAULT_PATTERNS = [

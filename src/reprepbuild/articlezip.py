@@ -21,8 +21,8 @@
 
 import argparse
 import os
-import re
 
+from .utils import parse_inputs_fls
 from .zip import reprozip
 
 
@@ -48,23 +48,8 @@ def article_zip(fn_zip, fn_pdf):
         return 2
     prefix = filename[:-4]
 
-    # Collect files to be zipped
-    paths = []
-    with open(os.path.join(workdir, prefix + ".fls")) as f:
-        for line in f:
-            if not line.startswith("INPUT "):
-                continue
-            path = line[6:].strip()
-            if path.startswith("/"):
-                continue
-            if re.match(r".*\.aux$", path):
-                continue
-            path = os.path.normpath(path)
-            path = os.path.join(workdir, path)
-            paths.append(path)
-
-    # Write zip
-    reprozip(fn_zip, list(paths))
+    # Collect files to be zipped and write zip
+    reprozip(fn_zip, parse_inputs_fls(os.path.join(workdir, prefix + ".fls")))
     return 0
 
 

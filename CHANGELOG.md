@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The LaTeX sources are now built without `latexmk`.
+  It's features are replaced by more general dependency logic in the `build.ninja` file.
+  A few extra scripts were added to make this all work: `rr-latexdep` and `rr-bibtex`.
+
 ### Fixed
 
 - Fixed compression of ZIP files.
