@@ -72,7 +72,9 @@ def run_latex_deps(fn_tex):
                 filename = None
                 if line.startswith(b"No file "):
                     filename = line[8:-2]
-                if line.startswith(b"LaTeX Warning: File `"):
+                elif line.startswith(b"LaTeX Warning: File `") or line.startswith(
+                    b"! LaTeX Error: File `"
+                ):
                     line = line[21:]
                     filename = line[: line.find(b"'")]
                 if filename is not None:
