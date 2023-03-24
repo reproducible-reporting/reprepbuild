@@ -56,12 +56,12 @@ def reprozip(fn_zip, filenames):
     assert not common.endswith("/")
     nskip = len(common) + 1
     # Make a new zip file
-    with zipfile.ZipFile(fn_zip, "w", compression=zipfile.ZIP_LZMA) as fz:
+    with zipfile.ZipFile(fn_zip, "w") as fz:
         for filename in filenames:
             with open(filename, "rb") as fin:
                 zipinfo = zipfile.ZipInfo(filename[nskip:])
-                with fz.open(zipinfo, "w") as fout:
-                    fout.write(fin.read())
+                zipinfo.compress_type = zipfile.ZIP_LZMA
+                fz.writestr(zipinfo, fin.read())
 
 
 if __name__ == "__main__":

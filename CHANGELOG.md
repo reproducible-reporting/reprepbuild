@@ -7,10 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.2] - 2023-03-23
-
 ### Fixed
 
+- Fixed compression of ZIP files.
 - The regular expression has been updated to be more permissive and now matches Python files with numbers in their name.
 - Fix minor typos and update the regular expression for function arguments to allow for strings containing both letters and numbers to be valid function arguments.
 
