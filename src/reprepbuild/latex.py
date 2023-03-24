@@ -68,14 +68,10 @@ def compile_latex(fn_tex, silent_fail=False):
         print("SOURCE_DATE_EPOCH is not set to 315532800.")
         return 3
 
-    # Save the old aux file.
-    fn_aux = os.path.join(workdir, f"{prefix}.aux")
-    os.rename(fn_aux, fn_aux + "bib")
-
     # Compile the LaTeX source with pdflatex, until converged, max three times
     args = ["pdflatex", "-interaction=nonstopmode", "-recorder", "-file-line-error", filename]
     fn_log = os.path.join(workdir, prefix + ".log")
-    for irep in range(3):
+    for irep in range(4):
         found_error = False
         rerun = False
         try:
@@ -91,33 +87,29 @@ def compile_latex(fn_tex, silent_fail=False):
             # Say what was tried.
             print(f"    Error running `pdflatex {filename}` in `{workdir}`")
             # Print minimal output explaining the error, if possible.
-            if os.path.isfile(fn_log):
-                # The encoding is unpredictable, so read as binary.
-                with open(fn_log, "rb") as f:
-                    for line in f:
-                        if re.match(rb".*\.tex:[0-9]+: ", line) is not None:
-                            found_error = True
-                            break
-                        if b"rerun" in line.lower():
-                            rerun = True
-                            break
-                    if found_error:
-                        # stdout tricks to dump the raw contents on the terminal.
-                        sys.stdout.flush()
+
+        # Process the log file
+        if os.path.isfile(fn_log):
+            # The encoding is unpredictable, so read as binary.
+            with open(fn_log, "rb") as f:
+                for line in f:
+                    if re.match(rb".*\.tex:[0-9]+: ", line) is not None:
+                        found_error = True
+                        break
+                    if b"Rerun to" in line:
+                        rerun = True
+                        break
+                if found_error:
+                    # stdout tricks to dump the raw contents on the terminal.
+                    sys.stdout.flush()
+                    sys.stdout.buffer.write(b"        " + line)
+                    for line, _ in zip(f, range(4)):
                         sys.stdout.buffer.write(b"        " + line)
-                        for line, _ in zip(f, range(4)):
-                            sys.stdout.buffer.write(b"        " + line)
-                        print(f"    See {fn_log} for more details.")
-                        return 1
-            else:
-                print(f"    File {fn_log} was not created.")
+                    print(f"    See {fn_log} for more details.")
+                    return 1
 
         if not rerun:
             break
-
-    # Move the old aux file back.
-    os.remove(fn_aux)
-    os.rename(fn_aux + "bib", fn_aux)
 
 
 if __name__ == "__main__":

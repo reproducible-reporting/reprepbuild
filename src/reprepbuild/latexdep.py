@@ -26,6 +26,7 @@ By renaming, it is not overwritten by later LaTeX runs, which would mark the bbl
 
 import argparse
 import os
+import shutil
 import subprocess
 
 from .utils import parse_inputs_fls, write_depfile, write_dyndep
@@ -85,6 +86,14 @@ def run_latex_deps(fn_tex):
     # Write a depfile for all tex sources, in which changes may affect dependencies.
     fn_depfile = fn_dd + ".depfile"
     write_depfile(fn_depfile, [fn_dd], [path for path in inputs if path.endswith(".tex")])
+
+    # Make a copy of the aux file for bibtex.
+    # This copy circumvents one of the annoying LaTeX circular dependencies.
+    # Without this trick, LaTeX is incompatible with build systems,
+    # because the same files serve as input and output in one build step.
+    fn_aux1 = os.path.join(workdir, f"{prefix}.aux")
+    fn_aux2 = os.path.join(workdir, f"{prefix}.first.aux")
+    shutil.copy(fn_aux1, fn_aux2)
 
 
 if __name__ == "__main__":

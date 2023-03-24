@@ -75,6 +75,7 @@ def latex_pattern(path):
         "outputs": fixpath(f"{prefix}.dd"),
         "implicit_outputs": [
             fixpath(f"{prefix}.aux"),
+            fixpath(f"{prefix}.first.aux"),
             fixpath(f"{prefix}.fls"),
             fixpath(f"{prefix}.log"),
         ],
@@ -85,7 +86,7 @@ def latex_pattern(path):
         "outputs": fixpath(f"{prefix}.bbl"),
         "implicit_outputs": fixpath(f"{prefix}.blg"),
         "rule": "bibtex",
-        "inputs": fixpath(f"{prefix}.aux"),
+        "inputs": fixpath(f"{prefix}.first.aux"),
     }
     yield {
         "outputs": fixpath(f"{prefix}.pdf"),
