@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Let the build fail when bibtex finds no bib file.
+- Add missing depfile lines to `latexdep` and `bibtex` build rules.
+- Let the build fail when `bibtex` finds no `.bib` file.
 
 ## [0.4.0] - 2023-03-24
 

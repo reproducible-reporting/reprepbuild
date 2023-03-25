@@ -43,8 +43,8 @@ __all__ = ("main",)
 
 
 DEFAULT_RULES = {
-    "latexdep": {"command": "rr-latexdep $in"},
-    "bibtex": {"command": "rr-bibtex $in"},
+    "latexdep": {"command": "rr-latexdep $in", "depfile": "$in.d"},
+    "bibtex": {"command": "rr-bibtex $in", "depfile": "$in.d"},
     "latex": {"command": "rr-latex $in"},
     "copy": {"command": "cp $in $out"},
     "latexdiff": {"command": "latexdiff $in > $out"},
@@ -53,10 +53,7 @@ DEFAULT_RULES = {
     "svgtopdf": {
         "command": "inkscape $in --export-filename=$out --export-type=pdf; rr-normalize-pdf $out"
     },
-    "pythonscript": {
-        "command": "rr-python-script $in -- $args > $out",
-        "depfile": "$in.d",
-    },
+    "pythonscript": {"command": "rr-python-script $in -- $args > $out", "depfile": "$in.d"},
 }
 
 
