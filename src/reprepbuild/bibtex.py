@@ -49,6 +49,7 @@ def run_bibtex(path_aux):
 
     args = ["bibtex", fn_aux]
     result = 0
+    path_blg = os.path.join(workdir, prefix + ".blg")
     try:
         subprocess.run(
             args,
@@ -59,7 +60,13 @@ def run_bibtex(path_aux):
             stderr=subprocess.DEVNULL,
         )
     except subprocess.CalledProcessError:
-        result = 1
+        print(f"    Error running `bibtex {fn_aux}` in `{workdir}`.")
+        with open(path_blg) as f:
+            for line in f:
+                print(line[:-1])
+                if line.startswith("You've used "):
+                    break
+        sys.exit(1)
 
     # Rename files to those without the `first` interjection.
     for ext in "blg", "bbl":
@@ -70,7 +77,6 @@ def run_bibtex(path_aux):
 
     # Parse the blg file to get a list of used bib files
     paths_bib = set()
-    path_blg = os.path.join(workdir, prefix + ".blg")
     with open(path_blg) as f:
         for line in f:
             if line.startswith("Database file #"):
@@ -83,20 +89,10 @@ def run_bibtex(path_aux):
             if line.startswith("OUTPUT "):
                 paths_bib.discard(os.path.join(workdir, os.path.normpath(line[7:].strip())))
 
-    if len(paths_bib) == 0:
-        result = 0
-    if result == 1:
-        print(f"    Error running `bibtex {fn_aux}` in `{workdir}`.")
-        with open(path_blg) as f:
-            for line in f:
-                print(line[:-1])
-                if line.startswith("You've used "):
-                    break
-    else:
-        # Store the input bib files for dependency tracking
-        path_bbl = os.path.join(workdir, prefix + ".bbl")
-        path_dep = path_aux + ".d"
-        write_dep(path_dep, [path_bbl], paths_bib)
+    # Store the input bib files for dependency tracking
+    path_bbl = os.path.join(workdir, prefix + ".bbl")
+    path_dep = fn_aux + ".d"
+    write_dep(path_dep, [path_bbl], paths_bib)
 
     return result
 
