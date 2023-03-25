@@ -91,7 +91,7 @@ def run_bibtex(path_aux):
 
     # Store the input bib files for dependency tracking
     path_bbl = os.path.join(workdir, prefix + ".bbl")
-    path_dep = fn_aux + ".d"
+    path_dep = path_aux + ".d"
     write_dep(path_dep, [path_bbl], paths_bib)
 
     return result

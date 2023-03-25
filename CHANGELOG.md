@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.4.0] - 2023-03-25
+## [0.4.2] - 2023-03-25
+
+### Fixed
+
+- Fix typo in `rr-bibtex` script.
+
+## [0.4.1] - 2023-03-25
 
 ### Fixed
 
