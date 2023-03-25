@@ -28,27 +28,30 @@ __all__ = ("normalize_pdf",)
 
 def main():
     """Main program."""
-    normalize_pdf(parse_args().fn_pdf)
+    normalize_pdf(parse_args().path_pdf)
 
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser("rr-normalize-pdf")
-    parser.add_argument("fn_pdf", help="The pdf to be normalized (in place).")
+    parser.add_argument("path_pdf", help="The pdf to be normalized (in place).")
     return parser.parse_args()
 
 
-def normalize_pdf(fn_pdf):
+def normalize_pdf(path_pdf):
     """Rewrite a PDF by its normalized equivalent. This helps making PDFs reproducible."""
-    pdf = fitz.open(fn_pdf)
+    if not path_pdf.endswith(".pdf"):
+        print(f"An article must have a `.pdf` extension. Got {path_pdf}")
+        return 2
+    pdf = fitz.open(path_pdf)
     pdf.set_metadata({})
     pdf.del_xml_metadata()
     pdf.scrub()
     with tempfile.TemporaryDirectory(suffix="normalize-pdf", prefix="rr") as dn:
-        fn_out = os.path.join(dn, "out.pdf")
-        pdf.save(fn_out, garbage=4, deflate=True, linear=True, no_new_id=True)
+        path_out = os.path.join(dn, "out.pdf")
+        pdf.save(path_out, garbage=4, deflate=True, linear=True, no_new_id=True)
         pdf.close()
-        shutil.copy(fn_out, fn_pdf)
+        shutil.copy(path_out, path_pdf)
 
 
 if __name__ == "__main__":

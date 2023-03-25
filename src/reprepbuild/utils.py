@@ -42,20 +42,20 @@ import re
 
 __all__ = (
     "parse_inputs_fls",
-    "write_depfile",
+    "write_dep",
     "write_dyndep",
     "import_python_path",
     "check_script_args",
 )
 
 
-def parse_inputs_fls(fn_fls):
+def parse_inputs_fls(path_fls):
     """Get local inputs from an fls file."""
     # Collect inputs and outputs
-    workdir = os.path.dirname(fn_fls)
+    workdir = os.path.dirname(path_fls)
     inputs = set()
     outputs = set()
-    with open(fn_fls) as f:
+    with open(path_fls) as f:
         for line in f:
             if line.startswith("INPUT "):
                 select = inputs
@@ -86,7 +86,7 @@ def filter_local_files(paths):
     return sorted(local)
 
 
-def write_depfile(fn_depfile, outputs, inputs):
+def write_dep(path_dep, outputs, inputs):
     """Write a depfile for outputs that depend on inputs.
 
     Inputs are ignored when they are not inside of the current directory (recursively).
@@ -94,18 +94,18 @@ def write_depfile(fn_depfile, outputs, inputs):
     It is assumed that the depfile is always specified as "depfile = $out.depfile"
     and that there is only one output file.
     """
-    with open(fn_depfile, "w") as f:
+    with open(path_dep, "w") as f:
         f.write(" ".join(outputs))
         f.write(": \\\n")
         for ipath in filter_local_files(inputs):
             f.write(f"    {ipath} \\\n")
 
 
-def write_dyndep(fn_dd, fn_out, imp_outputs, imp_inputs):
+def write_dyndep(path_dyndep, output, imp_outputs, imp_inputs):
     """Write a dynamic dependency file for ninja, for a single output."""
-    with open(fn_dd, "w") as f:
+    with open(path_dyndep, "w") as f:
         f.write("ninja_dyndep_version = 1\n")
-        f.write(f"build {fn_out}")
+        f.write(f"build {output}")
         imp_outputs = filter_local_files(imp_outputs)
         if len(imp_outputs) > 0:
             f.write(" | ")

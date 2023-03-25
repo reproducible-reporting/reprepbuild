@@ -45,23 +45,23 @@ import sys
 def main():
     """Main program."""
     args = parse_args()
-    return compile_latex(args.fn_tex)
+    return compile_latex(args.path_tex)
 
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser("rr-latex")
-    parser.add_argument("fn_tex", help="The top-level tex file.")
+    parser.add_argument("path_tex", help="The top-level tex file.")
     return parser.parse_args()
 
 
-def compile_latex(fn_tex, silent_fail=False):
+def compile_latex(path_tex):
     """Compile the tex file with minimal output."""
-    workdir, filename = os.path.split(fn_tex)
-    if not filename.endswith(".tex"):
-        print(f"Source must have tex extension. Got {fn_tex}")
+    if not path_tex.endswith(".tex"):
+        print(f"LaTeX source must have a `.tex` extension. Got {path_tex}")
         return 2
-    prefix = filename[:-4]
+    workdir, fn_tex = os.path.split(path_tex)
+    prefix = fn_tex[:-4]
 
     # Check whether we're already in the eighties. (compatibility with ZIP)
     if os.environ.get("SOURCE_DATE_EPOCH") != "315532800":
@@ -69,8 +69,8 @@ def compile_latex(fn_tex, silent_fail=False):
         return 3
 
     # Compile the LaTeX source with pdflatex, until converged, max three times
-    args = ["pdflatex", "-interaction=nonstopmode", "-recorder", "-file-line-error", filename]
-    fn_log = os.path.join(workdir, prefix + ".log")
+    args = ["pdflatex", "-interaction=nonstopmode", "-recorder", "-file-line-error", fn_tex]
+    path_log = os.path.join(workdir, prefix + ".log")
     for irep in range(4):
         found_error = False
         rerun = False
@@ -85,13 +85,13 @@ def compile_latex(fn_tex, silent_fail=False):
             )
         except subprocess.CalledProcessError:
             # Say what was tried.
-            print(f"    Error running `pdflatex {filename}` in `{workdir}`")
+            print(f"    Error running `pdflatex {fn_tex}` in `{workdir}`")
             # Print minimal output explaining the error, if possible.
 
         # Process the log file
-        if os.path.isfile(fn_log):
+        if os.path.isfile(path_log):
             # The encoding is unpredictable, so read as binary.
-            with open(fn_log, "rb") as f:
+            with open(path_log, "rb") as f:
                 for line in f:
                     if re.match(rb".*\.tex:[0-9]+: ", line) is not None:
                         found_error = True
@@ -105,7 +105,7 @@ def compile_latex(fn_tex, silent_fail=False):
                     sys.stdout.buffer.write(b"        " + line)
                     for line, _ in zip(f, range(4)):
                         sys.stdout.buffer.write(b"        " + line)
-                    print(f"    See {fn_log} for more details.")
+                    print(f"    See {path_log} for more details.")
                     return 1
 
         if not rerun:

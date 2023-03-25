@@ -55,7 +55,7 @@ DEFAULT_RULES = {
     },
     "pythonscript": {
         "command": "rr-python-script $in -- $args > $out",
-        "depfile": "$depfile",
+        "depfile": "$in.d",
     },
 }
 
@@ -68,11 +68,11 @@ def latex_pattern(path):
     prefix = result.group("prefix")
     workdir = f"latex-{prefix}"
 
-    def fixpath(local_path):
-        return os.path.normpath(os.path.join(workdir, local_path))
+    def fixpath(fn_local):
+        return os.path.normpath(os.path.join(workdir, fn_local))
 
     yield {
-        "outputs": fixpath(f"{prefix}.dd"),
+        "outputs": fixpath(f"{prefix}.tex.dd"),
         "implicit_outputs": [
             fixpath(f"{prefix}.aux"),
             fixpath(f"{prefix}.first.aux"),
@@ -92,8 +92,8 @@ def latex_pattern(path):
         "outputs": fixpath(f"{prefix}.pdf"),
         "rule": "latex",
         "inputs": fixpath(f"{prefix}.tex"),
-        "order_only": fixpath(f"{prefix}.dd"),
-        "dyndep": fixpath(f"{prefix}.dd"),
+        "order_only": fixpath(f"{prefix}.tex.dd"),
+        "dyndep": fixpath(f"{prefix}.tex.dd"),
     }
     yield {
         "outputs": os.path.join("uploads", f"{prefix}.pdf"),
@@ -119,8 +119,8 @@ def latexdiff_pattern(path):
     ext = result.group("ext")
     workdir = f"latex_{prefix}"
 
-    def fixpath(local_path):
-        return os.path.normpath(os.path.join(workdir, local_path))
+    def fixpath(fn_local):
+        return os.path.normpath(os.path.join(workdir, fn_local))
 
     yield {
         "outputs": fixpath(f"{prefix}-diff.{ext}"),
@@ -196,15 +196,14 @@ def python_script_pattern(path):
         else:
             build_cases = reprepbuild_cases()
 
-        def fixpath(local_path):
-            return os.path.normpath(os.path.join(workdir, local_path))
+        def fixpath(fn_local):
+            return os.path.normpath(os.path.join(workdir, fn_local))
 
         # Loop over all cases to make build records
         for script_args in build_cases:
             build_info = reprepbuild_info(*script_args)
             strargs = check_script_args(script_args)
             fn_log = fixpath(f"{prefix}{strargs}.log")
-            fn_depfile = fixpath(f"{prefix}{strargs}.depfile")
             yield {
                 "inputs": path,
                 "implicit": [fixpath(ipath) for ipath in build_info.get("inputs", [])],
@@ -214,7 +213,6 @@ def python_script_pattern(path):
                 "variables": {
                     "args": " ".join(str(arg) for arg in script_args),
                     "strargs": strargs,
-                    "depfile": fn_depfile,
                 },
                 "default": True,
             }

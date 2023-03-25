@@ -20,6 +20,14 @@
 r"""List all the (missing) dependencies of a LaTeX source."""
 
 
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+
+from .utils import parse_inputs_fls, write_dep, write_dyndep
+
 EMERGENCY_STOP_HINT = r"""
 LaTeX made an emergency stop!
 
@@ -51,36 +59,27 @@ and define `\warninput` in the preamble as follows:
 """
 
 
-import argparse
-import os
-import shutil
-import subprocess
-import sys
-
-from .utils import parse_inputs_fls, write_depfile, write_dyndep
-
-
 def main():
     """Main program."""
     args = parse_args()
-    return run_latex_deps(args.fn_tex)
+    return run_latex_deps(args.path_tex)
 
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser("rr-bibtex")
-    parser.add_argument("fn_tex", help="The top-level tex file.")
+    parser.add_argument("path_tex", help="The top-level tex file.")
     return parser.parse_args()
 
 
-def run_latex_deps(fn_tex):
-    workdir, filename = os.path.split(fn_tex)
-    if not filename.endswith(".tex"):
-        print(f"Input must have aux extension. Got {fn_tex}")
+def run_latex_deps(path_tex):
+    if not path_tex.endswith(".tex"):
+        print(f"LaTeX source must have a `.tex` extension. Got {path_tex}")
         return 2
-    prefix = filename[:-4]
+    workdir, fn_tex = os.path.split(path_tex)
+    prefix = fn_tex[:-4]
 
-    args = ["pdflatex", "-interaction=nonstopmode", "-recorder", "-draftmode", filename]
+    args = ["pdflatex", "-interaction=nonstopmode", "-recorder", "-draftmode", fn_tex]
     subprocess.run(
         args,
         cwd=workdir,
@@ -93,38 +92,38 @@ def run_latex_deps(fn_tex):
     # Extract relevant files for log, fls and bbl files.
     inputs = parse_inputs_fls(os.path.join(workdir, prefix + ".fls"))
     # The encoding is unpredictable, so read log as binary.
-    fn_log = os.path.join(workdir, prefix + ".log")
-    if os.path.isfile(fn_log):
-        with open(fn_log, "rb") as f:
+    path_log = os.path.join(workdir, prefix + ".log")
+    if os.path.isfile(path_log):
+        with open(path_log, "rb") as f:
             for line in f:
-                filename = None
+                fn_missing = None
                 if line.startswith(b"No file "):
-                    filename = line[8:-2]
+                    fn_missing = line[8:-2]
                 elif line.startswith(b"LaTeX Warning: File `"):
                     line = line[21:]
-                    filename = line[: line.find(b"'")]
+                    fn_missing = line[: line.find(b"'")]
                 elif b"Emergency stop" in line:
                     print(EMERGENCY_STOP_HINT)
                     sys.exit(1)
-                if filename is not None:
-                    inputs.append(os.path.join(workdir, filename.decode("utf8")))
+                if fn_missing is not None:
+                    inputs.append(os.path.join(workdir, fn_missing.decode("utf8")))
 
     # Write the dyndep, which is the most complete
-    fn_pdf = os.path.join(workdir, f"{prefix}.pdf")
-    fn_dd = os.path.join(workdir, f"{prefix}.dd")
-    write_dyndep(fn_dd, fn_pdf, [], inputs)
+    path_pdf = os.path.join(workdir, f"{prefix}.pdf")
+    path_dyndep = path_tex + ".dd"
+    write_dyndep(path_dyndep, path_pdf, [], inputs)
 
     # Write a depfile for all tex sources, in which changes may affect dependencies.
-    fn_depfile = fn_dd + ".depfile"
-    write_depfile(fn_depfile, [fn_dd], [path for path in inputs if path.endswith(".tex")])
+    path_dep = path_tex + ".d"
+    write_dep(path_dep, [path_dyndep], [path for path in inputs if path.endswith(".tex")])
 
     # Make a copy of the aux file for bibtex.
     # This copy circumvents one of the annoying LaTeX circular dependencies.
     # Without this trick, LaTeX is incompatible with build systems,
     # because the same files serve as input and output in one build step.
-    fn_aux1 = os.path.join(workdir, f"{prefix}.aux")
-    fn_aux2 = os.path.join(workdir, f"{prefix}.first.aux")
-    shutil.copy(fn_aux1, fn_aux2)
+    path_aux_src = os.path.join(workdir, f"{prefix}.aux")
+    path_aux_dst = os.path.join(workdir, f"{prefix}.first.aux")
+    shutil.copy(path_aux_src, path_aux_dst)
 
 
 if __name__ == "__main__":

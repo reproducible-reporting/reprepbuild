@@ -29,27 +29,27 @@ from .zip import reprozip
 def main():
     """Main program."""
     args = parse_args()
-    return article_zip(args.fn_zip, args.fn_pdf)
+    return article_zip(args.path_zip, args.path_pdf)
 
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser("rr-article-zip")
-    parser.add_argument("fn_zip", help="The output zip file with the sources.")
-    parser.add_argument("fn_pdf", help="The article pdf file.")
+    parser.add_argument("path_zip", help="The output zip file with the sources.")
+    parser.add_argument("path_pdf", help="The article pdf file.")
     return parser.parse_args()
 
 
-def article_zip(fn_zip, fn_pdf):
+def article_zip(path_zip, path_pdf):
     """Zip the sources of the article."""
-    workdir, filename = os.path.split(fn_pdf)
-    if not filename.endswith(".pdf"):
-        print(f"An article must have a pdf extension. Got {workdir}/{filename}")
+    if not path_pdf.endswith(".pdf"):
+        print(f"Article PDF must have a `.pdf` extension. Got {path_pdf}")
         return 2
-    prefix = filename[:-4]
+    workdir, fn_py = os.path.split(path_pdf)
+    prefix = fn_py[:-4]
 
     # Collect files to be zipped and write zip
-    reprozip(fn_zip, parse_inputs_fls(os.path.join(workdir, prefix + ".fls")))
+    reprozip(path_zip, parse_inputs_fls(os.path.join(workdir, prefix + ".fls")))
     return 0
 
 

@@ -30,36 +30,39 @@ __all__ = ("reprozip",)
 def main():
     """Main program."""
     args = parse_args()
-    reprozip(args.fn_zip, args.fns)
+    reprozip(args.path_zip, args.paths_in)
 
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser("rr-zip")
-    parser.add_argument("fn_zip", help="Destination zip file.")
-    parser.add_argument("fns", nargs="+", help="Files to zip.")
+    parser.add_argument("path_zip", help="Destination zip file.")
+    parser.add_argument("paths_in", nargs="+", help="File paths to zip.")
     return parser.parse_args()
 
 
-def reprozip(fn_zip, filenames):
+def reprozip(path_zip, paths_in):
     """Create a reproducible zip file."""
+    if not path_zip.endswith(".zip"):
+        print(f"Destination must have a `.zip` extension. Got {path_zip}")
+        return 2
     # Remove old zip
-    if os.path.isfile(fn_zip):
-        os.remove(fn_zip)
-    # Clean up list of filenames
-    filenames = sorted({os.path.normpath(filename) for filename in filenames})
+    if os.path.isfile(path_zip):
+        os.remove(path_zip)
+    # Clean up list of input paths
+    paths_in = sorted({os.path.normpath(path_in) for path_in in paths_in})
     # Prepare to trim leading directories
-    if len(filenames) == 1:
-        common = os.path.dirname(filenames[0])
+    if len(paths_in) == 1:
+        common = os.path.dirname(paths_in[0])
     else:
-        common = os.path.commonpath(filenames)
+        common = os.path.commonpath(paths_in)
     assert not common.endswith("/")
     nskip = len(common) + 1
     # Make a new zip file
-    with zipfile.ZipFile(fn_zip, "w") as fz:
-        for filename in filenames:
-            with open(filename, "rb") as fin:
-                zipinfo = zipfile.ZipInfo(filename[nskip:])
+    with zipfile.ZipFile(path_zip, "w") as fz:
+        for path_in in paths_in:
+            with open(path_in, "rb") as fin:
+                zipinfo = zipfile.ZipInfo(path_in[nskip:])
                 zipinfo.compress_type = zipfile.ZIP_LZMA
                 fz.writestr(zipinfo, fin.read())
 

@@ -30,7 +30,7 @@ import argparse
 import os
 import sys
 
-from .utils import check_script_args, import_python_path, write_depfile
+from .utils import check_script_args, import_python_path, write_dep
 
 
 def main():
@@ -60,22 +60,19 @@ def convert(script_arg):
     return script_arg
 
 
-def run_script(path, script_args):
+def run_script(path_py, script_args):
     """Run the python script and collected module dependencies."""
-    workdir, filename = os.path.split(path)
-    if not filename.endswith(".py"):
-        print(f"Source must have py extension. Got {workdir}/{filename}")
-        return -2
+    if not path_py.endswith(".py"):
+        print(f"Python script must have `.py` extension. Got {path_py}")
+        return 2
+    workdir, fn_py = os.path.split(path_py)
+    prefix = fn_py[:-3]
+    orig_workdir = os.getcwd()
 
     # Check whether we're already in the eighties. (compatibility with ZIP)
     if os.environ.get("SOURCE_DATE_EPOCH") != "315532800":
         print("SOURCE_DATE_EPOCH is not set to 315532800.")
         return -3
-
-    orig_workdir = os.getcwd()
-    workdir, fn_py = os.path.split(path)
-    prefix = fn_py[:-3]
-    result = -1
 
     try:
         # Load the script in its own directory
@@ -85,11 +82,11 @@ def run_script(path, script_args):
         # Get the relevant functions
         reprepbuild_info = getattr(pythonscript, "reprepbuild_info", None)
         if reprepbuild_info is None:
-            print(f"The script {path} has no reprepbuild_info function.")
+            print(f"The script {path_py} has no reprepbuild_info function.")
             return -1
         script_main = getattr(pythonscript, "main", None)
         if script_main is None:
-            print(f"The script {path} has no main function.")
+            print(f"The script {path_py} has no main function.")
             return -1
 
         # Execute the functions as if the script is running inside its own dir.
@@ -109,13 +106,14 @@ def run_script(path, script_args):
         imported_paths.add(module_path)
 
     # Write the depfile.
-    def fixpath(local_path):
-        return os.path.normpath(os.path.join(workdir, local_path))
+    def fixpath(fn_local):
+        return os.path.normpath(os.path.join(workdir, fn_local))
 
     outputs = [fixpath(opath) for opath in build_info.get("outputs", [])]
     strargs = check_script_args(script_args)
     outputs.append(fixpath(f"{prefix}{strargs}.log"))
-    write_depfile(fixpath(f"{prefix}{strargs}.depfile"), outputs, imported_paths)
+    path_dep = path_py + ".d"
+    write_dep(path_dep, outputs, imported_paths)
 
     return result
 
