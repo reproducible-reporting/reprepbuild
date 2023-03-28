@@ -24,6 +24,8 @@ import argparse
 import os
 import zipfile
 
+import tqdm
+
 __all__ = ("reprozip",)
 
 
@@ -60,10 +62,10 @@ def reprozip(path_zip, paths_in):
     nskip = len(common) + 1
     # Make a new zip file
     with zipfile.ZipFile(path_zip, "w") as fz:
-        for path_in in paths_in:
+        for path_in in tqdm.tqdm(paths_in, f"Creating {path_zip}", delay=1):
             with open(path_in, "rb") as fin:
                 zipinfo = zipfile.ZipInfo(path_in[nskip:])
-                zipinfo.compress_type = zipfile.ZIP_LZMA
+                zipinfo.compress_type = zipfile.ZIP_DEFLATED
                 fz.writestr(zipinfo, fin.read())
 
 

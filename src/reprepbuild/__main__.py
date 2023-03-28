@@ -140,7 +140,7 @@ def latexdiff_pattern(path):
 
 def dataset_pattern(path):
     """Make ninja build commands to ZIP datasets."""
-    result = re.match("dataset-(?P<name>[a-z-]*)/$", path)
+    result = re.match("dataset-(?P<name>[a-z-]*)/README.md$", path)
     if not result:
         return
     name = result.group("name")
@@ -148,8 +148,9 @@ def dataset_pattern(path):
         "outputs": f"uploads/dataset-{name}.zip",
         "rule": "reprozip",
         "inputs": [
-            path for path in glob(f"dataset-{name}/**", recursive=True) if not path.endswith("/")
+            path for path in glob(f"dataset-{name}/**", recursive=True) if not os.path.isdir(path)
         ],
+        "pool": "console",
         "default": True,
     }
 

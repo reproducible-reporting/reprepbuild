@@ -30,6 +30,7 @@ classifiers = [
 dependencies = [
     "ninja",
     "pymupdf",
+    "tqdm",
     "watchdog",
 ]
 

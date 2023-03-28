@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Use regular deflation algorithm for a more acceptable ZIP compression time.
+
+### Changed
+
+- When the compression of the ZIP file takes more than 1 second, a progress bar appears.
+  This introduces a dependency on [`tqdm`](https://github.com/tqdm/tqdm).
+
 ## [0.4.2] - 2023-03-25
 
 ### Fixed
