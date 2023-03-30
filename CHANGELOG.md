@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Use regular deflation algorithm for a more acceptable ZIP compression time.
+- Allow for more filename patterns when assigning build rules.
 
 ### Changed
 
