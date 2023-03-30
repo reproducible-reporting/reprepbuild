@@ -59,7 +59,7 @@ DEFAULT_RULES = {
 
 def latex_pattern(path):
     """Make ninja build commands to compile latex with pdflatex."""
-    result = re.match("latex-(?P<prefix>[a-z][a-z0-9-]*)/(?P=prefix).tex$", path)
+    result = re.match(r"latex-(?P<prefix>[a-z0-9-]+)/(?P=prefix).tex$", path)
     if not result:
         return
     prefix = result.group("prefix")
@@ -109,7 +109,7 @@ def latex_pattern(path):
 
 def latexdiff_pattern(path):
     """Make ninja build commands to generate a latex diff."""
-    result = re.match("latex-(?P<prefix>[a-z][a-z0-9-]*)/(?P=prefix)-old.(?P<ext>.*)$", path)
+    result = re.match(r"latex-(?P<prefix>[a-z0-9-]+)/(?P=prefix)-old.(?P<ext>.*)$", path)
     if not result:
         return
     prefix = result.group("prefix")
@@ -140,7 +140,7 @@ def latexdiff_pattern(path):
 
 def dataset_pattern(path):
     """Make ninja build commands to ZIP datasets."""
-    result = re.match("dataset-(?P<name>[a-z][a-z0-9-]*)/README.md$", path)
+    result = re.match(r"dataset-(?P<name>[a-z][a-z0-9-]*)/README.md$", path)
     if not result:
         return
     name = result.group("name")
@@ -157,7 +157,7 @@ def dataset_pattern(path):
 
 def svg_pattern(path):
     """Make ninja build commands to convert SVG to PDF files."""
-    result = re.match("(?P<name>[a-z0-9/-]*).svg$", path)
+    result = re.match(r"(?P<name>[a-z0-9/-]+).svg$", path)
     if not result:
         return
     name = result.group("name")
@@ -172,7 +172,7 @@ def svg_pattern(path):
 def python_script_pattern(path):
     """Make ninja build commands for python scripts."""
     # for any valid python file
-    if not re.match(r"(?P<name>[a-zA-Z0-9/_-]*[a-zA-Z][a-zA-Z0-9_-]*).py$", path):
+    if not re.match(r"(?P<name>([a-z0-9_-]+/)*[a-z][a-z0-9_-]*).py$", path):
         return
 
     # Call reprepbuild_info as if the script is running in its own directory.
