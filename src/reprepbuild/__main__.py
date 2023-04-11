@@ -47,7 +47,7 @@ DEFAULT_RULES = {
     "bibtex": {"command": "rr-bibtex $in", "depfile": "$in.d"},
     "latex": {"command": "rr-latex $in"},
     "copy": {"command": "cp $in $out"},
-    "latexdiff": {"command": "latexdiff $in > $out"},
+    "latexdiff": {"command": "latexdiff --append-context2cmd=abstract $in > $out"},
     "reprozip": {"command": "rr-zip $out $in"},
     "reproarticlezip": {"command": "rr-article-zip $out $in"},
     "svgtopdf": {

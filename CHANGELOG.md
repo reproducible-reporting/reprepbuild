@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Add option to latexdiff to track changes in the abstract when it is in the preamble.
+
 ## [0.5.1] - 2023-04-11
 
 ### Fixed
