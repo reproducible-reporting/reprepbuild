@@ -114,7 +114,7 @@ def latexdiff_pattern(path):
         return
     prefix = result.group("prefix")
     ext = result.group("ext")
-    workdir = f"latex_{prefix}"
+    workdir = f"latex-{prefix}"
 
     def fixpath(fn_local):
         return os.path.normpath(os.path.join(workdir, fn_local))
@@ -126,9 +126,22 @@ def latexdiff_pattern(path):
     }
     if ext == "tex":
         yield {
+            "outputs": fixpath(f"{prefix}-diff.tex.dd"),
+            "implicit_outputs": [
+                fixpath(f"{prefix}-diff.aux"),
+                fixpath(f"{prefix}-diff.first.aux"),
+                fixpath(f"{prefix}-diff.fls"),
+                fixpath(f"{prefix}-diff.log"),
+            ],
+            "rule": "latexdep",
+            "inputs": fixpath(f"{prefix}-diff.tex"),
+        }
+        yield {
             "outputs": fixpath(f"{prefix}-diff.pdf"),
             "rule": "latex",
             "inputs": fixpath(f"{prefix}-diff.tex"),
+            "order_only": fixpath(f"{prefix}-diff.tex.dd"),
+            "dyndep": fixpath(f"{prefix}-diff.tex.dd"),
         }
         yield {
             "outputs": os.path.join("uploads", f"{prefix}-diff.pdf"),
