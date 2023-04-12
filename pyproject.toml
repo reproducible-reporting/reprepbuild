@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "RepRepBuild"
-version = "0.5.1"
+version = "0.6.0"
 authors = [
   { name="Toon Verstraelen", email="toon.verstraelen@ugent.be" },
 ]
@@ -32,6 +32,7 @@ dependencies = [
     "pymupdf",
     "tqdm",
     "watchdog",
+    "bibsane",
 ]
 
 [project.urls]

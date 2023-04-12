@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2023-04-12
+
 ### Fixed
 
 - Add option to latexdiff to track changes in the abstract when it is in the preamble.
+
+### Changed
+
+- Run bibsane directly after bibtex, using the configuration file `bibsane.yaml` located
+  next to the `build.ninja` file.
 
 ## [0.5.1] - 2023-04-11
 
