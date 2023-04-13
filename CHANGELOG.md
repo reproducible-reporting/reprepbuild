@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Add option to latexdiff to track changes in other common sections in articles.
+
 ## [0.6.0] - 2023-04-12
 
 ### Fixed
