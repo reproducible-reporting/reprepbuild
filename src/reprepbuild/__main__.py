@@ -111,11 +111,11 @@ def latex_pattern(path):
         "inputs": fixpath(f"{prefix}.pdf"),
         "default": True,
     }
-    if prefix == "article":
+    if prefix in ["article", "supp"]:
         yield {
-            "outputs": os.path.join("uploads", "article.zip"),
+            "outputs": os.path.join("uploads", f"{prefix}.zip"),
             "rule": "reproarticlezip",
-            "inputs": "latex-article/article.pdf",
+            "inputs": f"latex-{prefix}/{prefix}.pdf",
             "default": True,
         }
 

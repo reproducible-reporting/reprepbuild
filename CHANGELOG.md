@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add option to latexdiff to track changes in other common sections in articles.
 
+### Changed
+
+- Also ZIP the supporting information sources, which is needed in some scenario's,
+  such as submission of a preprint to arXiv.
+
 ## [0.6.0] - 2023-04-12
 
 ### Fixed
