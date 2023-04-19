@@ -228,11 +228,20 @@ def python_script_pattern(path):
             build_info = reprepbuild_info(*script_args)
             strargs = check_script_args(script_args)
             fn_log = fixpath(f"{prefix}{strargs}.log")
+            implicit_inputs = [fixpath(ipath) for ipath in build_info.get("inputs", [])]
+            implicit_outputs = [fixpath(opath) for opath in build_info.get("outputs", [])]
+            for path_out in implicit_outputs:
+                if path_out.endswith(".tex"):
+                    raise ValueError(
+                        "Programatically generated LaTeX files should not end with '.tex' "
+                        "to make the distinction with static tex files in the build process. "
+                        r"For example, '.itex' instead and update the \input commands accordingly."
+                    )
             yield {
                 "inputs": path,
-                "implicit": [fixpath(ipath) for ipath in build_info.get("inputs", [])],
+                "implicit": implicit_inputs,
                 "rule": "pythonscript",
-                "implicit_outputs": [fixpath(opath) for opath in build_info.get("outputs", [])],
+                "implicit_outputs": implicit_outputs,
                 "outputs": fn_log,
                 "variables": {
                     "args": " ".join(str(arg) for arg in script_args),

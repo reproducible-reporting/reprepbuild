@@ -89,7 +89,7 @@ def run_latex_deps(path_tex):
         stderr=subprocess.DEVNULL,
     )
 
-    # Extract relevant files for log, fls and bbl files.
+    # Extract relevant files from log and fls.
     inputs = parse_inputs_fls(os.path.join(workdir, prefix + ".fls"))
     # The encoding is unpredictable, so read log as binary.
     path_log = os.path.join(workdir, prefix + ".log")
