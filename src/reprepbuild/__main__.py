@@ -66,7 +66,7 @@ DEFAULT_RULES = {
     "svgtopdf": {
         "command": "inkscape $in --export-filename=$out --export-type=pdf; rr-normalize-pdf $out"
     },
-    "pythonscript": {"command": "rr-python-script $in -- $args > $out", "depfile": "$in.d"},
+    "pythonscript": {"command": "rr-python-script $in -- $args > $out", "depfile": "$noext.d"},
 }
 
 
@@ -236,7 +236,7 @@ def python_script_pattern(path):
                 "outputs": fn_log,
                 "variables": {
                     "args": " ".join(str(arg) for arg in script_args),
-                    "strargs": strargs,
+                    "noext": fixpath(f"{prefix}{strargs}"),
                 },
                 "default": True,
             }

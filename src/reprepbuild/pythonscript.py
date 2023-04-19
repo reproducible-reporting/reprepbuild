@@ -109,10 +109,11 @@ def run_script(path_py, script_args):
     def fixpath(fn_local):
         return os.path.normpath(os.path.join(workdir, fn_local))
 
-    outputs = [fixpath(opath) for opath in build_info.get("outputs", [])]
+    # Note: only explicit outputs must be added to the depfile, not the implicit ones.
     strargs = check_script_args(script_args)
-    outputs.append(fixpath(f"{prefix}{strargs}.log"))
-    path_dep = path_py + ".d"
+    noext = fixpath(f"{prefix}{strargs}")
+    outputs = [(f"{noext}.log")]
+    path_dep = f"{noext}.d"
     write_dep(path_dep, outputs, imported_paths)
 
     return result
