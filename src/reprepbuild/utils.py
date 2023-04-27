@@ -122,7 +122,11 @@ def import_python_path(path):
     """Return a module by importing a Python file at a given path."""
     spec = importlib.util.spec_from_file_location("<pythonscript>", path)
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    try:
+        spec.loader.exec_module(module)
+    except Exception as e:
+        # Ignore the script if it cannot be imported correctly.
+        return None
     return module
 
 

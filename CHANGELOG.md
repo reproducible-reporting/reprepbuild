@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Ignore Python scripts that cannot be imported.
+  When this happens, a comment is added to `build.ninja`.
+
 ## [0.7.1] - 2023-04-19
 
 ### Fixed

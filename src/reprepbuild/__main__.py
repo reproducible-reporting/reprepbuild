@@ -210,9 +210,14 @@ def python_script_pattern(path):
         os.chdir(workdir)
         pythonscript = import_python_path(fn_py)
 
+        # Ignore script if the import failed.
+        if pythonscript is None:
+            yield "Skipped: import failed"
+            return
         # Get the relevant functions
         reprepbuild_info = getattr(pythonscript, "reprepbuild_info", None)
         if reprepbuild_info is None:
+            yield "Skipped: missing reprepbuild_info"
             return
         reprepbuild_cases = getattr(pythonscript, "reprepbuild_cases", None)
         if reprepbuild_cases is None:
@@ -268,34 +273,33 @@ def check_tex_outputs(outputs: list[str] | str | None):
 def write_ninja(patterns, rules):
     """Search through the source for patterns that can be translated into ninja build commands."""
     # Loop over all files and create rules and builds for them
-    rule_names = set()
-    builds = []
-    defaults = []
-    for path in glob("**", recursive=True):
-        for pattern in patterns:
-            for build in pattern(path):
-                if build.get("default", False):
-                    defaults.append(build["outputs"])
-                    del build["default"]
-                check_tex_outputs(build.get("outputs", None))
-                check_tex_outputs(build.get("implicit_outputs", None))
-                rule_names.add(build["rule"])
-                builds.append(build)
-
-    # Sanity check
-    if len(builds) == 0:
-        print("Nothing to build. Wrong current directory?")
-        sys.exit(-1)
-
-    # Format rules and builds
     with open("build.ninja", "w") as f:
         writer = Writer(f, 100)
-        for rule_name in rule_names:
-            writer.rule(name=rule_name, **rules[rule_name])
-        for build in builds:
-            writer.build(**build)
-        for default in defaults:
-            writer.default(default)
+
+        # Write all rules, even if some are not used.
+        writer.comment("All rules")
+        for name, rule in rules.items():
+            writer.rule(name=name, **rule)
+        writer.newline()
+
+        # Write all build lines and comments
+        for path in glob("**", recursive=True):
+            builds = []
+            for pattern in patterns:
+                builds.extend(pattern(path))
+            if len(builds) > 0:
+                writer.comment(path)
+                for build in builds:
+                    if isinstance(build, str):
+                        writer.comment(build)
+                    else:
+                        default = build.pop("default", False)
+                        check_tex_outputs(build.get("outputs", None))
+                        check_tex_outputs(build.get("implicit_outputs", None))
+                        writer.build(**build)
+                        if default:
+                            writer.default(build["outputs"])
+                writer.newline()
 
 
 DEFAULT_PATTERNS = [
