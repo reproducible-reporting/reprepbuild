@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Support for upper case in Python scripts and SVG files.
 - Ignore Python scripts that cannot be imported.
   When this happens, a comment is added to `build.ninja`.
 

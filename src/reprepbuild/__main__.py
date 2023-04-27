@@ -183,7 +183,7 @@ def dataset_pattern(path):
 
 def svg_pattern(path):
     """Make ninja build commands to convert SVG to PDF files."""
-    result = re.match(r"(?P<name>[a-z0-9/-]+).svg$", path)
+    result = re.match(r"(?P<name>[a-z][a-z0-9-]*/[a-zA-Z0-9/_-]+).svg$", path)
     if not result:
         return
     name = result.group("name")
@@ -198,7 +198,7 @@ def svg_pattern(path):
 def python_script_pattern(path):
     """Make ninja build commands for python scripts."""
     # for any valid python file
-    if not re.match(r"(?P<name>([a-z0-9_-]+/)*[a-z][a-z0-9_-]*).py$", path):
+    if not re.match(r"(?P<name>results-[a-z0-9-]*/[a-zA-Z0-9/_-]*).py$", path):
         return
 
     # Call reprepbuild_info as if the script is running in its own directory.
