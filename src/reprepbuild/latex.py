@@ -40,6 +40,7 @@ import os
 import re
 import subprocess
 import sys
+from itertools import islice
 
 
 def main():
@@ -71,7 +72,7 @@ def compile_latex(path_tex):
     # Compile the LaTeX source with pdflatex, until converged, max three times
     args = ["pdflatex", "-interaction=nonstopmode", "-recorder", "-file-line-error", fn_tex]
     path_log = os.path.join(workdir, prefix + ".log")
-    for irep in range(4):
+    for _irep in range(4):
         found_error = False
         rerun = False
         try:
@@ -103,7 +104,7 @@ def compile_latex(path_tex):
                     # stdout tricks to dump the raw contents on the terminal.
                     sys.stdout.flush()
                     sys.stdout.buffer.write(b"        " + line)
-                    for line, _ in zip(f, range(4)):
+                    for line in islice(f, 4):
                         sys.stdout.buffer.write(b"        " + line)
                     print(f"    See {path_log} for more details.")
                     return 1

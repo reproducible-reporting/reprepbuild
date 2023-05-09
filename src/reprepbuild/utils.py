@@ -124,7 +124,7 @@ def import_python_path(path):
     module = importlib.util.module_from_spec(spec)
     try:
         spec.loader.exec_module(module)
-    except Exception as e:
+    except Exception:
         # Ignore the script if it cannot be imported correctly.
         return None
     return module
@@ -137,6 +137,6 @@ def check_script_args(script_args):
                 raise ValueError(
                     "Script argument must only contain letters, numbers, underscores, and hyphens."
                 )  # E:lin101
-        elif not isinstance(script_arg, (int, float)):
+        elif not isinstance(script_arg, int | float):
             raise TypeError("A script argument must be int, float or str.")
     return "".join(f"_{script_arg}" for script_arg in script_args)

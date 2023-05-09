@@ -83,7 +83,7 @@ def main():
                 continue
             event_handler.snooze()
             write_ninja(DEFAULT_PATTERNS, DEFAULT_RULES)
-            subprocess.run(["ninja"] + args)
+            subprocess.run(["ninja", *args])
             time.sleep(0.1)
             event_handler.reset()
             print("  Waiting for new changes.")

@@ -333,7 +333,7 @@ def main():
     sanity_check()
     args = parse_args()
     write_ninja(DEFAULT_PATTERNS, DEFAULT_RULES)
-    subprocess.run(["ninja"] + args)
+    subprocess.run(["ninja", *args])
 
 
 if __name__ == "__main__":
