@@ -39,6 +39,7 @@ A `dyndep` is more powerful and general, but also a bit more complicated to set 
 import importlib.util
 import os
 import re
+import sys
 
 __all__ = (
     "parse_inputs_fls",
@@ -120,13 +121,17 @@ def write_dyndep(path_dyndep, output, imp_outputs, imp_inputs):
 
 def import_python_path(path):
     """Return a module by importing a Python file at a given path."""
+    cwd = os.getcwd()
+    sys.path.append(cwd)
     spec = importlib.util.spec_from_file_location("<pythonscript>", path)
     module = importlib.util.module_from_spec(spec)
     try:
         spec.loader.exec_module(module)
-    except Exception:
+    except ImportError:
         # Ignore the script if it cannot be imported correctly.
-        return None
+        module = None
+    finally:
+        sys.path.remove(cwd)
     return module
 
 
