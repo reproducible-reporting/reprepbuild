@@ -43,7 +43,9 @@ def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser("rr-python-script")
     parser.add_argument("path_py", help="The python script whose main function will be executed.")
-    parser.add_argument("argstr", default=None, help="Command-line argument for the script, if any")
+    parser.add_argument(
+        "argstr", nargs="?", default="", help="Command-line argument for the script, if any"
+    )
     return parser.parse_args()
 
 

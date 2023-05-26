@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Added sanity check to `rrr` command.
+
 ### Changed
 
 - Optional customization of formatting and parsing of script arguments when using

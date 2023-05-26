@@ -26,7 +26,7 @@ import time
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from .__main__ import DEFAULT_PATTERNS, DEFAULT_RULES, parse_args, write_ninja
+from .__main__ import DEFAULT_PATTERNS, DEFAULT_RULES, parse_args, sanity_check, write_ninja
 
 
 class AnyChangeHandler(FileSystemEventHandler):
@@ -71,6 +71,7 @@ class AnyChangeHandler(FileSystemEventHandler):
 
 def main():
     """Main program."""
+    sanity_check()
     args = parse_args()
     observer = Observer()
     event_handler = AnyChangeHandler()
