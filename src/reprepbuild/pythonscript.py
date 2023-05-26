@@ -30,37 +30,24 @@ import argparse
 import os
 import sys
 
-from .utils import check_script_args, import_python_path, write_dep
+from .utils import import_python_path, parse_case_args, write_dep
 
 
 def main():
     """Main program."""
     args = parse_args()
-    script_args = [convert(script_arg) for script_arg in args.script_args]
-    return run_script(args.path_py, script_args)
+    return run_script(args.path_py, args.argstr)
 
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser("rr-python-script")
     parser.add_argument("path_py", help="The python script whose main function will be executed.")
-    parser.add_argument(
-        "script_args", nargs="*", help="Command-line arguments for the script, if any"
-    )
+    parser.add_argument("argstr", default=None, help="Command-line argument for the script, if any")
     return parser.parse_args()
 
 
-def convert(script_arg):
-    """Try to convert to int, then float, fallback to string."""
-    for dtype in int, float:
-        try:
-            return dtype(script_arg)
-        except ValueError:
-            pass
-    return script_arg
-
-
-def run_script(path_py, script_args):
+def run_script(path_py, argstr):
     """Run the python script and collected module dependencies."""
     if not path_py.endswith(".py"):
         print(f"Python script must have `.py` extension. Got {path_py}")
@@ -88,9 +75,11 @@ def run_script(path_py, script_args):
         if script_main is None:
             print(f"The script {path_py} has no main function.")
             return -1
+        case_fmt = getattr(pythonscript, "REPREPBUILD_CASE_FMT", None)
 
         # Execute the functions as if the script is running inside its own dir.
-        build_info = reprepbuild_info(*script_args)
+        script_args, script_kwargs = parse_case_args(argstr, case_fmt)
+        build_info = reprepbuild_info(*script_args, **script_kwargs)
         result = script_main(**build_info)
     finally:
         os.chdir(orig_workdir)
@@ -110,8 +99,7 @@ def run_script(path_py, script_args):
         return os.path.normpath(os.path.join(workdir, fn_local))
 
     # Note: only explicit outputs must be added to the depfile, not the implicit ones.
-    strargs = check_script_args(script_args)
-    noext = fixpath(f"{prefix}{strargs}")
+    noext = fixpath(prefix if len(argstr) == 0 else f"{prefix}_{argstr}")
     outputs = [(f"{noext}.log")]
     path_dep = f"{noext}.d"
     write_dep(path_dep, outputs, imported_paths)

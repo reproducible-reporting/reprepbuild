@@ -38,15 +38,17 @@ A `dyndep` is more powerful and general, but also a bit more complicated to set 
 
 import importlib.util
 import os
-import re
 import sys
+
+from parse import parse
 
 __all__ = (
     "parse_inputs_fls",
     "write_dep",
     "write_dyndep",
     "import_python_path",
-    "check_script_args",
+    "format_case_args",
+    "parse_case_args",
 )
 
 
@@ -135,13 +137,67 @@ def import_python_path(path):
     return module
 
 
-def check_script_args(script_args):
-    for script_arg in script_args:
-        if isinstance(script_arg, str):
-            if not re.match(r"^[a-zA-Z0-9_-]*$", script_arg):
-                raise ValueError(
-                    "Script argument must only contain letters, numbers, underscores, and hyphens."
-                )  # E:lin101
-        elif not isinstance(script_arg, int | float):
-            raise TypeError("A script argument must be int, float or str.")
-    return "".join(f"_{script_arg}" for script_arg in script_args)
+def format_case_args(script_args, case_fmt=None):
+    # Compatibility with old API.
+    check_underscores = False
+    if case_fmt is None:
+        check_underscores = True
+        case_fmt = "_".join(["{}"] * len(script_args))
+
+    # Interpret the yield value of reprepbuild_cases as args and kwargs.
+    args = []
+    kwargs = {}
+    if isinstance(script_args, list | tuple):
+        if (
+            len(script_args) == 2
+            and isinstance(script_args[0], list | tuple)
+            and isinstance(script_args[1], dict)
+        ):
+            args, kwargs = script_args
+        else:
+            args = script_args
+    elif isinstance(script_args, dict):
+        kwargs = script_args
+    else:
+        args = [script_args]
+
+    # Check validity of kwargs
+    if not all(isinstance(key, str) for key in kwargs):
+        raise ValueError("Keys of kwargs must be strings.")
+
+    # Format and check
+    result = case_fmt.format(*args, **kwargs)
+    if check_underscores and result.count("_") != max(0, len(script_args) - 1):
+        raise ValueError(
+            "When using underscores in script arguments, specify a REPREPBUILD_CASE_FMT"
+        )
+    if " " in result:
+        raise ValueError("Script arguments cannot contain whitespace.")
+    return result
+
+
+def parse_case_args(argstr, case_fmt=None):
+    convert = False
+    if case_fmt is None:
+        convert = True
+        if len(argstr) == 0:
+            case_fmt = ""
+        else:
+            case_fmt = "_".join(["{}"] * (argstr.count("_") + 1))
+    result = parse(case_fmt, argstr, case_sensitive=True)
+    if result is None:
+        raise ValueError(f"Could not parse argstr '{argstr}' with case_fmt '{case_fmt}'.")
+    if convert:
+        args = tuple(_naive_convert(word) for word in result.fixed)
+    else:
+        args = result.fixed
+    return args, result.named
+
+
+def _naive_convert(word):
+    for dtype in int, float:
+        try:
+            return dtype(word)
+        except ValueError:
+            pass
+    return word

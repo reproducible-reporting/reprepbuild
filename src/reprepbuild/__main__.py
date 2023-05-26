@@ -37,7 +37,7 @@ from glob import glob
 
 from ninja.ninja_syntax import Writer
 
-from .utils import check_script_args, import_python_path
+from .utils import format_case_args, import_python_path
 
 __all__ = ("main",)
 
@@ -66,7 +66,7 @@ DEFAULT_RULES = {
     "svgtopdf": {
         "command": "inkscape $in --export-filename=$out --export-type=pdf; rr-normalize-pdf $out"
     },
-    "pythonscript": {"command": "rr-python-script $in -- $args > $out", "depfile": "$noext.d"},
+    "pythonscript": {"command": "rr-python-script $in -- $argstr > $out", "depfile": "$noext.d"},
 }
 
 
@@ -224,6 +224,7 @@ def python_script_pattern(path):
             build_cases = [[]]
         else:
             build_cases = reprepbuild_cases()
+        case_fmt = getattr(pythonscript, "REPREPBUILD_CASE_FMT", None)
 
         def fixpath(fn_local):
             return os.path.normpath(os.path.join(workdir, fn_local))
@@ -231,8 +232,9 @@ def python_script_pattern(path):
         # Loop over all cases to make build records
         for script_args in build_cases:
             build_info = reprepbuild_info(*script_args)
-            strargs = check_script_args(script_args)
-            fn_log = fixpath(f"{prefix}{strargs}.log")
+            argstr = format_case_args(script_args, case_fmt)
+            prefix_argstr = prefix if len(argstr) == 0 else f"{prefix}_{argstr}"
+            fn_log = fixpath(f"{prefix_argstr}.log")
             implicit_inputs = [fixpath(ipath) for ipath in build_info.get("inputs", [])]
             implicit_outputs = [fixpath(opath) for opath in build_info.get("outputs", [])]
             yield {
@@ -242,8 +244,8 @@ def python_script_pattern(path):
                 "implicit_outputs": implicit_outputs,
                 "outputs": fn_log,
                 "variables": {
-                    "args": " ".join(str(arg) for arg in script_args),
-                    "noext": fixpath(f"{prefix}{strargs}"),
+                    "argstr": argstr,
+                    "noext": fixpath(f"{prefix_argstr}"),
                 },
                 "default": True,
             }
