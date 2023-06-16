@@ -7,11 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2023-06-16
+
 ## Changed
 
 - The variable `REPREPBUILD_CASE_FMT` is no longer prefixed with the script name
-  to create filenames for log and dependency files. Instead, it is used as such, without
-  prefixing anything to it.
+  to create filenames for log and dependency files.
+  Instead, it is used as such, without prefixing anything to it.
+- A plain `dataset` directory is now also recognized and turned into a ZIP file.
 
 ## [0.8.0] - 2023-05-26
 
