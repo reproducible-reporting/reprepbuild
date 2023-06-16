@@ -55,7 +55,7 @@ def run_script(path_py, argstr):
         print(f"Python script must have `.py` extension. Got {path_py}")
         return 2
     workdir, fn_py = os.path.split(path_py)
-    prefix = fn_py[:-3]
+    script_prefix = fn_py[:-3]
     orig_workdir = os.getcwd()
 
     # Check whether we're already in the eighties. (compatibility with ZIP)
@@ -101,9 +101,9 @@ def run_script(path_py, argstr):
         return os.path.normpath(os.path.join(workdir, fn_local))
 
     # Note: only explicit outputs must be added to the depfile, not the implicit ones.
-    noext = fixpath(prefix if len(argstr) == 0 else f"{prefix}_{argstr}")
-    outputs = [(f"{noext}.log")]
-    path_dep = f"{noext}.d"
+    out_prefix = fixpath(script_prefix if argstr == "" else argstr)
+    outputs = [(f"{out_prefix}.log")]
+    path_dep = f"{out_prefix}.d"
     write_dep(path_dep, outputs, imported_paths)
 
     return result

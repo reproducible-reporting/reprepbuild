@@ -66,7 +66,10 @@ DEFAULT_RULES = {
     "svgtopdf": {
         "command": "inkscape $in --export-filename=$out --export-type=pdf; rr-normalize-pdf $out"
     },
-    "pythonscript": {"command": "rr-python-script $in -- $argstr > $out", "depfile": "$noext.d"},
+    "pythonscript": {
+        "command": "rr-python-script $in -- $argstr > $out",
+        "depfile": "$out_prefix.d",
+    },
 }
 
 
@@ -204,7 +207,7 @@ def python_script_pattern(path):
     # Call reprepbuild_info as if the script is running in its own directory.
     orig_workdir = os.getcwd()
     workdir, fn_py = os.path.split(path)
-    prefix = fn_py[:-3]
+    script_prefix = fn_py[:-3]
     try:
         # Load the script in its own directory
         os.chdir(workdir)
@@ -233,8 +236,8 @@ def python_script_pattern(path):
         for script_args in build_cases:
             build_info = reprepbuild_info(*script_args)
             argstr = format_case_args(script_args, case_fmt)
-            prefix_argstr = prefix if len(argstr) == 0 else f"{prefix}_{argstr}"
-            fn_log = fixpath(f"{prefix_argstr}.log")
+            out_prefix = fixpath(script_prefix if argstr == "" else argstr)
+            fn_log = f"{out_prefix}.log"
             implicit_inputs = [fixpath(ipath) for ipath in build_info.get("inputs", [])]
             implicit_outputs = [fixpath(opath) for opath in build_info.get("outputs", [])]
             yield {
@@ -245,7 +248,7 @@ def python_script_pattern(path):
                 "outputs": fn_log,
                 "variables": {
                     "argstr": argstr,
-                    "noext": fixpath(f"{prefix_argstr}"),
+                    "out_prefix": out_prefix,
                 },
                 "default": True,
             }

@@ -60,7 +60,7 @@ target-version = ['py310']
 select = ["E", "F", "UP", "B", "I", "PGH", "PL", "RUF"]
 line-length = 100
 target-version = "py310"
-ignore = ["PLR2004", "PLR0913", "PLR0912", "PLW2901", "PLR0915"]
+ignore = ["PLR2004", "PLR0913", "PLR0912", "PLW2901", "PLR0915", "PLC1901"]
 
 [tool.setuptools_scm]
 write_to = "src/reprepbuild/_version.py"
