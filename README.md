@@ -1,3 +1,8 @@
+[![PyPI Upload](https://github.com/reproducible-reporting/reprepbuild/actions/workflows/pypi.yaml/badge.svg)](https://github.com/reproducible-reporting/reprepbuild/actions/workflows/pypi.yaml)
+[![PyPI Version](https://img.shields.io/pypi/v/reprepbuild)](https://pypi.org/project/reprepbuild/)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/reprepbuild)
+![GPL-3 License](https://img.shields.io/github/license/reproducible-reporting/reprepbuild)
+
 # RepRepBuild
 
 RepRepBuild is the build tool for [Reproducible Reporting](https://github.com/reproducible-reporting).
