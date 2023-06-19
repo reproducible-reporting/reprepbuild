@@ -50,7 +50,7 @@ def run_bibtex(path_aux):
     prefix = fn_aux[:-10]
 
     args = ["bibtex", fn_aux]
-    path_blg = os.path.join(workdir, prefix + ".blg")
+    path_blg = os.path.join(workdir, prefix + ".first.blg")
     cp = subprocess.run(
         args,
         cwd=workdir,
@@ -90,6 +90,7 @@ def run_bibtex(path_aux):
 
     # Parse the blg file to get a list of used bib files.
     paths_bib = set()
+    path_blg = os.path.join(workdir, prefix + ".blg")
     with open(path_blg) as f:
         for line in f:
             if line.startswith("Database file #"):

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Print out BibTeX error messages from the correct `.blg` file.
+
 ## [0.9.0] - 2023-06-16
 
 ## Changed
