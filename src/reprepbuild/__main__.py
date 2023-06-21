@@ -117,6 +117,7 @@ def latex_pattern(path):
     if prefix in ["article", "supp"]:
         yield {
             "outputs": os.path.join("uploads", f"{prefix}.zip"),
+            "implicit_outputs": fixpath(f"{prefix}.sha256"),
             "rule": "reproarticlezip",
             "inputs": f"latex-{prefix}/{prefix}.pdf",
             "default": True,
@@ -169,14 +170,14 @@ def latexdiff_pattern(path):
 
 def dataset_pattern(path):
     """Make ninja build commands to ZIP datasets."""
-    result = re.match(r"(?P<name>dataset[a-z0-9-]*)/README.md$", path)
+    result = re.match(r"(?P<name>dataset[a-z0-9-]*)/MANIFEST.sha256$", path)
     if not result:
         return
     name = result.group("name")
     yield {
         "outputs": f"uploads/{name}.zip",
         "rule": "reprozip",
-        "inputs": [path for path in glob(f"{name}/**", recursive=True) if not os.path.isdir(path)],
+        "inputs": f"{name}/MANIFEST.sha256",
         "pool": "console",
         "default": True,
     }

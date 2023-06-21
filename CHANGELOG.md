@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Changed
+
+- The script `rr-zip` now takes a `MANIFEST.sha256` file as second argument with the complete
+  file list. This change is introduced for two reasons.
+  (1) Very long file lists are allowed, even longer than what is supported by shell commands.
+  (2) An additional check is introduced to make sure the ZIP file contains the right files,
+  i.e. the same as when the SHA256 sums were created.
+
 ## [0.9.1] - 2023-06-21
 
 ### Fixed

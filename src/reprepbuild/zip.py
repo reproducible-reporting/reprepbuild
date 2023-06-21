@@ -21,6 +21,7 @@
 
 
 import argparse
+import hashlib
 import os
 import zipfile
 
@@ -32,34 +33,53 @@ __all__ = ("reprozip",)
 def main():
     """Main program."""
     args = parse_args()
-    reprozip(args.path_zip, args.paths_in)
+    reprozip(args.path_zip, args.path_man)
 
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser("rr-zip")
     parser.add_argument("path_zip", help="Destination zip file.")
-    parser.add_argument("paths_in", nargs="+", help="File paths to zip.")
+    parser.add_argument(
+        "path_man",
+        help="The MANIFEST.sha256 with all files to be zipped. "
+        "The sha256 sums of the files will be checked before archiving. "
+        "The manifest file will be included in the ZIP.",
+    )
     return parser.parse_args()
 
 
-def reprozip(path_zip, paths_in):
+def reprozip(path_zip, path_man, check_sha256=True):
     """Create a reproducible zip file."""
     if not path_zip.endswith(".zip"):
         print(f"Destination must have a `.zip` extension. Got {path_zip}")
         return 2
+    if not path_man.endswith(".sha256"):
+        print(f"Manifest file must have a `.sha256` extension. Got {path_man}")
+        return 2
+
+    # Load the list of files and check the sha256
+    paths_in = [path_man]
+    root = os.path.dirname(path_man)
+    with open(path_man) as f:
+        lines = f.readlines()
+    for line in tqdm.tqdm(lines, f"Checking {path_man}", delay=1):
+        path = os.path.join(root, line[66:].strip())
+        if check_sha256:
+            sha256 = line[:64].lower()
+            mysha256 = compute_sha256(path)
+            if sha256 != mysha256:
+                print(f"SHA256 mismatch for file: {mysha256}  {path}")
+                return 2
+        paths_in.append(path)
+
     # Remove old zip
     if os.path.isfile(path_zip):
         os.remove(path_zip)
+
     # Clean up list of input paths
     paths_in = sorted({os.path.normpath(path_in) for path_in in paths_in})
-    # Prepare to trim leading directories
-    if len(paths_in) == 1:
-        common = os.path.dirname(paths_in[0])
-    else:
-        common = os.path.commonpath(paths_in)
-    assert not common.endswith("/")
-    nskip = len(common) + 1
+    nskip = len(root) + 1
     # Make a new zip file
     with zipfile.ZipFile(path_zip, "w") as fz:
         for path_in in tqdm.tqdm(paths_in, f"Creating {path_zip}", delay=1):
@@ -67,6 +87,18 @@ def reprozip(path_zip, paths_in):
                 zipinfo = zipfile.ZipInfo(path_in[nskip:])
                 zipinfo.compress_type = zipfile.ZIP_DEFLATED
                 fz.writestr(zipinfo, fin.read())
+
+
+def compute_sha256(path: str):
+    """Compute SHA256 hash of a file."""
+    sha = hashlib.sha256()
+    with open(path, "rb") as f:
+        while True:
+            block = f.read(1048576)
+            if len(block) == 0:
+                break
+            sha.update(block)
+    return sha.hexdigest()
 
 
 if __name__ == "__main__":

@@ -23,7 +23,7 @@ import argparse
 import os
 
 from .utils import parse_inputs_fls
-from .zip import reprozip
+from .zip import compute_sha256, reprozip
 
 
 def main():
@@ -45,11 +45,19 @@ def article_zip(path_zip, path_pdf):
     if not path_pdf.endswith(".pdf"):
         print(f"Article PDF must have a `.pdf` extension. Got {path_pdf}")
         return 2
-    workdir, fn_py = os.path.split(path_pdf)
-    prefix = fn_py[:-4]
+    workdir, fn_pdf = os.path.split(path_pdf)
+    prefix = fn_pdf[:-4]
+
+    # Make a manifest file
+    paths_in = parse_inputs_fls(os.path.join(workdir, prefix + ".fls"))
+    path_man = f"{workdir}/{prefix}.sha256"
+    with open(path_man, "w") as f:
+        for path_in in paths_in:
+            sha256 = compute_sha256(path_in)
+            f.write(f"{sha256}  {path_in[len(workdir) + 1:]}\n")
 
     # Collect files to be zipped and write zip
-    reprozip(path_zip, parse_inputs_fls(os.path.join(workdir, prefix + ".fls")))
+    reprozip(path_zip, path_man, check_sha256=False)
     return 0
 
 
