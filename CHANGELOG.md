@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2023-06-23
+
 ## Changed
 
 - The script `rr-zip` now takes a `MANIFEST.sha256` file as second argument with the complete
