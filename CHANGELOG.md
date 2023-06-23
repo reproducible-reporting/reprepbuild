@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Convert SVG to PDF with text to path conversion. This reduces the risk of font issues.
+
 ## [0.10.0] - 2023-06-23
 
 ## Changed

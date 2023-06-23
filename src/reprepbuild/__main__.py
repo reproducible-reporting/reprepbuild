@@ -64,7 +64,7 @@ DEFAULT_RULES = {
     "reprozip": {"command": "rr-zip $out $in"},
     "reproarticlezip": {"command": "rr-article-zip $out $in"},
     "svgtopdf": {
-        "command": "inkscape $in --export-filename=$out --export-type=pdf; rr-normalize-pdf $out"
+        "command": "inkscape $in -T --export-filename=$out --export-type=pdf; rr-normalize-pdf $out"
     },
     "pythonscript": {
         "command": "rr-python-script $in -- $argstr > $out",
