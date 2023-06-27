@@ -137,12 +137,12 @@ def import_python_path(path):
     return module
 
 
-def format_case_args(script_args, case_fmt=None):
+def format_case_args(script_args, prefix, case_fmt=None):
     # Compatibility with old API.
     check_underscores = False
     if case_fmt is None:
         check_underscores = True
-        case_fmt = "_".join(["{}"] * len(script_args))
+        case_fmt = prefix + "".join(["_{}"] * len(script_args))
 
     # Interpret the yield value of reprepbuild_cases as args and kwargs.
     args = []
@@ -167,26 +167,31 @@ def format_case_args(script_args, case_fmt=None):
 
     # Format and check
     result = case_fmt.format(*args, **kwargs)
-    if check_underscores and result.count("_") != max(0, len(script_args) - 1):
+    if check_underscores and result[len(prefix) :].count("_") != len(script_args):
         raise ValueError(
-            "When using underscores in script arguments, specify a REPREPBUILD_CASE_FMT"
+            "When using underscores in script arguments, "
+            f"specify a REPREPBUILD_CASE_FMT. ({prefix})"
         )
     if " " in result:
         raise ValueError("Script arguments cannot contain whitespace.")
     return result
 
 
-def parse_case_args(argstr, case_fmt=None):
+def parse_case_args(argstr, prefix, case_fmt=None):
     convert = False
     if case_fmt is None:
         convert = True
-        if len(argstr) == 0:
-            case_fmt = ""
-        else:
-            case_fmt = "_".join(["{}"] * (argstr.count("_") + 1))
-    result = parse(case_fmt, argstr, case_sensitive=True)
-    if result is None:
-        raise ValueError(f"Could not parse argstr '{argstr}' with case_fmt '{case_fmt}'.")
+        suffix = argstr[len(prefix) :]
+        case_fmt_suffix = "".join(["_{}"] * suffix.count("_"))
+        result = parse(case_fmt_suffix, suffix, case_sensitive=True)
+        if result is None:
+            raise ValueError(
+                f"Could not parse argstr '{suffix}' with case_fmt '{case_fmt_suffix}'."
+            )
+    else:
+        result = parse(case_fmt, argstr, case_sensitive=True)
+        if result is None:
+            raise ValueError(f"Could not parse argstr '{argstr}' with case_fmt '{case_fmt}'.")
     if convert:
         args = tuple(_naive_convert(word) for word in result.fixed)
     else:

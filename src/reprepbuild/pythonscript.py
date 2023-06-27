@@ -80,7 +80,7 @@ def run_script(path_py, argstr):
         case_fmt = getattr(pythonscript, "REPREPBUILD_CASE_FMT", None)
 
         # Execute the functions as if the script is running inside its own dir.
-        script_args, script_kwargs = parse_case_args(argstr, case_fmt)
+        script_args, script_kwargs = parse_case_args(argstr, script_prefix, case_fmt)
         build_info = reprepbuild_info(*script_args, **script_kwargs)
         result = script_main(**build_info)
     finally:

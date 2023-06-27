@@ -5,18 +5,19 @@ import pytest
 from reprepbuild.utils import format_case_args, parse_case_args
 
 
+@pytest.mark.parametrize("prefix", ["boo", "aa_bb", "aa__bb_"])
 @pytest.mark.parametrize(
     "args, argstr",
     [
         ([], ""),
-        ([1, 2], "1_2"),
-        (["foo", "bar"], "foo_bar"),
+        ([1, 2], "_1_2"),
+        (["foo", "bar"], "_foo_bar"),
         # Bad idea, but expected behavior
-        ([None, {}, ()], "None_{}_()"),
+        ([None, {}, ()], "_None_{}_()"),
     ],
 )
-def test_format_case_nofmt(args, argstr):
-    assert format_case_args(args) == argstr
+def test_format_case_nofmt(prefix, args, argstr):
+    assert format_case_args(args, prefix) == prefix + argstr
 
 
 @pytest.mark.parametrize(
@@ -30,7 +31,8 @@ def test_format_case_nofmt(args, argstr):
     ],
 )
 def test_format_case_fmt(args, case_fmt):
-    assert format_case_args(args, case_fmt) == case_fmt.format(*args)
+    assert format_case_args(args, None, case_fmt) == case_fmt.format(*args)
+    assert format_case_args(args, "boo", case_fmt) == case_fmt.format(*args)
 
 
 @pytest.mark.parametrize(
@@ -42,7 +44,8 @@ def test_format_case_fmt(args, case_fmt):
     ],
 )
 def test_format_case_kwargs(kwargs, case_fmt):
-    assert format_case_args(kwargs, case_fmt) == case_fmt.format(**kwargs)
+    assert format_case_args(kwargs, None, case_fmt) == case_fmt.format(**kwargs)
+    assert format_case_args(kwargs, "boo", case_fmt) == case_fmt.format(**kwargs)
 
 
 @pytest.mark.parametrize(
@@ -54,17 +57,18 @@ def test_format_case_kwargs(kwargs, case_fmt):
     ],
 )
 def test_format_case_args_kwargs(args, kwargs, case_fmt):
-    assert format_case_args((args, kwargs), case_fmt) == case_fmt.format(*args, **kwargs)
+    assert format_case_args((args, kwargs), None, case_fmt) == case_fmt.format(*args, **kwargs)
+    assert format_case_args((args, kwargs), "boo", case_fmt) == case_fmt.format(*args, **kwargs)
 
 
 @pytest.mark.parametrize(
     "args",
     [
-        ({1: 2}, "{:d}"),
-        (["foo_bar", "bluh"],),
-        (["foo bar", "bluh"], "{}-{}"),
-        ([("foo bar",), {}], "fff{}"),
-        ([(1,), {"s": "foo bar"}], "{s}fff{}"),
+        ({1: 2}, None, "{:d}"),
+        (["foo_bar", "bluh"], "woo"),
+        (["foo bar", "bluh"], None, "{}-{}"),
+        ([("foo bar",), {}], None, "fff{}"),
+        ([(1,), {"s": "foo bar"}], None, "{s}fff{}"),
     ],
 )
 def test_format_case_exceptions(args):
@@ -72,18 +76,19 @@ def test_format_case_exceptions(args):
         format_case_args(*args)
 
 
+@pytest.mark.parametrize("prefix", ["boo", "aa_bb", "aa__bb_"])
 @pytest.mark.parametrize(
     "argstr, args, kwargs",
     [
         ("", (), {}),
-        ("wawa", ("wawa",), {}),
-        ("1", (1,), {}),
-        ("foo_3.7", ("foo", 3.7), {}),
-        ("333_lmax", (333, "lmax"), {}),
+        ("_wawa", ("wawa",), {}),
+        ("_1", (1,), {}),
+        ("_foo_3.7", ("foo", 3.7), {}),
+        ("_333_lmax", (333, "lmax"), {}),
     ],
 )
-def test_parse_case_nofmt(argstr, args, kwargs):
-    assert parse_case_args(argstr) == (args, kwargs)
+def test_parse_case_nofmt(prefix, argstr, args, kwargs):
+    assert parse_case_args(prefix + argstr, prefix) == (args, kwargs)
 
 
 @pytest.mark.parametrize(
@@ -96,4 +101,5 @@ def test_parse_case_nofmt(argstr, args, kwargs):
     ],
 )
 def test_parse_case_fmt(argstr, case_fmt, args, kwargs):
-    assert parse_case_args(argstr, case_fmt) == (args, kwargs)
+    assert parse_case_args(argstr, None, case_fmt) == (args, kwargs)
+    assert parse_case_args(argstr, "boo", case_fmt) == (args, kwargs)

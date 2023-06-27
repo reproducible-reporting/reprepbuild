@@ -234,7 +234,7 @@ def python_script_pattern(path):
         # Loop over all cases to make build records
         for script_args in build_cases:
             build_info = reprepbuild_info(*script_args)
-            argstr = format_case_args(script_args, case_fmt)
+            argstr = format_case_args(script_args, script_prefix, case_fmt)
             out_prefix = fixpath(script_prefix if argstr == "" else argstr)
             fn_log = f"{out_prefix}.log"
             implicit_inputs = [fixpath(ipath) for ipath in build_info.get("inputs", [])]

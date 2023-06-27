@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Use script prefix in log files (and others) when `REPREPBUILD_CASE_FMT` is not specified.
+
 ## [0.10.1] - 2023-06-27
 
 ### Fixed
