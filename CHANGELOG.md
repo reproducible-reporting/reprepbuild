@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- No build lines are added when the required inputs come from datasets that are not present.
+  In this case, it is recommended that the owner of the dataset commits the results of such
+  builds to the Git repository, so those without access to the dataset can still complete the build.
 - The `glob` call used to find all relevant build tasks for `build.ninja` is no longer recursive,
   to avoid that this becomes a bottleneck in case of data sets with a huge number of files.
 - In the `rrr` command, watchdogs are only installed on the current directory and its

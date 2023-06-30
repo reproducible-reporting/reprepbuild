@@ -255,6 +255,19 @@ def python_script_pattern(path):
         os.chdir(orig_workdir)
 
 
+def find_missing_dataset(build):
+    """Return a list of missing input files from the datasets."""
+    missing = []
+    for key in "inputs", "implicit":
+        inputs = build.get(key, [])
+        if isinstance(inputs, str):
+            inputs = [inputs]
+        for path in inputs:
+            if path.startswith("dataset") and not os.path.exists(path):
+                missing.append(path)
+    return missing
+
+
 def check_tex_outputs(outputs: list[str] | str | None):
     """Raise an error when something produces a file with extension ``.tex``
 
@@ -297,12 +310,18 @@ def write_ninja(patterns, rules):
                     if isinstance(build, str):
                         writer.comment(build)
                     else:
-                        default = build.pop("default", False)
-                        check_tex_outputs(build.get("outputs", None))
-                        check_tex_outputs(build.get("implicit_outputs", None))
-                        writer.build(**build)
-                        if default:
-                            writer.default(build["outputs"])
+                        missing = find_missing_dataset(build)
+                        if len(missing) > 0:
+                            writer.comment("Skipping due to missing dataset files:")
+                            for ds_path in missing:
+                                writer.comment(ds_path)
+                        else:
+                            default = build.pop("default", False)
+                            check_tex_outputs(build.get("outputs", None))
+                            check_tex_outputs(build.get("implicit_outputs", None))
+                            writer.build(**build)
+                            if default:
+                                writer.default(build["outputs"])
                 writer.newline()
 
 
