@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The `glob` call used to find all relevant build tasks for `build.ninja` is no longer recursive,
+  to avoid that this becomes a bottleneck in case of data sets with a huge number of files.
 - Use script prefix in log files (and others) when `REPREPBUILD_CASE_FMT` is not specified.
 
 ## [0.10.1] - 2023-06-27

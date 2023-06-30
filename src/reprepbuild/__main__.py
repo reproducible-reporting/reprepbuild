@@ -287,7 +287,7 @@ def write_ninja(patterns, rules):
         writer.newline()
 
         # Write all build lines and comments
-        for path in glob("**", recursive=True):
+        for path in glob("*/*"):
             builds = []
             for pattern in patterns:
                 builds.extend(pattern(path))
