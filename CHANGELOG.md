@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The `glob` call used to find all relevant build tasks for `build.ninja` is no longer recursive,
   to avoid that this becomes a bottleneck in case of data sets with a huge number of files.
+- In the `rrr` command, watchdogs are only installed on the current directory and its
+  subdirectories, without deeper recursions, for the same reason as in the previous point.
 - Use script prefix in log files (and others) when `REPREPBUILD_CASE_FMT` is not specified.
 
 ## [0.10.1] - 2023-06-27

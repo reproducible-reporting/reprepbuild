@@ -22,6 +22,7 @@
 import os
 import subprocess
 import time
+from glob import glob
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -75,7 +76,9 @@ def main():
     args = parse_args()
     observer = Observer()
     event_handler = AnyChangeHandler()
-    observer.schedule(event_handler, ".", True)
+    observer.schedule(event_handler, ".")
+    for path in glob("*/"):
+        observer.schedule(event_handler, path)
     observer.start()
     try:
         while True:
