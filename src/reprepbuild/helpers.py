@@ -91,7 +91,10 @@ def layout_sub_figures(fn_pdf, sub_figures):
     for sub_figure in sub_figures:
         _add_label(sub_figure)
     out = _combine_figures(sub_figures)
-    out.save(fn_pdf, garbage=3, deflate=True)
+    out.set_metadata({})
+    out.del_xml_metadata()
+    out.scrub()
+    out.save(fn_pdf, garbage=4, deflate=True, linear=True, no_new_id=True)
 
 
 def _load_pdfs(sub_figures):
