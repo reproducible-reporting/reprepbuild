@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- More efficient ZIP: copy file before checking hash and compression to reduce
+  network load on remote datasets.
 - No build lines are added when the required inputs come from datasets that are not present.
   In this case, it is recommended that the owner of the dataset commits the results of such
   builds to the Git repository, so those without access to the dataset can still complete the build.

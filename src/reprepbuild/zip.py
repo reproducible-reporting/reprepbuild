@@ -21,7 +21,10 @@
 
 
 import argparse
+import datetime
 import os
+import shutil
+import tempfile
 import zipfile
 
 import tqdm
@@ -29,6 +32,9 @@ import tqdm
 from .manifest import compute_sha256
 
 __all__ = ("reprozip",)
+
+
+TIMESTAMP = datetime.datetime(1980, 1, 1).timestamp()
 
 
 def main():
@@ -59,39 +65,59 @@ def reprozip(path_zip, path_man, check_sha256=True):
         print(f"Manifest file must have a `.sha256` extension. Got {path_man}")
         return 2
 
-    # Load the list of files and check the sha256
-    paths_in = [path_man]
+    root, paths_in = load_manifest(path_man)
+    result = create_zip(path_zip, root, paths_in, check_sha256)
+    if result != 0:
+        os.remove(path_zip)
+    return result
+
+
+def load_manifest(path_man):
     root = os.path.dirname(path_man)
     with open(path_man) as f:
         lines = f.readlines()
-    for line in tqdm.tqdm(lines, f"Checking {path_man}", delay=1):
-        path = os.path.join(root, line[81:].strip())
-        if check_sha256:
-            size = int(line[:15])
-            sha256 = line[16:80].lower()
-            mysize, mysha256 = compute_sha256(path)
-            if size != mysize:
-                print(f"Size mismatch for file: {size}  {path}")
-                return 2
-            if sha256 != mysha256:
-                print(f"SHA256 mismatch for file: {mysha256}  {path}")
-                return 2
-        paths_in.append(path)
+    # Normalize the paths and store file info in dict
+    paths_in = {path_man: None}
+    for line in lines:
+        size = int(line[:15])
+        sha256 = line[16:80].lower()
+        path = os.path.normpath(os.path.join(root, line[81:].strip()))
+        paths_in[path] = (size, sha256)
+    return root, paths_in
 
+
+def create_zip(path_zip, root, paths_in, check_sha256) -> int:
     # Remove old zip
     if os.path.isfile(path_zip):
         os.remove(path_zip)
 
-    # Clean up list of input paths
-    paths_in = sorted({os.path.normpath(path_in) for path_in in paths_in})
+    # Create new one.
     nskip = 0 if root == "" else len(root) + 1
-    # Make a new zip file
-    with zipfile.ZipFile(path_zip, "w") as fz:
-        for path_in in tqdm.tqdm(paths_in, f"Creating {path_zip}", delay=1):
-            with open(path_in, "rb") as fin:
-                zipinfo = zipfile.ZipInfo(path_in[nskip:])
-                zipinfo.compress_type = zipfile.ZIP_DEFLATED
-                fz.writestr(zipinfo, fin.read())
+    with tempfile.TemporaryDirectory("rr-zip") as tmpdir:
+        with zipfile.ZipFile(path_zip, "w") as fz:
+            for src, info in tqdm.tqdm(sorted(paths_in.items()), "Compressing", delay=1):
+                # Copy the file to a temp dir.
+                # This saves bandwith in case of remote datasets and allows
+                # fixing the timestamp before compression.
+                dst = os.path.join(tmpdir, "todo")
+                shutil.copyfile(src, dst)
+                os.utime(dst, (TIMESTAMP, TIMESTAMP))
+                # Check if needed
+                if check_sha256 and info is not None:
+                    size, sha256 = info
+                    mysize, mysha256 = compute_sha256(dst)
+                    if size != mysize:
+                        print(f"Size mismatch for file: got {mysize}, expected {size}, for {src}")
+                        return 2
+                    if sha256 != mysha256:
+                        print(
+                            "SHA256 mismatch for file: "
+                            f"got {mysha256}, expected {sha256}, for {src}"
+                        )
+                        return 2
+                # Compress
+                fz.write(dst, src[nskip:], zipfile.ZIP_DEFLATED)
+    return 0
 
 
 if __name__ == "__main__":
