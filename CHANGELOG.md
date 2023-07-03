@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Helper functions for templating with jinja and combining PDFs into one figure.
+- Utility script `rr-manifest` to convert a `MANIFEST.in` into a `MANIFEST.sha256`.
 
 ### Changed
 
