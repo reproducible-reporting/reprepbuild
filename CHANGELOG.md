@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Helper functions for templating with jinja and combining PDFs into one figure.
+
 ### Changed
 
 - No build lines are added when the required inputs come from datasets that are not present.

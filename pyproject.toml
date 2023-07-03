@@ -27,12 +27,16 @@ classifiers = [
     "Topic :: Text Processing :: Markup :: LaTeX",
 ]
 dependencies = [
+    "attrs",
+    "bibsane",
+    "jinja2",
     "ninja",
+    "numpy",
+    "parse",
     "pymupdf",
+    "scipy",
     "tqdm",
     "watchdog",
-    "bibsane",
-    "parse",
 ]
 dynamic = ["version"]
 
