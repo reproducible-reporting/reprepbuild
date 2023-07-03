@@ -44,7 +44,9 @@ def main():
     filelist = FileList()
     with open(fn_manifest_in) as f:
         for line in f:
-            filelist.process_template_line(line)
+            line = line[: line.find("#")].strip()
+            if line != "":
+                filelist.process_template_line(line)
     filelist.sort()
     filelist.remove_duplicates()
 
