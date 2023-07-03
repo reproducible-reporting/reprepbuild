@@ -22,8 +22,9 @@
 import argparse
 import os
 
+from .manifest import compute_sha256
 from .utils import parse_inputs_fls
-from .zip import compute_sha256, reprozip
+from .zip import reprozip
 
 
 def main():
@@ -53,8 +54,8 @@ def article_zip(path_zip, path_pdf):
     path_man = f"{workdir}/{prefix}.sha256"
     with open(path_man, "w") as f:
         for path_in in paths_in:
-            sha256 = compute_sha256(path_in)
-            f.write(f"{sha256}  {path_in[len(workdir) + 1:]}\n")
+            size, sha256 = compute_sha256(path_in)
+            f.write(f"{size:15d} {sha256} {path_in[len(workdir) + 1:]}\n")
 
     # Collect files to be zipped and write zip
     reprozip(path_zip, path_man, check_sha256=False)

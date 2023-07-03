@@ -35,6 +35,7 @@ dependencies = [
     "parse",
     "pymupdf",
     "scipy",
+    "setuptools",
     "tqdm",
     "watchdog",
 ]
@@ -55,6 +56,7 @@ rr-bibtex = "reprepbuild.bibtex:main"
 rr-latex = "reprepbuild.latex:main"
 rr-python-script = "reprepbuild.pythonscript:main"
 rr-normalize-pdf = "reprepbuild.normalizepdf:main"
+rr-manifest = "reprepbuild.manifest:main"
 
 [tool.black]
 line-length = 100

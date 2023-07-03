@@ -21,11 +21,12 @@
 
 
 import argparse
-import hashlib
 import os
 import zipfile
 
 import tqdm
+
+from .manifest import compute_sha256
 
 __all__ = ("reprozip",)
 
@@ -64,10 +65,14 @@ def reprozip(path_zip, path_man, check_sha256=True):
     with open(path_man) as f:
         lines = f.readlines()
     for line in tqdm.tqdm(lines, f"Checking {path_man}", delay=1):
-        path = os.path.join(root, line[66:].strip())
+        path = os.path.join(root, line[81:].strip())
         if check_sha256:
-            sha256 = line[:64].lower()
-            mysha256 = compute_sha256(path)
+            size = int(line[:15])
+            sha256 = line[16:80].lower()
+            mysize, mysha256 = compute_sha256(path)
+            if size != mysize:
+                print(f"Size mismatch for file: {size}  {path}")
+                return 2
             if sha256 != mysha256:
                 print(f"SHA256 mismatch for file: {mysha256}  {path}")
                 return 2
@@ -79,7 +84,7 @@ def reprozip(path_zip, path_man, check_sha256=True):
 
     # Clean up list of input paths
     paths_in = sorted({os.path.normpath(path_in) for path_in in paths_in})
-    nskip = len(root) + 1
+    nskip = 0 if root == "" else len(root) + 1
     # Make a new zip file
     with zipfile.ZipFile(path_zip, "w") as fz:
         for path_in in tqdm.tqdm(paths_in, f"Creating {path_zip}", delay=1):
@@ -87,18 +92,6 @@ def reprozip(path_zip, path_man, check_sha256=True):
                 zipinfo = zipfile.ZipInfo(path_in[nskip:])
                 zipinfo.compress_type = zipfile.ZIP_DEFLATED
                 fz.writestr(zipinfo, fin.read())
-
-
-def compute_sha256(path: str):
-    """Compute SHA256 hash of a file."""
-    sha = hashlib.sha256()
-    with open(path, "rb") as f:
-        while True:
-            block = f.read(1048576)
-            if len(block) == 0:
-                break
-            sha.update(block)
-    return sha.hexdigest()
 
 
 if __name__ == "__main__":
