@@ -86,10 +86,33 @@ class SubFigure:
     pdf = attrs.field(default=None)
 
 
-def layout_sub_figures(fn_pdf, sub_figures):
+def layout_sub_figures(
+    fn_pdf, sub_figures, fontname="hebo", fontfile=None, fontsize=7, lineheight=10, padding=5
+):
+    """Combine PDF sub-figures into a single PDF with labels on top of each sub-figure.
+
+    Parameters
+    ----------
+    fn_pdf
+        The PDF output file.
+    sub_figures
+        The list sub figures, instances of the SubFigure class.
+    fontname
+        A Fontname recognized by PyMyPDF or a custom name when fontfile is specified.
+    fontfile
+        None or the path to a ttf file.
+        When used, specify a corresponding fontname (of your choice).
+    fontsize
+        The fontsize to use for the labels
+    lineheight
+        The line height to use for the labels
+    padding
+        The padding added added to the subfigures before combining them.
+        This parameter is also used as margin between the label and the figure.
+    """
     _load_pdfs(sub_figures)
     for sub_figure in sub_figures:
-        _add_label(sub_figure)
+        _add_label(sub_figure, fontname, fontfile, fontsize, lineheight, padding)
     out = _combine_figures(sub_figures)
     out.set_metadata({})
     out.del_xml_metadata()
@@ -107,22 +130,19 @@ def _load_pdfs(sub_figures):
             )
 
 
-def _add_label(sub_figure):
+def _add_label(sub_figure, fontname, fontfile, fontsize, lineheight, padding):
     new = fitz.open()
     oldpage = sub_figure.pdf[0]
-    fontsize = 10
-    lineheight = 15
-    margin = 5
     newpage = new.new_page(
-        width=oldpage.rect.x1 - oldpage.rect.x0 + 2 * margin,
-        height=oldpage.rect.y1 - oldpage.rect.y0 + lineheight + 3 * margin,
+        width=oldpage.rect.x1 - oldpage.rect.x0 + 2 * padding,
+        height=oldpage.rect.y1 - oldpage.rect.y0 + lineheight + 3 * padding,
     )
-    top = lineheight + 2 * margin
+    top = lineheight + 2 * padding
     newpage.show_pdf_page(
         fitz.Rect(
-            margin,
+            padding,
             top,
-            oldpage.rect.x1 - oldpage.rect.x0 + margin,
+            oldpage.rect.x1 - oldpage.rect.x0 + padding,
             oldpage.rect.y1 - oldpage.rect.y0 + top,
         ),
         sub_figure.pdf,
@@ -130,14 +150,15 @@ def _add_label(sub_figure):
     )
     newpage.insert_textbox(
         fitz.Rect(
-            margin,
-            margin,
-            oldpage.rect.x1 - oldpage.rect.x0 + margin,
-            margin + lineheight,
+            padding,
+            padding,
+            oldpage.rect.x1 - oldpage.rect.x0 + padding,
+            padding + lineheight,
         ),
         sub_figure.label,
         fontsize=fontsize,
-        fontname="hebo",
+        fontname=fontname,
+        fontfile=fontfile,
         lineheight=lineheight,
         align=fitz.TEXT_ALIGN_CENTER,
     )
