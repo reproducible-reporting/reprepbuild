@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2023-08-02
+
+### Fixed
+
+- Allow `*-diff.tex` build output.
+
+### Changed
+
+- Assume old version for `latexdiff` resides in `old` sub directory,
+  instead of relying on `*-old.tex` suffix.
+  `latexdiff --flatten` is always used, which makes the diff work for sources distributed
+  over multiple tex files.
+
 ## [0.11.0] - 2023-07-07
 
 ### Added

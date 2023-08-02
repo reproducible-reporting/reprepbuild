@@ -60,7 +60,9 @@ DEFAULT_RULES = {
     "bibtex": {"command": "rr-bibtex $in", "depfile": "$in.d"},
     "latex": {"command": "rr-latex $in"},
     "copy": {"command": "cp $in $out"},
-    "latexdiff": {"command": f"latexdiff --append-context2cmd={LATEXDIFF_CONTEXT2CMD} $in > $out"},
+    "latexdiff": {
+        "command": f"latexdiff --flatten --append-context2cmd={LATEXDIFF_CONTEXT2CMD} $in > $out"
+    },
     "reprozip": {"command": "rr-zip $out $in"},
     "reproarticlezip": {"command": "rr-article-zip $out $in"},
     "svgtopdf": {
@@ -122,26 +124,19 @@ def latex_pattern(path):
             "inputs": f"latex-{prefix}/{prefix}.pdf",
             "default": True,
         }
-
-
-def latexdiff_pattern(path):
-    """Make ninja build commands to generate a latex diff."""
-    result = re.match(r"latex-(?P<prefix>[a-z0-9-]+)/(?P=prefix)-old.(?P<ext>.*)$", path)
-    if not result:
-        return
-    prefix = result.group("prefix")
-    ext = result.group("ext")
-    workdir = f"latex-{prefix}"
-
-    def fixpath(fn_local):
-        return os.path.normpath(os.path.join(workdir, fn_local))
-
-    yield {
-        "outputs": fixpath(f"{prefix}-diff.{ext}"),
-        "rule": "latexdiff",
-        "inputs": [fixpath(f"{prefix}-old.{ext}"), fixpath(f"{prefix}.{ext}")],
-    }
-    if ext == "tex":
+    fn_old_tex = fixpath(f"old/{prefix}.tex")
+    if os.path.isfile(fn_old_tex):
+        yield {
+            "outputs": fixpath(f"{prefix}-diff.bbl"),
+            "rule": "latexdiff",
+            "inputs": [fixpath(f"old/{prefix}.bbl"), fixpath(f"{prefix}.bbl")],
+        }
+        yield {
+            "outputs": fixpath(f"{prefix}-diff.tex"),
+            "rule": "latexdiff",
+            "order_only": fixpath(f"{prefix}-diff.bbl"),
+            "inputs": [fn_old_tex, fixpath(f"{prefix}.tex")],
+        }
         yield {
             "outputs": fixpath(f"{prefix}-diff.tex.dd"),
             "implicit_outputs": [
@@ -279,7 +274,7 @@ def check_tex_outputs(outputs: list[str] | str | None):
     if isinstance(outputs, str):
         outputs = [outputs]
     for path_out in outputs:
-        if path_out.endswith(".tex"):
+        if path_out.endswith(".tex") and not path_out.endswith("-diff.tex"):
             raise ValueError(
                 "Programatically generated LaTeX files cannot end with '.tex' because this "
                 "would not allow for a distinction with static tex files in the build process. "
@@ -327,7 +322,6 @@ def write_ninja(patterns, rules):
 
 DEFAULT_PATTERNS = [
     latex_pattern,
-    latexdiff_pattern,
     dataset_pattern,
     svg_pattern,
     python_script_pattern,
