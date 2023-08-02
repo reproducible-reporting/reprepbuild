@@ -134,6 +134,7 @@ def latex_pattern(path):
         yield {
             "outputs": fixpath(f"{prefix}-diff.tex"),
             "rule": "latexdiff",
+            "implicit": fixpath(f"{prefix}.tex.dd"),
             "order_only": fixpath(f"{prefix}-diff.bbl"),
             "inputs": [fn_old_tex, fixpath(f"{prefix}.tex")],
         }
