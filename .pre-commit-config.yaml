@@ -21,7 +21,7 @@ repos:
       args: ["--autofix", "--no-sort-keys"]
     - id: trailing-whitespace
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.5.1
+  rev: v1.5.3
   hooks:
     - id: remove-crlf
 - repo: https://github.com/psf/black
