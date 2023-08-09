@@ -133,7 +133,7 @@ def latex_pattern(path):
         yield {
             "outputs": fixpath(f"{prefix}-flat.tex"),
             "rule": "latexflat",
-            "order_only": fixpath(f"{prefix}.pdf"),
+            "implicit": fixpath(f"{prefix}.pdf"),
             "inputs": fixpath(f"{prefix}.tex"),
         }
         yield {
