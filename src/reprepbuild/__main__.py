@@ -60,9 +60,8 @@ DEFAULT_RULES = {
     "bibtex": {"command": "rr-bibtex $in", "depfile": "$in.d"},
     "latex": {"command": "rr-latex $in"},
     "copy": {"command": "cp $in $out"},
-    "latexdiff": {
-        "command": f"latexdiff --flatten --append-context2cmd={LATEXDIFF_CONTEXT2CMD} $in > $out"
-    },
+    "latexdiff": {"command": f"latexdiff --append-context2cmd={LATEXDIFF_CONTEXT2CMD} $in > $out"},
+    "latexflat": {"command": "rr-latexflat $in > $out"},
     "reprozip": {"command": "rr-zip $out $in"},
     "reproarticlezip": {"command": "rr-article-zip $out $in"},
     "svgtopdf": {
@@ -132,11 +131,21 @@ def latex_pattern(path):
             "inputs": [fixpath(f"old/{prefix}.bbl"), fixpath(f"{prefix}.bbl")],
         }
         yield {
+            "outputs": fixpath(f"{prefix}-flat.tex"),
+            "rule": "latexflat",
+            "implicit": fixpath(f"{prefix}.tex.dd"),
+            "inputs": fixpath(f"{prefix}.tex"),
+        }
+        yield {
+            "outputs": fixpath(f"old/{prefix}-flat.tex"),
+            "rule": "latexflat",
+            "inputs": fixpath(f"old/{prefix}.tex"),
+        }
+        yield {
             "outputs": fixpath(f"{prefix}-diff.tex"),
             "rule": "latexdiff",
-            "implicit": fixpath(f"{prefix}.tex.dd"),
             "order_only": fixpath(f"{prefix}-diff.bbl"),
-            "inputs": [fn_old_tex, fixpath(f"{prefix}.tex")],
+            "inputs": [fixpath(f"old/{prefix}-flat.tex"), fixpath(f"{prefix}-flat.tex")],
         }
         yield {
             "outputs": fixpath(f"{prefix}-diff.tex.dd"),
@@ -275,7 +284,9 @@ def check_tex_outputs(outputs: list[str] | str | None):
     if isinstance(outputs, str):
         outputs = [outputs]
     for path_out in outputs:
-        if path_out.endswith(".tex") and not path_out.endswith("-diff.tex"):
+        if path_out.endswith(".tex") and not (
+            path_out.endswith("-diff.tex") or path_out.endswith("-flat.tex")
+        ):
             raise ValueError(
                 "Programatically generated LaTeX files cannot end with '.tex' because this "
                 "would not allow for a distinction with static tex files in the build process. "

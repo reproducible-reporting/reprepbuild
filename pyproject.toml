@@ -49,14 +49,15 @@ Changelog = "https://github.com/reproducible-reporting/reprepbuild/blob/main/CHA
 [project.scripts]
 rr = "reprepbuild.__main__:main"
 rrr = "reprepbuild.repeat:main"
-rr-zip = "reprepbuild.zip:main"
 rr-article-zip = "reprepbuild.articlezip:main"
-rr-latexdep = "reprepbuild.latexdep:main"
 rr-bibtex = "reprepbuild.bibtex:main"
 rr-latex = "reprepbuild.latex:main"
-rr-python-script = "reprepbuild.pythonscript:main"
-rr-normalize-pdf = "reprepbuild.normalizepdf:main"
+rr-latexdep = "reprepbuild.latexdep:main"
+rr-latexflat = "reprepbuild.latexflat:main"
 rr-manifest = "reprepbuild.manifest:main"
+rr-normalize-pdf = "reprepbuild.normalizepdf:main"
+rr-python-script = "reprepbuild.pythonscript:main"
+rr-zip = "reprepbuild.zip:main"
 
 [tool.black]
 line-length = 100

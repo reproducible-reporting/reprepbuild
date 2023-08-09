@@ -67,7 +67,7 @@ def main():
 
 def parse_args():
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser("rr-bibtex")
+    parser = argparse.ArgumentParser("rr-latexdep")
     parser.add_argument("path_tex", help="The top-level tex file.")
     return parser.parse_args()
 

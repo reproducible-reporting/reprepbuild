@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2023-08-09
+
+### Changed
+
+- Before calling latexdiff, the LaTeX source is flattened with `rr-latexflat`, which correctly
+  handles the `\warninput` command, unlike `latexdiff --flatten`.
+
 ## [0.12.1] - 2023-08-02
 
 ### Fixed
