@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Catch and print exceptions in `write_ninja` function in `rrr` command.
+
 ## [0.13.2] - 2023-08-09
 
 ### Fixed

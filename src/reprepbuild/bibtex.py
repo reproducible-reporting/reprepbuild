@@ -57,6 +57,7 @@ def run_bibtex(path_aux):
         stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
+        check=False,
     )
     if cp.returncode != 0:
         print(f"    Error running `bibtex {fn_aux}` in `{workdir}`.")
@@ -75,6 +76,7 @@ def run_bibtex(path_aux):
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        check=False,
     )
     if cp.returncode != 0:
         print(f"    Error running `bibsane {fn_aux}` in `{workdir}`.")

@@ -22,6 +22,7 @@
 import os
 import subprocess
 import time
+import traceback
 from glob import glob
 
 from watchdog.events import FileSystemEventHandler
@@ -86,8 +87,11 @@ def main():
                 time.sleep(1)
                 continue
             event_handler.snooze()
-            write_ninja(DEFAULT_PATTERNS, DEFAULT_RULES)
-            subprocess.run(["ninja", *args])
+            try:
+                write_ninja(DEFAULT_PATTERNS, DEFAULT_RULES)
+                subprocess.run(["ninja", *args], check=False)
+            except Exception:
+                print(traceback.format_exc())
             time.sleep(0.1)
             event_handler.reset()
             print("  Waiting for new changes.")
