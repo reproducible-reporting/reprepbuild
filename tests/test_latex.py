@@ -206,34 +206,27 @@ BUILDS_LATEX_DIFF = [
         "outputs": ["sub/main-diff.bbl"],
         "rule": "latex_diff",
         "variables": {
-            "latex-diff": "latex-diff",
+            "latexdiff": "latexdiff",
             "latexdiff_context2cmd": "abstract,supplementary,dataavailability,funding,"
             "authorcontributions,conflictsofinterest,abbreviations",
         },
     },
     {
         "inputs": ["sub/old/main.tex", "sub/main.tex"],
-        "order_only": ["sub/main-diff.bbl"],
         "outputs": ["sub/main-diff.tex"],
         "rule": "latex_diff",
         "variables": {
-            "latex-diff": "latex-diff",
+            "latexdiff": "latexdiff",
             "latexdiff_context2cmd": "abstract,supplementary,dataavailability,funding,"
             "authorcontributions,conflictsofinterest,abbreviations",
         },
-    },
-    {
-        "implicit": ["sub/old/main.pdf", "sub/main.pdf"],
-        "inputs": ["sub/main-diff.tex"],
-        "order_only": ["sub/main-diff.bbl"],
-        "outputs": ["sub/main-diff.pdf"],
-        "rule": "latex",
-        "variables": {"latex": "pdflatex"},
     },
 ]
 
 
 def test_write_build_latex_diff():
-    builds, not_scanned = latex_diff.generate(["sub/main.tex", "sub/old/main.tex"], [], None)
+    builds, not_scanned = latex_diff.generate(
+        ["sub/main.tex", "sub/old/main.tex"], ["sub/main-diff.tex"], None
+    )
     assert not_scanned == []
     assert BUILDS_LATEX_DIFF == builds
