@@ -10,7 +10,7 @@ authors = [
 description = "Build tool for Reproducible Reporting"
 readme = "README.md"
 license = {file = "COPYING"}
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
@@ -28,12 +28,16 @@ classifiers = [
 ]
 dependencies = [
     "attrs",
+    "beautifulsoup4",
     "bibsane",
     "jinja2",
+    "markdown",
     "ninja",
     "numpy",
     "parse",
     "pymupdf",
+    "pyyaml",
+    "requests",
     "scipy",
     "setuptools",
     "tqdm",
@@ -49,25 +53,27 @@ Changelog = "https://github.com/reproducible-reporting/reprepbuild/blob/main/CHA
 [project.scripts]
 rr = "reprepbuild.__main__:main"
 rrr = "reprepbuild.repeat:main"
-rr-article-zip = "reprepbuild.articlezip:main"
-rr-bibtex = "reprepbuild.bibtex:main"
-rr-latex = "reprepbuild.latex:main"
-rr-latexdep = "reprepbuild.latexdep:main"
-rr-latexflat = "reprepbuild.latexflat:main"
-rr-manifest = "reprepbuild.manifest:main"
-rr-normalize-pdf = "reprepbuild.normalizepdf:main"
-rr-python-script = "reprepbuild.pythonscript:main"
-rr-zip = "reprepbuild.zip:main"
+rr-check-hrefs = "reprepbuild.scripts.check_hrefs:main"
+rr-generator = "reprepbuild.scripts.generator:main"
+rr-latex-flat = "reprepbuild.scripts.latex_flat:main"
+rr-latex-zip = "reprepbuild.scripts.latex_zip:main"
+rr-manifest = "reprepbuild.scripts.manifest:main"
+rr-pdf-add-notes = "reprepbuild.scripts.pdf_add_notes:main"
+rr-pdf-normalize = "reprepbuild.scripts.pdf_normalize:main"
+rr-pdf-nup = "reprepbuild.scripts.pdf_nup:main"
+rr-python-script = "reprepbuild.scripts.python_script:main"
+rr-render = "reprepbuild.scripts.render:main"
+rr-zip = "reprepbuild.scripts.zip:main"
 
 [tool.black]
 line-length = 100
-target-version = ['py310']
+target-version = ['py311']
 
 [tool.ruff]
-select = ["E", "F", "UP", "B", "I", "PGH", "PL", "RUF"]
+select = ["E", "F", "UP", "B", "I", "PGH", "PL", "RUF", "C"]
 line-length = 100
-target-version = "py310"
-ignore = ["PLR2004", "PLR0913", "PLR0912", "PLW2901", "PLR0915", "PLC1901"]
+target-version = "py311"
+ignore = ["PLR2004", "PLR0913", "PLR0912", "PLW2901", "PLR0915", "C901"]
 
 [tool.setuptools_scm]
 write_to = "src/reprepbuild/_version.py"

@@ -36,6 +36,7 @@ from setuptools.command.egg_info import FileList
 
 
 def main():
+    """Main program."""
     fn_manifest_in = parse_args()
     if not fn_manifest_in.endswith(".in"):
         raise ValueError("The manifest input file must end with .in")
@@ -57,14 +58,17 @@ def main():
             f.write(f"{size:15d} {sha256} {fn}\n")
 
 
-def parse_args():
-    parser = argparse.ArgumentParser("rr-manifest")
+def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(
+        "rr-manifest", description="Create a MANIFEST.sha256 file for rr-zip."
+    )
     parser.add_argument("manifest_in", help="A MANIFEST.in file compatible with setuptools.")
     args = parser.parse_args()
     return args.manifest_in
 
 
-def compute_sha256(path: str):
+def compute_sha256(path: str) -> tuple[int, str]:
     """Compute SHA256 hash and size in bytes of a file."""
     size = 0
     sha = hashlib.sha256()

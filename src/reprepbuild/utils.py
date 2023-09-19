@@ -38,22 +38,37 @@ A `dyndep` is more powerful and general, but also a bit more complicated to set 
 
 import importlib.util
 import os
+import re
+import string
 import sys
 
 from parse import parse
 
 __all__ = (
     "parse_inputs_fls",
+    "hide_path",
     "write_dep",
     "write_dyndep",
     "import_python_path",
     "format_case_args",
     "parse_case_args",
+    "CaseSensitiveTemplate",
 )
 
 
-def parse_inputs_fls(path_fls):
-    """Get local inputs from an fls file."""
+def parse_inputs_fls(path_fls: str) -> list[str]:
+    """Get local inputs from an LaTeX fls file.
+
+    Parameters
+    ----------
+    path_fls
+        The location of the file list file.
+
+    Returns
+    -------
+    paths
+        A list of paths.
+    """
     # Collect inputs and outputs
     workdir = os.path.dirname(path_fls)
     inputs = set()
@@ -62,34 +77,41 @@ def parse_inputs_fls(path_fls):
         for line in f:
             if line.startswith("INPUT "):
                 select = inputs
-                path = line[6:].strip()
+                my_path = line[6:].strip()
             elif line.startswith("OUTPUT "):
                 select = outputs
-                path = line[7:].strip()
+                my_path = line[7:].strip()
             else:
                 continue
-            path = os.path.normpath(path)
-            if path.startswith("/"):
+            my_path = os.path.normpath(my_path)
+            if my_path.startswith("/"):
                 continue
-            path = os.path.join(workdir, path)
-            select.add(path)
+            my_path = os.path.join(workdir, my_path)
+            select.add(my_path)
     # When files are both inputs and outputs, skip them.
     # These are usually aux and out.
     inputs -= outputs
     return sorted(inputs)
 
 
-def filter_local_files(paths):
-    """Return paths, only those under the cwd, without duplicates, sorted and normalized."""
+def hide_path(visible_path: str) -> str:
+    parent, name = os.path.split(visible_path)
+    if not name.startswith("."):
+        name = "." + name
+    return os.path.join(parent, name)
+
+
+def _filter_local_files(all_paths: list[str]) -> list[str]:
+    """Return only those paths under the cwd, without duplicates, sorted and normalized."""
     local = set()
-    for path in paths:
-        path = os.path.normpath(os.path.relpath(path))
-        if not path.startswith(".."):
-            local.add(path)
+    for any_path in all_paths:
+        any_path = os.path.normpath(os.path.relpath(any_path))
+        if not any_path.startswith(".."):
+            local.add(any_path)
     return sorted(local)
 
 
-def write_dep(path_dep, outputs, inputs):
+def write_dep(path_dep: str, outputs: list[str], inputs: list[str]):
     """Write a depfile for outputs that depend on inputs.
 
     Inputs are ignored when they are not inside of the current directory (recursively).
@@ -100,21 +122,33 @@ def write_dep(path_dep, outputs, inputs):
     with open(path_dep, "w") as f:
         f.write(" ".join(outputs))
         f.write(": \\\n")
-        for ipath in filter_local_files(inputs):
+        for ipath in _filter_local_files(inputs):
             f.write(f"    {ipath} \\\n")
 
 
-def write_dyndep(path_dyndep, output, imp_outputs, imp_inputs):
-    """Write a dynamic dependency file for ninja, for a single output."""
+def write_dyndep(path_dyndep: str, output: str, imp_outputs: list[str], imp_inputs: list[str]):
+    """Write a dynamic dependency file for ninja, for a single output.
+
+    Parameters
+    ----------
+    path_dyndep
+        The file to write to
+    output
+        The output whose dependencies are dynamic.
+    imp_outputs
+        Implicit outputs (dynamic) produced along output.
+    imp_inputs
+        Implicit inputs (dynamic) required to build output.
+    """
     with open(path_dyndep, "w") as f:
         f.write("ninja_dyndep_version = 1\n")
         f.write(f"build {output}")
-        imp_outputs = filter_local_files(imp_outputs)
+        imp_outputs = _filter_local_files(imp_outputs)
         if len(imp_outputs) > 0:
             f.write(" | ")
             f.write(" ".join(imp_outputs))
         f.write(": dyndep")
-        imp_inputs = filter_local_files(imp_inputs)
+        imp_inputs = _filter_local_files(imp_inputs)
         if len(imp_inputs) > 0:
             f.write(" | ")
             f.write(" ".join(imp_inputs))
@@ -129,15 +163,32 @@ def import_python_path(path):
     module = importlib.util.module_from_spec(spec)
     try:
         spec.loader.exec_module(module)
-    except ImportError:
-        # Ignore the script if it cannot be imported correctly.
-        module = None
     finally:
         sys.path.remove(cwd)
     return module
 
 
-def format_case_args(script_args, prefix, case_fmt=None):
+def format_case_args(
+    script_args: (list | dict | tuple[list, dict]), prefix: str, case_fmt: (str | None) = None
+):
+    """Format arguments for a Python script.
+
+    Parameters
+    ----------
+    script_args
+        Arguments for the script, can be in multiple forms.
+    prefix
+        The script prefix, used to generate a suitable case_fmt,
+        if not given.
+    case_fmt
+        A formatting string to turn the args into one contiguous string.
+
+    Returns
+    -------
+    argstr
+        A formatted string representation of the script arguments,
+        without whitespaces.
+    """
     # Compatibility with old API.
     check_underscores = False
     if case_fmt is None:
@@ -177,7 +228,24 @@ def format_case_args(script_args, prefix, case_fmt=None):
     return result
 
 
-def parse_case_args(argstr, prefix, case_fmt=None):
+def parse_case_args(argstr: str, prefix: str, case_fmt: (str | None) = None) -> tuple[list, dict]:
+    """The inverse of format_case_args.
+
+    Parameters
+    ----------
+    argstr
+        The output of format_case_args.
+    prefix
+        The script prefix, used to generate a suitable case_fmt,
+        if not given.
+    case_fmt
+        A formatting string to turn the args into one contiguous string.
+
+    Returns
+    -------
+    args, kwargs
+        Arguments and keyword arguments, to be passed into the main function of the script.
+    """
     convert = False
     if case_fmt is None:
         convert = True
@@ -199,10 +267,17 @@ def parse_case_args(argstr, prefix, case_fmt=None):
     return args, result.named
 
 
-def _naive_convert(word):
+def _naive_convert(word: str) -> int | float | str:
+    """Convert str to int or float if possible."""
     for dtype in int, float:
         try:
             return dtype(word)
         except ValueError:
             pass
     return word
+
+
+class CaseSensitiveTemplate(string.Template):
+    """A case sensitive Template class."""
+
+    flags = re.NOFLAG

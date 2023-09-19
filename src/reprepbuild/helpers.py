@@ -22,57 +22,10 @@
 
 import attrs
 import fitz
-import jinja2
 import numpy as np
 from scipy import optimize
 
-__all__ = ("render", "SubFigure", "layout_sub_figures")
-
-
-def render(fn_template, variables, *, latex, str_in=None):
-    """The template is processed with jinja and returned after filling in variables.
-
-    Parameters
-    ----------
-    fn_template
-        The filename of the template to load, may be a mock
-    variables
-        A dictionary of variables to substitute into the template.
-    latex
-        When True, the angle-version of the template codes is used, e.g. `<%` etc.
-    str_in
-        The template string.
-        When given fn_templates is not loaded and only used for error messages.
-
-    Returns
-    -------
-    str_out
-        A string with the result.
-    """
-    template_kwargs = {
-        "keep_trailing_newline": True,
-        "trim_blocks": True,
-        "undefined": jinja2.StrictUndefined,
-    }
-    if latex:
-        template_kwargs.update(
-            {
-                "block_start_string": "<%",
-                "block_end_string": "%>",
-                "variable_start_string": "<<",
-                "variable_end_string": ">>",
-                "comment_start_string": "<#",
-                "comment_end_string": "#>",
-                "line_statement_prefix": "%==",
-            }
-        )
-
-    if str_in is None:
-        with open(fn_template) as f:
-            str_in = f.read()
-    template = jinja2.Template(str_in, **template_kwargs)
-    template.filename = fn_template
-    return template.render(**variables)
+__all__ = ("SubFigure", "layout_sub_figures")
 
 
 @attrs.define

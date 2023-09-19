@@ -23,25 +23,25 @@ import tempfile
 
 import fitz
 
-__all__ = ("normalize_pdf",)
+__all__ = ("pdf_normalize",)
 
 
 def main():
     """Main program."""
-    normalize_pdf(parse_args().path_pdf)
+    pdf_normalize(parse_args().path_pdf)
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser("rr-normalize-pdf")
+    parser = argparse.ArgumentParser("rr-normalize-pdf", description="Normalize a PDF file.")
     parser.add_argument("path_pdf", help="The pdf to be normalized (in place).")
     return parser.parse_args()
 
 
-def normalize_pdf(path_pdf):
-    """Rewrite a PDF by its normalized equivalent. This helps making PDFs reproducible."""
+def pdf_normalize(path_pdf: str):
+    """Replace a PDF file by its normalized equivalent. This helps making PDFs reproducible."""
     if not path_pdf.endswith(".pdf"):
-        print(f"An article must have a `.pdf` extension. Got {path_pdf}")
+        print(f"The input must have a `.pdf` extension, got: {path_pdf}")
         return 2
     pdf = fitz.open(path_pdf)
     pdf.set_metadata({})

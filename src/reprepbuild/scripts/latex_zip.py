@@ -22,44 +22,45 @@
 import argparse
 import os
 
+from ..utils import parse_inputs_fls
 from .manifest import compute_sha256
-from .utils import parse_inputs_fls
 from .zip import reprozip
 
 
 def main():
     """Main program."""
     args = parse_args()
-    return article_zip(args.path_zip, args.path_pdf)
+    return article_zip(args.path_fls, args.path_zip)
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser("rr-article-zip")
+    parser = argparse.ArgumentParser(
+        "rr-latex-zip", description="Zip a LaTeX file with required files."
+    )
+    parser.add_argument("path_fls", help="The LaTeX fls file.")
     parser.add_argument("path_zip", help="The output zip file with the sources.")
-    parser.add_argument("path_pdf", help="The article pdf file.")
     return parser.parse_args()
 
 
-def article_zip(path_zip, path_pdf):
+def article_zip(path_fls: str, path_zip: str):
     """Zip the sources of the article."""
-    if not path_pdf.endswith(".pdf"):
-        print(f"Article PDF must have a `.pdf` extension. Got {path_pdf}")
+    if not path_fls.endswith(".fls"):
+        print(f"The input must have a `.fls` extension. Got {path_fls}")
         return 2
-    workdir, fn_pdf = os.path.split(path_pdf)
-    prefix = fn_pdf[:-4]
+    workdir, fn_fls = os.path.split(path_fls)
+    prefix = fn_fls[:-4]
 
     # Make a manifest file
-    paths_in = parse_inputs_fls(os.path.join(workdir, prefix + ".fls"))
-    path_man = f"{workdir}/{prefix}.sha256"
-    with open(path_man, "w") as f:
+    paths_in = parse_inputs_fls(path_fls)
+    path_manifest = f"{workdir}/{prefix}.sha256"
+    with open(path_manifest, "w") as f:
         for path_in in paths_in:
             size, sha256 = compute_sha256(path_in)
             f.write(f"{size:15d} {sha256} {path_in[len(workdir) + 1:]}\n")
 
     # Collect files to be zipped and write zip
-    reprozip(path_zip, path_man, check_sha256=False)
-    return 0
+    return reprozip(path_manifest, path_zip, check_sha256=False)
 
 
 if __name__ == "__main__":

@@ -22,7 +22,7 @@ r"""Execute the main function of a Python script.
 Reproducible matplotlib figures:
 https://matplotlib.org/stable/users/prev_whats_new/whats_new_2.1.0.html#reproducible-ps-pdf-and-svg-output
 
-This script checks whether SOURCE_DATE_EPOCH is 0.
+This script checks whether SOURCE_DATE_EPOCH is 315532800.
 
 """
 
@@ -30,7 +30,7 @@ import argparse
 import os
 import sys
 
-from .utils import import_python_path, parse_case_args, write_dep
+from ..utils import hide_path, import_python_path, parse_case_args, write_dep
 
 
 def main():
@@ -39,9 +39,9 @@ def main():
     return run_script(args.path_py, args.argstr)
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser("rr-python-script")
+    parser = argparse.ArgumentParser("rr-python-script", description="Execute a Python script")
     parser.add_argument("path_py", help="The python script whose main function will be executed.")
     parser.add_argument(
         "argstr", nargs="?", default="", help="Command-line argument for the script, if any"
@@ -49,19 +49,29 @@ def parse_args():
     return parser.parse_args()
 
 
-def run_script(path_py, argstr):
-    """Run the python script and collected module dependencies."""
+def run_script(path_py, argstr) -> int:
+    """Run the python script and collect module dependencies.
+
+    Parameters
+    ----------
+    path_py
+        The full path of the script.
+        (It will be executed after changing directory.)
+    argstr
+        The arguments to the ``main`` function, encoded with
+        ``reprepbuild.utils.format_case_args``.
+
+    Returns
+    -------
+    exitcode
+        The script exitcode.
+    """
     if not path_py.endswith(".py"):
         print(f"Python script must have `.py` extension. Got {path_py}")
         return 2
     workdir, fn_py = os.path.split(path_py)
     script_prefix = fn_py[:-3]
     orig_workdir = os.getcwd()
-
-    # Check whether we're already in the eighties. (compatibility with ZIP)
-    if os.environ.get("SOURCE_DATE_EPOCH") != "315532800":
-        print("SOURCE_DATE_EPOCH is not set to 315532800.")
-        return -3
 
     try:
         # Load the script in its own directory
@@ -102,8 +112,8 @@ def run_script(path_py, argstr):
 
     # Note: only explicit outputs must be added to the depfile, not the implicit ones.
     out_prefix = fixpath(script_prefix if argstr == "" else argstr)
-    outputs = [(f"{out_prefix}.log")]
-    path_dep = f"{out_prefix}.d"
+    outputs = [hide_path(out_prefix + ".log")]
+    path_dep = hide_path(out_prefix + ".d")
     write_dep(path_dep, outputs, imported_paths)
 
     return result

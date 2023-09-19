@@ -1,0 +1,113 @@
+# RepRepBuild is the build tool for Reproducible Reporting.
+# Copyright (C) 2023 Toon Verstraelen
+#
+# This file is part of RepRepBuild.
+#
+# RepRepBuild is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+#
+# RepRepBuild is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, see <http://www.gnu.org/licenses/>
+#
+# --
+"""Render a file with Jinja2."""
+
+
+import argparse
+import json
+
+import jinja2
+
+
+def main():
+    """Main program."""
+    args = parse_args()
+    with open(args.variables) as fh:
+        variables = json.load(fh)
+    if args.mode == "plain":
+        latex = False
+    elif args.mode == "latex":
+        latex = True
+    elif args.mode == "auto":
+        latex = args.path_out.endswith(".tex")
+    result = render(args.path_in, variables, latex)
+    with open(args.path_out, "w") as fh:
+        fh.write(result)
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser("rr-render", description="Render a file with Jinja2.")
+    parser.add_argument("path_in", help="The input file")
+    parser.add_argument("path_out", help="The output file")
+    parser.add_argument(
+        "--variables",
+        help="JSON file with dictionary of variables",
+        default=".reprepbuild/variables.json",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["auto", "plain", "latex"],
+        help="The delimiter style to use",
+        default="auto",
+    )
+    return parser.parse_args()
+
+
+def render(
+    path_template: str, variables: dict[str, str], latex: bool = False, str_in: str | None = None
+) -> str:
+    """The template is processed with jinja and returned after filling in variables.
+
+    Parameters
+    ----------
+    path_template
+        The filename of the template to load, may be a mock
+    variables
+        A dictionary of variables to substitute into the template.
+    latex
+        When True, the angle-version of the template codes is used, e.g. `<%` etc.
+    str_in
+        The template string.
+        When given path_templates is not loaded and only used for error messages.
+
+    Returns
+    -------
+    str_out
+        A string with the result.
+    """
+    template_kwargs = {
+        "keep_trailing_newline": True,
+        "trim_blocks": True,
+        "undefined": jinja2.StrictUndefined,
+    }
+    if latex:
+        template_kwargs.update(
+            {
+                "block_start_string": "<%",
+                "block_end_string": "%>",
+                "variable_start_string": "<<",
+                "variable_end_string": ">>",
+                "comment_start_string": "<#",
+                "comment_end_string": "#>",
+                "line_statement_prefix": "%==",
+            }
+        )
+
+    if str_in is None:
+        with open(path_template) as f:
+            str_in = f.read()
+    template = jinja2.Template(str_in, **template_kwargs)
+    template.filename = path_template
+    return template.render(**variables)
+
+
+if __name__ == "__main__":
+    main()

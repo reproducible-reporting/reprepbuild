@@ -40,23 +40,23 @@ TIMESTAMP = datetime.datetime(1980, 1, 1).timestamp()
 def main():
     """Main program."""
     args = parse_args()
-    reprozip(args.path_zip, args.path_man)
+    return reprozip(args.path_man, args.path_zip)
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser("rr-zip")
-    parser.add_argument("path_zip", help="Destination zip file.")
+    parser = argparse.ArgumentParser("rr-zip", description="Create a reproducible ZIP file.")
     parser.add_argument(
         "path_man",
         help="The MANIFEST.sha256 with all files to be zipped. "
         "The sha256 sums of the files will be checked before archiving. "
         "The manifest file will be included in the ZIP.",
     )
+    parser.add_argument("path_zip", help="Destination zip file.")
     return parser.parse_args()
 
 
-def reprozip(path_zip, path_man, check_sha256=True):
+def reprozip(path_man: str, path_zip: str, check_sha256: bool = True) -> int:
     """Create a reproducible zip file."""
     if not path_zip.endswith(".zip"):
         print(f"Destination must have a `.zip` extension. Got {path_zip}")
@@ -72,7 +72,22 @@ def reprozip(path_zip, path_man, check_sha256=True):
     return result
 
 
-def load_manifest(path_man):
+def load_manifest(path_man: str) -> tuple[str, dict[str, (int, str)]]:
+    """Load a MANIFEST.sha256 file.
+
+    Parameters
+    ----------
+    path_man
+        The file to be loaded.
+
+    Returns
+    -------
+    root
+        The location of the MANIFEST.sha256 file.
+    paths_in
+        A dict whose keys are paths in the MANIFEST.sha256 file, relative to root.
+        The values are tuples of the size (in bytes) and the sha256 hash.
+    """
     root = os.path.dirname(path_man)
     with open(path_man) as f:
         lines = f.readlines()
@@ -86,7 +101,30 @@ def load_manifest(path_man):
     return root, paths_in
 
 
-def create_zip(path_zip, root, paths_in, check_sha256) -> int:
+def create_zip(
+    path_zip: str, root: str, paths_in: dict[str, (int, str)], check_sha256: bool
+) -> int:
+    """Create the reproducible ZIP file.
+
+    Parameters
+    ----------
+    path_zip
+        The ZIP file to be created.
+    root
+        The root directory of the contents for the ZIP file.
+    paths_in
+        A dict whose keys are paths, relative to root.
+        The values are tuples of the size (in bytes) and the sha256 hash.
+    check_sha256
+        When True, the file will be validated with size and hash
+        before adding it to the ZIP file.
+        In case of a mismatch, the partial ZIP is removed.
+
+    Return
+    ------
+    exitcode
+        The exit code of the script.
+    """
     # Remove old zip
     if os.path.isfile(path_zip):
         os.remove(path_zip)

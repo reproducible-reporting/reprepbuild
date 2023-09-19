@@ -1,4 +1,5 @@
 [![PyPI Upload](https://github.com/reproducible-reporting/reprepbuild/actions/workflows/pypi.yaml/badge.svg)](https://github.com/reproducible-reporting/reprepbuild/actions/workflows/pypi.yaml)
+[![pytest](https://github.com/reproducible-reporting/reprepbuild/actions/workflows/pytest.yaml/badge.svg)](https://github.com/reproducible-reporting/reprepbuild/actions/workflows/pytest.yaml)
 [![PyPI Version](https://img.shields.io/pypi/v/reprepbuild)](https://pypi.org/project/reprepbuild/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/reprepbuild)
 ![GPL-3 License](https://img.shields.io/github/license/reproducible-reporting/reprepbuild)
@@ -10,7 +11,6 @@ Run `rr` in a source directory, and the publication will be rebuilt from its sou
 
 To get started, follow the [documentation](https://github.com/reproducible-reporting/templates/blob/main/DOCUMENTATION.md) of the [templates](https://github.com/reproducible-reporting/templates) repository.
 RepRepBuild will be installed in your instance of the template, as part of the setup.
-(There is little point in installing RepRepBuild separately.)
 
 RepRepBuild emphasizes two kinds of reproducibility:
 
