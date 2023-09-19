@@ -90,16 +90,15 @@ class PythonScript(Command):
                 fn_log = f"{out_prefix}.log"
                 implicit_inputs = [fix_path(ipath) for ipath in build_info.get("inputs", [])]
                 implicit_outputs = [fix_path(opath) for opath in build_info.get("outputs", [])]
-                builds.append(
-                    {
-                        "inputs": [path_py],
-                        "implicit": implicit_inputs,
-                        "rule": "python_script",
-                        "implicit_outputs": implicit_outputs,
-                        "outputs": [fn_log],
-                        "variables": {"argstr": argstr, "out_prefix": out_prefix},
-                    }
-                )
+                build = {
+                    "inputs": [path_py],
+                    "implicit": implicit_inputs,
+                    "rule": "python_script",
+                    "implicit_outputs": implicit_outputs,
+                    "outputs": [fn_log],
+                    "variables": {"argstr": argstr, "out_prefix": out_prefix},
+                }
+                builds.append(build)
             return builds, []
 
 
