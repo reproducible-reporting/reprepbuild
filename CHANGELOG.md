@@ -5,9 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased (targets 1.0)
+## [1.0.0] - 2023-09-19
 
 This is an API-breaking release with lots of refactoring.
+For users, the main change is that `reprepbuild.yaml` configuration file must be added.
+In most cases, the example file from the [templates](https://github.com/reproducible-reporting/templates)
+repository is just fine.
 
 ### Added
 
@@ -49,9 +52,6 @@ This is an API-breaking release with lots of refactoring.
 - A few scripts are no longer needed and have been removed: `rr-latex`, `rr-latex-dep`, `rr-bibtex`.
 - The special `\warninput` LaTeX command is no longer needed.
   Use ordinary `\input` instead.
-
-
-## [0.13.3] - TODO
 
 ## [0.13.3] - 2023-09-13
 
