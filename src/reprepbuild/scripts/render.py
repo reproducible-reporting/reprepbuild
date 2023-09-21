@@ -22,6 +22,7 @@
 
 import argparse
 import json
+import os
 
 import jinja2
 
@@ -37,7 +38,8 @@ def main():
         latex = True
     elif args.mode == "auto":
         latex = args.path_out.endswith(".tex")
-    result = render(args.path_in, variables, latex)
+    dstdir = os.path.normpath(os.path.dirname(args.path_out))
+    result = render(args.path_in, variables, latex, dstdir=dstdir)
     with open(args.path_out, "w") as fh:
         fh.write(result)
 
@@ -62,7 +64,12 @@ def parse_args() -> argparse.Namespace:
 
 
 def render(
-    path_template: str, variables: dict[str, str], latex: bool = False, str_in: str | None = None
+    path_template: str,
+    variables: dict[str, str],
+    latex: bool = False,
+    *,
+    str_in: str | None = None,
+    dstdir: str | None = None,
 ) -> str:
     """The template is processed with jinja and returned after filling in variables.
 
@@ -77,19 +84,22 @@ def render(
     str_in
         The template string.
         When given path_templates is not loaded and only used for error messages.
+    dstdir
+        This is used by the relpath filter, which allows converting absolute to relative paths.
 
     Returns
     -------
     str_out
         A string with the result.
     """
-    template_kwargs = {
+    # Customize Jinja 2 environment
+    env_kwargs = {
         "keep_trailing_newline": True,
         "trim_blocks": True,
         "undefined": jinja2.StrictUndefined,
     }
     if latex:
-        template_kwargs.update(
+        env_kwargs.update(
             {
                 "block_start_string": "<%",
                 "block_end_string": "%>",
@@ -100,11 +110,17 @@ def render(
                 "line_statement_prefix": "%==",
             }
         )
+    env = jinja2.Environment(**env_kwargs)
 
+    # Add custom filter
+    if dstdir is not None:
+        env.filters["relpath"] = lambda path: os.path.normpath(os.path.relpath(path, dstdir))
+
+    # Load template and use it
     if str_in is None:
         with open(path_template) as f:
             str_in = f.read()
-    template = jinja2.Template(str_in, **template_kwargs)
+    template = env.from_string(str_in)
     template.filename = path_template
     return template.render(**variables)
 

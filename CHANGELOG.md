@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add the `relpath` Jinja2 filter to the ``rr-render``.
+
 ## [1.1.0] - 2023-09-21
 
 ### Added
