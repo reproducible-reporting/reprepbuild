@@ -121,6 +121,7 @@ convert_odf_pdf = Transform(
 )
 pdf_raster = Transform(
     "pdf_raster",
-    "${gs} -sDEVICE=pdfimage24 -dNOPAUSE -dBATCH -dSAFER -r150 -sOutputFile=${out} ${in}",
-    variables={"gs": "gs"},
+    "${gs} -sDEVICE=pdfimage24 -dNOPAUSE -dBATCH -dSAFER "
+    "-r${raster_dpi} -sOutputFile=${out} ${in} > /dev/null",
+    variables={"gs": "gs", "raster_dpi": "150"},
 )

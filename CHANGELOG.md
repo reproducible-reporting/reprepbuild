@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add the `relpath` Jinja2 filter to the ``rr-render``.
+- Add option to configure DPI to `pdf_raster`.
+
+## Fixed
+
+- Send output of `gs` in command `pdf_raster` to `/dev/null.
 
 ## [1.1.0] - 2023-09-21
 

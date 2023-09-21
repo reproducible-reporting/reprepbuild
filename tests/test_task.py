@@ -229,7 +229,6 @@ def test_generate_not_scanned(tmpdir):
     with contextlib.chdir(tmpdir):
         results = list(task.generate(outputs))
     [[records, ns]] = results
-    print(records)
     assert records == [
         "command: latex",
         "inp: main.tex",
