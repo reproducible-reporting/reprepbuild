@@ -21,12 +21,10 @@ r"""Execute the main function of a Python script.
 
 Reproducible matplotlib figures:
 https://matplotlib.org/stable/users/prev_whats_new/whats_new_2.1.0.html#reproducible-ps-pdf-and-svg-output
-
-This script checks whether SOURCE_DATE_EPOCH is 315532800.
-
 """
 
 import argparse
+import contextlib
 import os
 import sys
 
@@ -71,11 +69,9 @@ def run_script(path_py, argstr) -> int:
         return 2
     workdir, fn_py = os.path.split(path_py)
     script_prefix = fn_py[:-3]
-    orig_workdir = os.getcwd()
 
-    try:
+    with contextlib.chdir(workdir):
         # Load the script in its own directory
-        os.chdir(workdir)
         pythonscript = import_python_path(fn_py)
 
         # Get the relevant functions
@@ -92,9 +88,8 @@ def run_script(path_py, argstr) -> int:
         # Execute the functions as if the script is running inside its own dir.
         script_args, script_kwargs = parse_case_args(argstr, script_prefix, case_fmt)
         build_info = reprepbuild_info(*script_args, **script_kwargs)
+        os.environ["SOURCE_DATE_EPOCH"] = "315532800"
         result = script_main(**build_info)
-    finally:
-        os.chdir(orig_workdir)
 
     # Analyze the imported modules for the depfile.
     # Note that a depfile is sufficient and no dyndep is needed

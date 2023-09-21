@@ -153,8 +153,9 @@ class Task:
         records = [
             f"command: {self.command.name}",
             "inp: " + " ".join(inp),
-            "out: " + " ".join(out),
         ]
+        if len(out) > 0:
+            records.append("out: " + " ".join(out))
         if self.arg is not None:
             records.append(f" arg: {self.arg}")
         return records
@@ -201,6 +202,8 @@ def _expand_variables(build: dict, variables: dict[str, str]):
         values = build.get(key)
         if values is not None:
             build[key] = [_expand(path) for path in values]
+    if "variables" in build:
+        build["variables"] = {key: _expand(path) for key, path in build["variables"].items()}
     depfile = build.get("depfile")
     if depfile is not None:
         build["depfile"] = _expand(depfile)

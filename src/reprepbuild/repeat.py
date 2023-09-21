@@ -89,12 +89,16 @@ def main():
             event_handler.snooze()
             try:
                 generator(os.getcwd())
-                subprocess.run(["ninja", *args], check=False)
+                subprocess.run(
+                    ["ninja", *args],
+                    check=False,
+                    env=os.environ | {"NINJA_STATUS": "\033[1;36;40m[%f/%t]\033[0;0m "},
+                )
             except Exception:
                 print(traceback.format_exc())
             time.sleep(0.1)
             event_handler.reset()
-            print("  Waiting for new changes.")
+            print("\033[1;36;40m-- Waiting for new changes. --\033[0;0m")
     except KeyboardInterrupt:
         print("  See you!")
     finally:

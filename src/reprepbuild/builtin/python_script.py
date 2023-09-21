@@ -41,8 +41,7 @@ class PythonScript(Command):
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
         return {
             "python_script": {
-                "command": "export SOURCE_DATE_EPOCH='315532800' && "
-                "rr-python-script ${in} -- ${argstr} > ${out}",
+                "command": "rr-python-script ${in} -- ${argstr} > ${out}",
                 "depfile": "${out_prefix}.d",
             }
         }

@@ -150,12 +150,11 @@ def test_generate_ignore_missing(tmpdir, ignore):
         results = list(task.generate(outputs))
     [[records, ns]] = results
     if ignore:
-        assert records == ["command: python_script", "inp: script.py", "out: "]
+        assert records == ["command: python_script", "inp: script.py"]
     else:
         assert records == [
             "command: python_script",
             "inp: script.py",
-            "out: ",
             {
                 "inputs": ["script.py"],
                 "implicit": ["foo.txt"],
@@ -230,17 +229,17 @@ def test_generate_not_scanned(tmpdir):
     with contextlib.chdir(tmpdir):
         results = list(task.generate(outputs))
     [[records, ns]] = results
+    print(records)
     assert records == [
         "command: latex",
         "inp: main.tex",
-        "out: ",
         {
             "rule": "latex",
             "inputs": ["main.tex"],
             "outputs": ["main.pdf"],
-            "implicit_outputs": ["main.aux", "main.fls", "main.log"],
+            "implicit_outputs": ["main.aux", "main.fls", "main.log", "main.out"],
             "implicit": ["table.tex"],
-            "variables": {"workdir": ".", "stem": "main", "latex": "pdflatex"},
+            "variables": {"latex": "pdflatex"},
         },
     ]
     assert ns == ["table.tex"]

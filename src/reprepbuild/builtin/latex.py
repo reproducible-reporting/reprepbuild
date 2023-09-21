@@ -146,16 +146,11 @@ def scan_latex_deps(path_tex, tex_root=None):
 
 
 RULES = {
-    "bibtex": {
-        "command": "cd ${workdir} && "
-        "${latex} -recorder -interaction=nonstopmode -draftmode ${stem} > /dev/null && "
-        "${bibtex} ${stem}.aux > /dev/null"
+    "latex_bibtex": {
+        "command": "rr-latex ${in} ${latex} --bibtex=${bibtex} "
+        "--bibsane='${bibsane}' --bibsane-config='${bibsane_config}'"
     },
-    "latex": {
-        "command": "cd ${workdir} && export SOURCE_DATE_EPOCH='315532800' && "
-        "while [ 1 ]; do ${latex} -recorder ${stem} > /dev/null && "
-        "grep 'Rerun to get cross-references right.' ${stem}.log > /dev/null || break; done"
-    },
+    "latex": {"command": "rr-latex ${in} ${latex}"},
     "latex_diff": {
         "command": "${latexdiff} --append-context2cmd=${latexdiff_context2cmd} ${in} > ${out}"
     },
@@ -197,36 +192,45 @@ class Latex(Command):
         implicit, not_scanned, bib = scan_latex_deps(path_tex)
 
         # Create builds
-        builds = []
         if len(bib) > 0:
-            builds.append(
-                {
-                    "rule": "bibtex",
-                    "inputs": [path_tex, *bib],
-                    "outputs": [f"{prefix}.bbl"],
-                    "implicit_outputs": [f"{prefix}.blg"],
-                    "implicit": implicit,
-                    "variables": {
-                        "workdir": workdir,
-                        "stem": stem,
-                        "latex": "pdflatex",
-                        "bibtex": "bibtex",
-                    },
-                }
-            )
-            implicit = implicit + bib + [f"{prefix}.bbl"]
-        builds.append(
-            {
+            build = {
+                "rule": "latex_bibtex",
+                "inputs": [path_tex],
+                "outputs": [f"{prefix}.pdf"],
+                "implicit_outputs": [
+                    f"{prefix}.blg",
+                    f"{prefix}.bbl",
+                    f"{prefix}.log",
+                    f"{prefix}.aux",
+                    f"{prefix}.out",
+                    f"{prefix}.fls",
+                ],
+                "implicit": implicit + bib,
+                "variables": {
+                    "latex": "pdflatex",
+                    "bibtex": "bibtex",
+                    "bibsane": "bibsane",
+                    "bibsane_config": "${root}/bibsane.yaml",
+                },
+            }
+        else:
+            build = {
                 "rule": "latex",
                 "inputs": [path_tex],
                 "outputs": [f"{prefix}.pdf"],
-                "implicit_outputs": [f"{prefix}.aux", f"{prefix}.log", f"{prefix}.fls"],
-                "implicit": implicit,
-                "variables": {"workdir": workdir, "stem": stem, "latex": "pdflatex"},
+                "implicit_outputs": [
+                    f"{prefix}.log",
+                    f"{prefix}.aux",
+                    f"{prefix}.out",
+                    f"{prefix}.fls",
+                ],
+                "implicit": implicit + bib,
+                "variables": {
+                    "latex": "pdflatex",
+                },
             }
-        )
 
-        return builds, not_scanned
+        return [build], not_scanned
 
 
 class LatexFlat(Command):

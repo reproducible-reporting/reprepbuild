@@ -123,7 +123,11 @@ def main():
     sanity_check()
     args = parse_args()
     generator(os.getcwd())
-    subprocess.run(["ninja", *args], check=False)
+    subprocess.run(
+        ["ninja", *args],
+        check=False,
+        env=os.environ | {"NINJA_STATUS": "\033[1;36;40m[%f/%t]\033[0;0m "},
+    )
 
 
 if __name__ == "__main__":

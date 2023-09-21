@@ -17,21 +17,23 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Unit tests for reprepbuild.builtin.latex"""
+"""Unit tests for reprepbuild.builtin.latex and reprepbuild.scripts.latex"""
 
 import contextlib
+import io
 import os
 
 from reprepbuild.builtin.latex import latex, latex_diff, latex_flat
+from reprepbuild.scripts.latex import DEFAULT_MESSAGE, parse_bibtex_log, parse_latex_log
 
 BUILDS_LATEX = [
     {
         "rule": "latex",
         "inputs": ["sub/main.tex"],
         "outputs": ["sub/main.pdf"],
-        "implicit_outputs": ["sub/main.aux", "sub/main.log", "sub/main.fls"],
+        "implicit_outputs": ["sub/main.log", "sub/main.aux", "sub/main.out", "sub/main.fls"],
         "implicit": [],
-        "variables": {"workdir": "sub", "stem": "main", "latex": "pdflatex"},
+        "variables": {"latex": "pdflatex"},
     }
 ]
 
@@ -58,21 +60,25 @@ MAIN1_TEX = r"""
 
 BUILDS_LATEX_BIBTEX1 = [
     {
-        "rule": "bibtex",
-        "inputs": ["main.tex", "references.bib"],
-        "outputs": ["main.bbl"],
-        "implicit_outputs": ["main.blg"],
-        "implicit": ["smile.pdf", "sub/foo.tex", "table.tex"],
-        "variables": {"workdir": ".", "stem": "main", "latex": "pdflatex", "bibtex": "bibtex"},
-    },
-    {
-        "rule": "latex",
+        "rule": "latex_bibtex",
         "inputs": ["main.tex"],
         "outputs": ["main.pdf"],
-        "implicit_outputs": ["main.aux", "main.log", "main.fls"],
-        "implicit": ["smile.pdf", "sub/foo.tex", "table.tex", "references.bib", "main.bbl"],
-        "variables": {"workdir": ".", "stem": "main", "latex": "pdflatex"},
-    },
+        "implicit_outputs": [
+            "main.blg",
+            "main.bbl",
+            "main.log",
+            "main.aux",
+            "main.out",
+            "main.fls",
+        ],
+        "implicit": ["smile.pdf", "sub/foo.tex", "table.tex", "references.bib"],
+        "variables": {
+            "latex": "pdflatex",
+            "bibtex": "bibtex",
+            "bibsane": "bibsane",
+            "bibsane_config": "${root}/bibsane.yaml",
+        },
+    }
 ]
 
 
@@ -94,28 +100,25 @@ Here is some text.
 
 BUILDS_LATEX_BIBTEX_FOO1 = [
     {
-        "rule": "bibtex",
-        "inputs": ["main.tex", "references.bib"],
-        "outputs": ["main.bbl"],
-        "implicit_outputs": ["main.blg"],
-        "implicit": ["smile.pdf", "sub/foo.tex", "sub/plot.pdf", "table.tex"],
-        "variables": {"workdir": ".", "stem": "main", "latex": "pdflatex", "bibtex": "bibtex"},
-    },
-    {
-        "rule": "latex",
+        "rule": "latex_bibtex",
         "inputs": ["main.tex"],
         "outputs": ["main.pdf"],
-        "implicit_outputs": ["main.aux", "main.log", "main.fls"],
-        "implicit": [
-            "smile.pdf",
-            "sub/foo.tex",
-            "sub/plot.pdf",
-            "table.tex",
-            "references.bib",
+        "implicit_outputs": [
+            "main.blg",
             "main.bbl",
+            "main.log",
+            "main.aux",
+            "main.out",
+            "main.fls",
         ],
-        "variables": {"workdir": ".", "stem": "main", "latex": "pdflatex"},
-    },
+        "implicit": ["smile.pdf", "sub/foo.tex", "sub/plot.pdf", "table.tex", "references.bib"],
+        "variables": {
+            "latex": "pdflatex",
+            "bibtex": "bibtex",
+            "bibsane": "bibsane",
+            "bibsane_config": "${root}/bibsane.yaml",
+        },
+    }
 ]
 
 
@@ -152,21 +155,25 @@ Table here.
 
 BUILDS_LATEX_BIBTEX_TABLE2 = [
     {
-        "rule": "bibtex",
-        "inputs": ["sub/main.tex", "sub/references.bib"],
-        "outputs": ["sub/main.bbl"],
-        "implicit_outputs": ["sub/main.blg"],
-        "implicit": ["sub/smile.pdf", "sub/table.tex"],
-        "variables": {"workdir": "sub", "stem": "main", "latex": "pdflatex", "bibtex": "bibtex"},
-    },
-    {
-        "rule": "latex",
+        "rule": "latex_bibtex",
         "inputs": ["sub/main.tex"],
         "outputs": ["sub/main.pdf"],
-        "implicit_outputs": ["sub/main.aux", "sub/main.log", "sub/main.fls"],
-        "implicit": ["sub/smile.pdf", "sub/table.tex", "sub/references.bib", "sub/main.bbl"],
-        "variables": {"workdir": "sub", "stem": "main", "latex": "pdflatex"},
-    },
+        "implicit_outputs": [
+            "sub/main.blg",
+            "sub/main.bbl",
+            "sub/main.log",
+            "sub/main.aux",
+            "sub/main.out",
+            "sub/main.fls",
+        ],
+        "implicit": ["sub/smile.pdf", "sub/table.tex", "sub/references.bib"],
+        "variables": {
+            "latex": "pdflatex",
+            "bibtex": "bibtex",
+            "bibsane": "bibsane",
+            "bibsane_config": "${root}/bibsane.yaml",
+        },
+    }
 ]
 
 
@@ -230,3 +237,98 @@ def test_write_build_latex_diff():
     )
     assert not_scanned == []
     assert BUILDS_LATEX_DIFF == builds
+
+
+BIBTEX_BLG1 = """\
+This is BibTeX, Version 0.99d (TeX Live 2022/CVE-2023-32700 patched)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: article.aux
+The style file: achemso.bst
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Database file #1: acs-article.bib
+Database file #2: references.bib
+I was expecting a `{' or a `('---line 12 of file references.bib
+ :
+ : @article{SomeAuthor1999,
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+achemso 2022-11-25 v3.13f
+You've used 62 entries,
+            2538 wiz_defined-function locations,
+            1232 strings with 23159 characters,
+and the built_in function-call counts, 27532 in all, are:
+"""
+
+BIBTEX_BLG1_MESSAGE = """\
+I was expecting a `{' or a `('---line 12 of file references.bib
+ :
+ : @article{SomeAuthor1999,
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+"""
+
+
+def test_parse_bibtex_log1():
+    error_info = parse_bibtex_log(io.StringIO(BIBTEX_BLG1))
+    assert error_info.program == "BibTeX"
+    assert error_info.src == "references.bib"
+    assert error_info.message == BIBTEX_BLG1_MESSAGE.strip()
+
+
+LATEX_LOG1 = r"""
+**article
+(./article.tex
+LaTeX2e <2022-06-01> patch level 5
+
+[17] [18] [19]
+<fig1.pdf, id=90, 200pt x 200pt>
+File: fig1.pdf Graphic file (type pdf)
+<use fig1.pdf>
+Package pdftex.def Info: fig1.pdf  used on input line 300.
+(pdftex.def)             Requested size:  200pt x 200pt.
+[20] [21]
+! Undefined control sequence.
+l.396         \begin{center}\foo
+
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+<fig2.pdf, id=97, 100pt x 100pt>
+File: fig2.pdf Graphic file (type pdf)
+<use fig2.pdf>
+"""
+
+LATEX_LOG1_MESSAGE = r"""
+! Undefined control sequence.
+l.396         \begin{center}\foo
+
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+"""
+
+
+def test_parse_latex_log1():
+    rebuild, error_info = parse_latex_log(io.StringIO(LATEX_LOG1))
+    assert not rebuild
+    assert error_info.program == "LaTeX"
+    assert error_info.src == "./article.tex"
+    assert error_info.message.strip() == LATEX_LOG1_MESSAGE.strip()
+
+
+LATEX_LOG2 = r"""
+not so much
+"""
+
+
+def test_parse_latex_log2():
+    rebuild, error_info = parse_latex_log(io.StringIO(LATEX_LOG2))
+    assert not rebuild
+    assert error_info.program == "LaTeX"
+    assert error_info.src == "(could not detect source file)"
+    assert error_info.message == DEFAULT_MESSAGE

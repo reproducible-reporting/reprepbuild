@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.1.0] - 2023-09-21
+
+### Added
+
+- Introduced (or restored to some extent) `rr-latex` script to handle LaTeX and BibTex.
+  A Python script makes it easier to handle more corner cases and
+  to provide opportunity to keep improving the error detection in future versions.
+- Call [bibsane](https://github.com/reproducible-reporting/bibsane) again,
+  as in pre-1.0.0 versions.
+- Colored output
+
+### Fixed
+
+- Set `SOURCE_DATE_EPOCH` as late as possible, inside `rr-latex` and `rr-python-script` to
+  make sure this variable is set in all scenarios.
+- Perform variable substitution in pre-defined variables defined in `reprepbuild.builtin`.
+
 ## [1.0.0] - 2023-09-19
 
 This is an API-breaking release with lots of refactoring.
