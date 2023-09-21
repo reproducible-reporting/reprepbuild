@@ -65,7 +65,7 @@ def run_script(path_py, argstr) -> int:
         The script exitcode.
     """
     if not path_py.endswith(".py"):
-        print(f"Python script must have `.py` extension. Got {path_py}")
+        print(f"Python script must have a .py extension. Got {path_py}")
         return 2
     workdir, fn_py = os.path.split(path_py)
     script_prefix = fn_py[:-3]

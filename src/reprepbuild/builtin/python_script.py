@@ -56,6 +56,10 @@ class PythonScript(Command):
         if arg is not None:
             raise ValueError(f"Expected no arguments, got {arg}")
         path_py = inp[0]
+        if not path_py.endswith(".py"):
+            raise ValueError(f"Python script must have a .py extension. Got {path_py}")
+        if not os.path.isfile(path_py):
+            raise ValueError(f"Python script does not exist: {path_py}")
 
         # Call reprepbuild_info (and reprepbuild_cases)
         # as if the script is running in its own directory.
