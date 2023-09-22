@@ -36,8 +36,6 @@ from .utils import CaseSensitiveTemplate
 __all__ = ("load_config",)
 
 
-CONVERTER = cattrs.Converter(forbid_extra_keys=True)
-
 RE_IMPORT = re.compile(r"[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*")
 RE_NAME = re.compile(r"[a-zA-Z_][a-zA-Z0-9_]*")
 
@@ -173,9 +171,10 @@ def load_config(
         Commands inherited from higher recursions.
     """
     # Load config file into Config instance with basic validation.
+    converter = cattrs.Converter(forbid_extra_keys=True)
     with open(os.path.join(root, path_config)) as fh:
         try:
-            config = CONVERTER.structure(yaml.safe_load(fh), Config)
+            config = converter.structure(yaml.safe_load(fh), Config)
         except Exception as exc:
             exc.add_note(f"Error occurred while loading {path_config}")
             raise

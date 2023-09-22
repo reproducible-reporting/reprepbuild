@@ -100,7 +100,7 @@ class Transform(Command):
 copy = Transform("copy", "cp ${in} ${out}")
 render = Transform(
     "render",
-    "rr-render ${in} ${out} --variables=$here/.reprepbuild/variables.json",
+    "rr-render ${in} ${out} --variables=${here}/.reprepbuild/variables.json",
     implicit=["${here}/.reprepbuild/variables.json"],
 )
 convert_svg_pdf = Transform(

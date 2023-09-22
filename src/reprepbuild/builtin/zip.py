@@ -59,10 +59,13 @@ class ReproZip(Command):
             raise ValueError(f"Expected no arguments, got {arg}")
 
         # Write builds
-        builds = [
-            {"outputs": [path_zip], "rule": "repro_zip", "inputs": [path_sha256], "pool": "console"}
-        ]
-        return builds, []
+        build = {
+            "outputs": [path_zip],
+            "rule": "repro_zip",
+            "inputs": [path_sha256],
+            "pool": "console",
+        }
+        return [build], []
 
 
 class ReproLatexZip(Command):

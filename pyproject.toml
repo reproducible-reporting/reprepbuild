@@ -12,7 +12,6 @@ readme = "README.md"
 license = {file = "COPYING"}
 requires-python = ">=3.11"
 classifiers = [
-    "Development Status :: 3 - Alpha",
     "Environment :: Console",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Education",
@@ -23,6 +22,7 @@ classifiers = [
     "Operating System :: MacOS",
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering",
+    "Topic :: Education :: Computer Aided Instruction (CAI)",
     "Topic :: Text Processing",
     "Topic :: Text Processing :: Markup :: LaTeX",
 ]
