@@ -23,6 +23,7 @@
 import argparse
 import json
 import os
+import sys
 
 import jinja2
 
@@ -126,4 +127,4 @@ def render(
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

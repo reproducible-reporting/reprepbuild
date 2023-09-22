@@ -17,6 +17,7 @@
 """Put multiple pages in a single page, using a fixed layout."""
 
 import argparse
+import sys
 
 import fitz
 
@@ -109,4 +110,4 @@ def pdf_nup(
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

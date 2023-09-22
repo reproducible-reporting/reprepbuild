@@ -24,6 +24,7 @@ import argparse
 import datetime
 import os
 import shutil
+import sys
 import tempfile
 import zipfile
 
@@ -159,4 +160,4 @@ def create_zip(
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -19,6 +19,7 @@
 import argparse
 import os
 import shutil
+import sys
 import tempfile
 
 import fitz
@@ -55,4 +56,4 @@ def pdf_normalize(path_pdf: str):
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

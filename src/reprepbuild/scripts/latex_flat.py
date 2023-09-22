@@ -40,6 +40,7 @@ commands are contained within a single line.
 import argparse
 import os
 import re
+import sys
 from typing import TextIO
 
 
@@ -164,4 +165,4 @@ def rewrite_line(line, tex_root, out_root):
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

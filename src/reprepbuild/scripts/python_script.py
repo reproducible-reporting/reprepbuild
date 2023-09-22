@@ -115,4 +115,4 @@ def run_script(path_py, argstr) -> int:
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

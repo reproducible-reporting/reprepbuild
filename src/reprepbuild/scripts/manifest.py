@@ -30,6 +30,7 @@ There are two kinds of MANIFEST files:
 
 import argparse
 import hashlib
+import sys
 
 import tqdm
 from setuptools.command.egg_info import FileList
@@ -83,4 +84,4 @@ def compute_sha256(path: str) -> tuple[int, str]:
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -21,6 +21,7 @@
 
 import argparse
 import os
+import sys
 
 from ..utils import parse_inputs_fls
 from .manifest import compute_sha256
@@ -64,4 +65,4 @@ def article_zip(path_fls: str, path_zip: str):
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

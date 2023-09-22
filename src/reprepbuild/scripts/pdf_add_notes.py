@@ -17,6 +17,7 @@
 """Script to insert notes pages at every even page in a PDF."""
 
 import argparse
+import sys
 
 import fitz
 
@@ -61,4 +62,4 @@ def pdf_add_notes(path_src: str, path_notes: str, path_dst: str):
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
