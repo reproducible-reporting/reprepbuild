@@ -38,8 +38,8 @@ def main():
         latex = True
     elif args.mode == "auto":
         latex = args.path_out.endswith(".tex")
-    dstdir = os.path.normpath(os.path.dirname(args.path_out))
-    result = render(args.path_in, variables, latex, dstdir=dstdir)
+    dir_out = os.path.normpath(os.path.dirname(args.path_out))
+    result = render(args.path_in, variables, latex, dir_out=dir_out)
     with open(args.path_out, "w") as fh:
         fh.write(result)
 
@@ -69,7 +69,7 @@ def render(
     latex: bool = False,
     *,
     str_in: str | None = None,
-    dstdir: str | None = None,
+    dir_out: str | None = None,
 ) -> str:
     """The template is processed with jinja and returned after filling in variables.
 
@@ -84,7 +84,7 @@ def render(
     str_in
         The template string.
         When given path_templates is not loaded and only used for error messages.
-    dstdir
+    dir_out
         This is used by the relpath filter, which allows converting absolute to relative paths.
 
     Returns
@@ -113,8 +113,8 @@ def render(
     env = jinja2.Environment(**env_kwargs)
 
     # Add custom filter
-    if dstdir is not None:
-        env.filters["relpath"] = lambda path: os.path.normpath(os.path.relpath(path, dstdir))
+    if dir_out is not None:
+        env.filters["relpath"] = lambda path: os.path.normpath(os.path.relpath(path, dir_out))
 
     # Load template and use it
     if str_in is None:

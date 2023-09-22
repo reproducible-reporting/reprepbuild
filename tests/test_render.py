@@ -40,6 +40,6 @@ MAIN_OUT_TEX = r"""
 def test_relpath():
     variables = {"public": "/home/foo/public"}
     result = render(
-        "template.tex", variables, True, str_in=MAIN_IN_TEX, dstdir="/home/foo/public/sub"
+        "template.tex", variables, True, str_in=MAIN_IN_TEX, dir_out="/home/foo/public/sub"
     )
     assert result == MAIN_OUT_TEX
