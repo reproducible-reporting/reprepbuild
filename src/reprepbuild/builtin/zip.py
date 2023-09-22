@@ -100,17 +100,13 @@ class ReproLatexZip(Command):
             raise ValueError(f"Expected no arguments, got {arg}")
 
         # Write builds
-        builds = [
-            {
-                "outputs": [path_zip],
-                "rule": "repro_latex_zip",
-                "inputs": [path_fls],
-                # Wait until the fls file is overwritten by the last LaTeX compile.
-                "order_only": [path_fls[:-4] + ".pdf"],
-                "pool": "console",
-            }
-        ]
-        return builds, []
+        build = {
+            "outputs": [path_zip],
+            "rule": "repro_latex_zip",
+            "inputs": [path_fls],
+            "pool": "console",
+        }
+        return [build], []
 
 
 repro_zip = ReproZip()

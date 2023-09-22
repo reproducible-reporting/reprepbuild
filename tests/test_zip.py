@@ -42,7 +42,6 @@ BUILDS_REPRO_LATEX_ZIP = [
         "rule": "repro_latex_zip",
         "inputs": ["latex-sub/sub.fls"],
         "outputs": ["sub.zip"],
-        "order_only": ["latex-sub/sub.pdf"],
         "pool": "console",
     }
 ]
