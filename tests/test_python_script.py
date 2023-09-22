@@ -53,7 +53,7 @@ def test_write_build_python_script(tmpdir):
     with open(os.path.join(tmpdir, "foo.py"), "w") as fh:
         fh.write(SCRIPT)
     with contextlib.chdir(tmpdir):
-        builds, _ = python_script.generate(["foo.py"], [], None)
+        builds, _ = python_script.generate(["foo.py"], [], None, {})
     assert BUILDS_PYTHON_SCRIPT == builds
 
 
@@ -76,5 +76,5 @@ def test_write_build_python_script_sub(tmpdir):
     with open(os.path.join(subdir, "foo.py"), "w") as fh:
         fh.write(SCRIPT)
     with contextlib.chdir(tmpdir):
-        builds, _ = python_script.generate(["sub/foo.py"], [], None)
+        builds, _ = python_script.generate(["sub/foo.py"], [], None, {})
     assert BUILDS_PYTHON_SCRIPT_SUB == builds

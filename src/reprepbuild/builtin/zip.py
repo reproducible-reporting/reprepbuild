@@ -38,7 +38,9 @@ class ReproZip(Command):
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
         return {"repro_zip": {"command": "rr-zip ${in} ${out}"}}
 
-    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
+    def generate(
+        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
+    ) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Check parameters
         if len(inp) != 1:
@@ -81,7 +83,9 @@ class ReproLatexZip(Command):
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
         return {"repro_latex_zip": {"command": "rr-latex-zip ${in} ${out}"}}
 
-    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
+    def generate(
+        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
+    ) -> tuple[list, list[str]]:
         """See ``Command.generate``."""
         # Check parameters
         if len(inp) != 1:

@@ -53,7 +53,7 @@ import attrs
 
 from ..command import Command
 
-__all__ = ("latex", "latex_flat", "latex_diff")
+__all__ = ("scan_latex_deps", "latex", "latex_flat", "latex_diff")
 
 
 RE_INPUT = re.compile(r"\\input\s*\{(.*?)\}", re.DOTALL)
@@ -172,7 +172,9 @@ class Latex(Command):
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
         return RULES
 
-    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
+    def generate(
+        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
+    ) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Parse parameters
         if len(inp) != 1:
@@ -246,7 +248,9 @@ class LatexFlat(Command):
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
         return RULES
 
-    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
+    def generate(
+        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
+    ) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Parse parameters
         if len(inp) != 1:
@@ -290,7 +294,9 @@ class LatexDiff(Command):
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
         return RULES
 
-    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
+    def generate(
+        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
+    ) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Argument parsing.
         if len(inp) != 2:

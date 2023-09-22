@@ -37,7 +37,7 @@ BUILDS_COPY = [
 
 
 def test_write_build_copy():
-    builds, _ = copy.generate(["sub/foo.txt", "sub/bar.md"], ["/dst/sub/"], None)
+    builds, _ = copy.generate(["sub/foo.txt", "sub/bar.md"], ["/dst/sub/"], None, {})
     assert BUILDS_COPY == builds
 
 
@@ -51,7 +51,7 @@ BUILDS_COPY_AS = [
 
 
 def test_write_build_copy_as():
-    builds, _ = copy.generate(["sub/foo.txt"], ["/dst/sub/bar.txt"], None)
+    builds, _ = copy.generate(["sub/foo.txt"], ["/dst/sub/bar.txt"], None, {})
     assert BUILDS_COPY_AS == builds
 
 
@@ -72,7 +72,7 @@ BUILDS_RENDER = [
 
 
 def test_write_build_render():
-    builds, _ = render.generate(["sub/foo.md", "sub/bar.tex"], ["/dst/sub/"], None)
+    builds, _ = render.generate(["sub/foo.md", "sub/bar.tex"], ["/dst/sub/"], None, {})
     assert BUILDS_RENDER == builds
 
 
@@ -87,7 +87,7 @@ BUILDS_CONVERT_SVG_PDF1 = [
 
 
 def test_write_build_convert_svg_pdf1():
-    builds, _ = convert_svg_pdf.generate(["sub/foo.svg"], ["/dst/sub/"], None)
+    builds, _ = convert_svg_pdf.generate(["sub/foo.svg"], ["/dst/sub/"], None, {})
     assert BUILDS_CONVERT_SVG_PDF1 == builds
 
 
@@ -102,7 +102,7 @@ BUILDS_CONVERT_SVG_PDF2 = [
 
 
 def test_write_build_convert_svg_pdf2():
-    builds, _ = convert_svg_pdf.generate(["sub/foo.svg"], [], None)
+    builds, _ = convert_svg_pdf.generate(["sub/foo.svg"], [], None, {})
     assert BUILDS_CONVERT_SVG_PDF2 == builds
 
 
@@ -117,7 +117,7 @@ BUILDS_CONVERT_ODF_PDF = [
 
 
 def test_write_build_convert_odf_pdf():
-    builds, _ = convert_odf_pdf.generate(["sub/foo.odp"], ["/dst/sub/"], None)
+    builds, _ = convert_odf_pdf.generate(["sub/foo.odp"], ["/dst/sub/"], None, {})
     assert BUILDS_CONVERT_ODF_PDF == builds
 
 
@@ -132,5 +132,5 @@ BUILDS_CONVERT_PDF_RASTER = [
 
 
 def test_write_build_pdf_raster():
-    builds, _ = pdf_raster.generate(["original.pdf"], ["/public/rastered.pdf"], None)
+    builds, _ = pdf_raster.generate(["original.pdf"], ["/public/rastered.pdf"], None, {})
     assert BUILDS_CONVERT_PDF_RASTER == builds

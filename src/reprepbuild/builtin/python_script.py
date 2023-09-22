@@ -46,7 +46,9 @@ class PythonScript(Command):
             }
         }
 
-    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
+    def generate(
+        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
+    ) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Parse parameters
         if len(inp) != 1:

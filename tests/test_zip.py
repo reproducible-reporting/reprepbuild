@@ -33,7 +33,7 @@ BUILDS_REPRO_ZIP = [
 
 
 def test_write_build_repro_zip():
-    builds, _ = repro_zip.generate(["sub/WAWA.sha256"], ["sub.zip"], None)
+    builds, _ = repro_zip.generate(["sub/WAWA.sha256"], ["sub.zip"], None, {})
     assert BUILDS_REPRO_ZIP == builds
 
 
@@ -48,5 +48,5 @@ BUILDS_REPRO_LATEX_ZIP = [
 
 
 def test_write_build_repro_latex_zip():
-    builds, _ = repro_latex_zip.generate(["latex-sub/sub.fls"], ["sub.zip"], None)
+    builds, _ = repro_latex_zip.generate(["latex-sub/sub.fls"], ["sub.zip"], None, {})
     assert BUILDS_REPRO_LATEX_ZIP == builds

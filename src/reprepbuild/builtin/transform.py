@@ -59,7 +59,9 @@ class Transform(Command):
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
         return {self._name: {"command": self.command}}
 
-    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
+    def generate(
+        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
+    ) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Check parameters
         if len(out) > 1:

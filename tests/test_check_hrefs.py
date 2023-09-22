@@ -37,5 +37,5 @@ BUILDS_CHECK_HREFS = [
 
 
 def test_write_build_check_hrefs():
-    builds, _ = check_hrefs.generate(["sub/boo.md", "foo/plop.pdf"], [], None)
+    builds, _ = check_hrefs.generate(["sub/boo.md", "foo/plop.pdf"], [], None, {})
     assert BUILDS_CHECK_HREFS == builds

@@ -119,7 +119,9 @@ class Task:
 
             # Generate the raw build statements
             try:
-                body_records, not_scanned = self.command.generate(inp, out, self.arg)
+                body_records, not_scanned = self.command.generate(
+                    inp, out, self.arg, self.variables
+                )
             except Exception as exc:
                 exc.add_note(f"While processing task {self}")
                 raise
