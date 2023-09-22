@@ -244,8 +244,8 @@ def load_config(
                     command,
                     default,
                     variables,
-                    _parse_paths(task_config.inp, variables | loop_variables),
-                    _parse_paths(task_config.out, variables | loop_variables),
+                    rewrite_paths(task_config.inp, variables | loop_variables, True),
+                    rewrite_paths(task_config.out, variables | loop_variables, True),
                     task_config.arg,
                 )
                 tasks.append(task)
@@ -265,29 +265,39 @@ def write_if_changed(filename: str, contents: str) -> bool:
     return True
 
 
-def _parse_paths(paths_string: str, variables: dict[str, str]) -> list[str]:
-    """Process paths in the config file: substitue vars and write relative to root.
+def rewrite_paths(
+    paths_string: str, variables: dict[str, str], ignore_wild: bool = False
+) -> list[str]:
+    """Process paths in the config file: substitute vars and write relative to root."""
+    return [rewrite_path(path, variables, ignore_wild) for path in paths_string.split()]
+
+
+def rewrite_path(path: str, variables: dict[str, str], ignore_wild: bool = False) -> list[str]:
+    """Process path in the config file: substitute vars and write relative to root.
 
     Parameters
     ----------
-    paths_string
-        A string containing one or more paths, separated by whitespace
+    path
+        The path to rewrite.
     variables
         The variables to be substituted.
-        Missing variables will raise an error, unless they are named wildcards, like ``${*name}``.
+        Missing variables will raise an error.
+    ignore_wild
+        If true, named wildcards like ``${*name}`` are left untouched.
 
     Returns
     -------
-    paths
-        A list of paths without variable references.
+    rewritten
+        The rewritten path
     """
-    result = []
-    for path0 in NoFancyTemplate(paths_string).substitute_nofancy(variables).split():
-        if path0.startswith(os.sep):
-            path1 = os.path.normpath(os.path.relpath(path0, variables["root"]))
-        else:
-            path1 = os.path.normpath(os.path.join(variables["here"], path0))
-        if path0.endswith(os.sep):
-            path1 += os.sep
-        result.append(path1)
+    if ignore_wild:
+        result = NoFancyTemplate(path).substitute_nofancy(variables)
+    else:
+        result = CaseSensitiveTemplate(path).substitute(variables)
+    if result.startswith(os.sep):
+        result = os.path.normpath(os.path.relpath(result, variables["root"]))
+    else:
+        result = os.path.normpath(os.path.join(variables["here"], result))
+    if path.endswith(os.sep):
+        result += os.sep
     return result
