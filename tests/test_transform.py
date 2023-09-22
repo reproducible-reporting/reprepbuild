@@ -106,6 +106,27 @@ def test_write_build_convert_svg_pdf2():
     assert BUILDS_CONVERT_SVG_PDF2 == builds
 
 
+BUILDS_CONVERT_SVG_PDF3 = [
+    {
+        "rule": "convert_svg_pdf",
+        "inputs": ["sub/foo.svg"],
+        "outputs": ["sub/foo.pdf"],
+        "variables": {"inkscape": "inkscape"},
+    },
+    {
+        "rule": "convert_svg_pdf",
+        "inputs": ["sub/bar.svg"],
+        "outputs": ["sub/bar.pdf"],
+        "variables": {"inkscape": "inkscape"},
+    },
+]
+
+
+def test_write_build_convert_svg_pdf3():
+    builds, _ = convert_svg_pdf.generate(["sub/foo.svg", "sub/bar.svg"], [], None, {})
+    assert BUILDS_CONVERT_SVG_PDF3 == builds
+
+
 BUILDS_CONVERT_ODF_PDF = [
     {
         "rule": "convert_odf_pdf",

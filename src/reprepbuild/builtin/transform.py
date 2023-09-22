@@ -66,7 +66,7 @@ class Transform(Command):
         # Check parameters
         if len(out) > 1:
             raise ValueError(f"Expecting at most one destination, got {len(out)}: {out}")
-        if len(inp) > 1 and (len(out) == 0 or not out[0].endswith(os.sep)):
+        if len(inp) > 1 and len(out) == 1 and not out[0].endswith(os.sep):
             raise ValueError(f"Need directory output for multiple inputs, got {len(out)}: {out}")
         if len(out) == 0 and self.new_ext is None:
             raise ValueError("Output required because extension does not change.")
