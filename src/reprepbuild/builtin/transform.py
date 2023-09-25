@@ -22,7 +22,7 @@ import attrs
 
 from ..command import Command
 
-__all__ = ("copy", "render", "convert_svg_pdf", "convert_odf_pdf")
+__all__ = ("copy", "render", "convert_svg_pdf", "convert_odf_pdf", "pdf_raster")
 
 
 @attrs.define
@@ -49,7 +49,7 @@ class Transform(Command):
     )
 
     @implicit.validator
-    def validate_implicit(self, attribute, implicit):
+    def validate_implicit(self, _attribute, implicit):
         for i, imp in enumerate(implicit):
             if not isinstance(imp, str):
                 raise TypeError(f"Item {i} of implicit inputs is not a string: {imp}")

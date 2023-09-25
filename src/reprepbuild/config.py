@@ -30,7 +30,7 @@ import yaml
 
 from .command import Command
 from .fancyglob import NoFancyTemplate
-from .task import BarrierTask, Task
+from .generator import BarrierGenerator, BaseGenerator, BuildGenerator
 from .utils import CaseSensitiveTemplate
 
 __all__ = ("load_config",)
@@ -93,7 +93,7 @@ def iterate_loop_config(loop: list[LoopConfig]):
 
 
 @attrs.define
-class CommandConfig(TaskConfig):
+class BuildConfig(TaskConfig):
     command: str = attrs.field(validator=attrs.validators.instance_of(str))
     inp: str = attrs.field(validator=attrs.validators.instance_of(str))
     out: str = attrs.field(validator=attrs.validators.instance_of(str), default="")
@@ -122,7 +122,7 @@ class BarrierConfig(TaskConfig):
 class Config:
     imports: list[str] = attrs.field(default=attrs.Factory(list))
     variables: dict[str, str] = attrs.field(default=attrs.Factory(dict))
-    tasks: list[CommandConfig | SubDirConfig | BarrierConfig] = attrs.field(
+    tasks: list[BuildConfig | SubDirConfig | BarrierConfig] = attrs.field(
         default=attrs.Factory(list)
     )
 
@@ -151,7 +151,7 @@ class Config:
         for task in tasks:
             if not isinstance(task, TaskConfig):
                 raise TypeError(f"Tasks must be TaskConfig, got: {task}")
-            if isinstance(task, CommandConfig):
+            if isinstance(task, BuildConfig):
                 if RE_NAME.fullmatch(task.command) is None:
                     raise ValueError(f"Invalid task command: {task.command}")
 
@@ -159,7 +159,7 @@ class Config:
 def load_config(
     root: str,
     path_config: str,
-    tasks: list[Task],
+    generators: list[BaseGenerator],
     inherit_variables: (dict[str, str] | None) = None,
     commands: (dict[str, Command] | None) = None,
 ):
@@ -171,13 +171,17 @@ def load_config(
         The directory of the top-level ``reprepbuild.yaml`` file.
     path_config
         The path of the ``reprepbuild.yaml`` file in the current recursion.
-    tasks
-        The list of tasks being generated. (output parameter)
+    generators
+        The list of generators being generated. (output parameter)
     inherit_variables
         Variables inherited from higher recursions.
     commands
         Commands inherited from higher recursions.
     """
+    # Convert root to an absolute path.
+    # This is needed to differentiate relative and absolute file references.
+    root = os.path.abspath(root)
+
     # Load config file into Config instance with basic validation.
     converter = cattrs.Converter(forbid_extra_keys=True)
     with open(os.path.join(root, path_config)) as fh:
@@ -233,11 +237,11 @@ def load_config(
             load_config(
                 root,
                 os.path.join(here, task_config.subdir, os.path.basename(path_config)),
-                tasks,
+                generators,
                 variables,
                 commands,
             )
-        elif isinstance(task_config, CommandConfig):
+        elif isinstance(task_config, BuildConfig):
             command_name = task_config.command
             if command_name.startswith("_"):
                 default = False
@@ -248,7 +252,7 @@ def load_config(
             if command is None:
                 raise ValueError(f"In {path_config}, unknown command: {command_name}")
             for loop_variables in iterate_loop_config(task_config.loop):
-                task = Task(
+                generator = BuildGenerator(
                     command,
                     default,
                     variables,
@@ -257,9 +261,9 @@ def load_config(
                     task_config.arg,
                     task_config.phony,
                 )
-                tasks.append(task)
+                generators.append(generator)
         elif isinstance(task_config, BarrierConfig):
-            tasks.append(BarrierTask(task_config.barrier))
+            generators.append(BarrierGenerator(task_config.barrier))
         else:
             raise TypeError(f"Cannot use task_config of type {type(task_config)}: {task_config}")
 
@@ -283,7 +287,7 @@ def rewrite_paths(
     return [rewrite_path(path, variables, ignore_wild) for path in paths_string.split()]
 
 
-def rewrite_path(path: str, variables: dict[str, str], ignore_wild: bool = False) -> list[str]:
+def rewrite_path(path: str, variables: dict[str, str], ignore_wild: bool = False) -> str:
     """Process path in the config file: substitute vars and write relative to root.
 
     Parameters

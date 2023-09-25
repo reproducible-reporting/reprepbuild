@@ -39,6 +39,8 @@ def main() -> int:
         latex = True
     elif args.mode == "auto":
         latex = args.path_out.endswith(".tex")
+    else:
+        raise ValueError(f"mode not supported: {args.mode}")
     dir_out = os.path.normpath(os.path.dirname(args.path_out))
     result = render(args.path_in, variables, latex, dir_out=dir_out)
     with open(args.path_out, "w") as fh:

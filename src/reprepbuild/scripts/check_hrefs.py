@@ -140,8 +140,8 @@ def check_href(href: HRef, fn_src: str) -> str:
     elif "://" in href.url:
         session = requests.Session()
         session.headers["User-Agent"] = (
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36"
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
         )
         try:
             status_code = str(session.head(href.url).status_code)

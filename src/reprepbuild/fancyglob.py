@@ -21,8 +21,9 @@
 
 import re
 import string
+from collections.abc import Collection
 
-RE_FANCY_WILD = re.compile(r"(\[.*?\]|\$\{\*[a-zA-Z0-9_]*?\}|[*]{1,2}|[?])")
+RE_FANCY_WILD = re.compile(r"(\[.*?]|\$\{\*[a-zA-Z0-9_]*?}|[*]{1,2}|[?])")
 
 
 __all__ = ("convert_fancy_to_normal", "convert_fancy_to_regex", "NoFancyTemplate", "fancy_filter")
@@ -114,17 +115,17 @@ class NoFancyTemplate(string.Template):
         mapping = mapping | {
             key: f"${{{key}}}" for key in self.get_identifiers() if key.startswith("*")
         }
-        return self.substitute(mapping)
+        return self.substitute(mapping, **kwds)
 
 
 def fancy_filter(
-    paths: list[str], fancy: str
+    paths: Collection[str], fancy: str
 ) -> tuple[tuple[str, ...], dict[tuple[str, ...], list[str]]]:
     """Filter results from ordinary glob with the fancy glob string.
 
     Parameters
     ----------
-    filenames
+    paths
         A list of paths generated with glob.
     fancy
         A fancy glob expression. See notes for details.
@@ -169,7 +170,15 @@ def fancy_filter(
 
     .. code-block:: python
 
-        >>> pprint(fancyglob("path/${*prefix}/foo*/${*prefix}-main.txt"))
+        >>> from pprint import pprint
+        >>> paths = [
+            "path/some/foo1/some-main.txt",
+            "path/other/foo1/other-main.txt",
+            "path/other/foo2/other-main.txt",
+            "path/other/foo1/some-main.txt",
+        ]
+        >>> fancy = "path/${*prefix}/foo*/${*prefix}-main.txt"
+        >>> pprint(fancy_filter(paths, fancy))
         (('prefix',),
          {('other',): ['path/other/foo1/other-main.txt',
                        'path/other/foo2/other-main.txt'],

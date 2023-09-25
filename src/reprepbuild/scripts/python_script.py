@@ -93,7 +93,7 @@ def run_script(path_py, argstr) -> int:
 
     # Analyze the imported modules for the depfile.
     # Note that a depfile is sufficient and no dyndep is needed
-    # because imported Python modules are not the output of previous build tasks.
+    # because imported Python modules are not the output of previous build steps.
     imported_paths = set()
     for module in sys.modules.values():
         module_path = getattr(module, "__file__", None)

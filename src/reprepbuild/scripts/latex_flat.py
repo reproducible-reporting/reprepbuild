@@ -63,7 +63,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def flatten_latex(path_tex: str, fh_out: TextIO, out_root: str, tex_root: (str | None) = None):
+def flatten_latex(
+    path_tex: str, fh_out: TextIO, out_root: str, tex_root: (str | None) = None
+) -> int:
     """Write a flattened LaTeX file
 
     Parameters
@@ -123,15 +125,16 @@ def flatten_latex(path_tex: str, fh_out: TextIO, out_root: str, tex_root: (str |
                     print(f"Could not parse '{stripped}' on line {iline+1} in '{path_tex}'")
                 else:
                     print("Unknown error")
-                return
+                return status
             elif isinstance(sub_path_tex, str):
                 flatten_latex(sub_path_tex, fh_out, out_root, new_root)
             else:
                 fh_out.write(rewrite_line(line, tex_root, out_root))
+    return 0
 
 
 RE_REWRITE = re.compile(
-    r"(?P<comopt>\\(?:includegraphics|thebibliography)(?:\s*\[.*?\])?\s*)\{(?P<path>.*?)\}"
+    r"(?P<comopt>\\(?:includegraphics|thebibliography)(?:\s*\[.*?])?\s*)\{(?P<path>.*?)}"
 )
 
 

@@ -17,14 +17,14 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Unit tests for reprepbuild.task"""
+"""Unit tests for reprepbuild.generator"""
 
 import contextlib
 import os
 
 import pytest
 from reprepbuild.builtin import copy, latex, python_script, render
-from reprepbuild.task import BarrierTask, Task, _clean_build, _split_if_string
+from reprepbuild.generator import BarrierGenerator, BuildGenerator, _clean_build, _split_if_string
 
 
 def test_split_if_string():
@@ -45,10 +45,10 @@ def test_clean_build():
 
 def test_generate_named_wildcard_inp_out(tmpdir):
     tmpdir = str(tmpdir)
-    task = Task(copy, True, {}, ["foo${*id}.txt"], ["bar${*id}.txt"])
+    gen = BuildGenerator(copy, True, {}, ["foo${*id}.txt"], ["bar${*id}.txt"])
     outputs = {"foo1.txt", "foo3.txt"}
     with contextlib.chdir(tmpdir):
-        results = list(task.generate(outputs, set()))
+        results = list(gen(outputs, set()))
     [records0, ns0], [records1, ns1] = results
     assert records0 == [
         "command: copy",
@@ -70,10 +70,10 @@ def test_generate_named_wildcard_inp_out(tmpdir):
 
 def test_generate_anonymous_wildcard_inp_out(tmpdir):
     tmpdir = str(tmpdir)
-    task = Task(copy, True, {}, ["foo*.txt"], ["bar/"])
+    gen = BuildGenerator(copy, True, {}, ["foo*.txt"], ["bar/"])
     outputs = {"foo1.txt", "foo3.txt"}
     with contextlib.chdir(tmpdir):
-        results = list(task.generate(outputs, set()))
+        results = list(gen(outputs, set()))
     [[records, ns]] = results
     assert records == [
         "command: copy",
@@ -99,10 +99,10 @@ def test_generate_anonymous_wildcard_inp_out(tmpdir):
 
 def test_generate_named_wildcard_inp_inp_out(tmpdir):
     tmpdir = str(tmpdir)
-    task = Task(copy, True, {}, ["foo${*id}.txt", "bar${*id}.txt"], ["spam${*id}/"])
+    gen = BuildGenerator(copy, True, {}, ["foo${*id}.txt", "bar${*id}.txt"], ["spam${*id}/"])
     outputs = {"foo1.txt", "bar2.txt", "foo3.txt", "bar3.txt"}
     with contextlib.chdir(tmpdir):
-        results = list(task.generate(outputs, set()))
+        results = list(gen(outputs, set()))
     [[records, ns]] = results
     assert records == [
         "command: copy",
@@ -144,10 +144,10 @@ def test_generate_ignore_missing(tmpdir, ignore):
     with open(os.path.join(tmpdir, "script.py"), "w") as fh:
         fh.write(PYTHON_SCRIPT)
     variables = {"ignore_missing": "foo*"} if ignore else {}
-    task = Task(python_script, True, variables, ["script.py"], [])
+    gen = BuildGenerator(python_script, True, variables, ["script.py"], [])
     outputs = {}
     with contextlib.chdir(tmpdir):
-        results = list(task.generate(outputs, set()))
+        results = list(gen(outputs, set()))
     [[records, ns]] = results
     if ignore:
         assert records == ["command: python_script", "inp: script.py"]
@@ -170,10 +170,12 @@ def test_generate_ignore_missing(tmpdir, ignore):
 
 def test_generate_add_variables(tmpdir):
     tmpdir = str(tmpdir)
-    task = Task(render, True, {"here": "template"}, ["template/README.md"], ["public/README.md"])
+    gen = BuildGenerator(
+        render, True, {"here": "template"}, ["template/README.md"], ["public/README.md"]
+    )
     outputs = {"template/README.md"}
     with contextlib.chdir(tmpdir):
-        results = list(task.generate(outputs, set()))
+        results = list(gen(outputs, set()))
     [[records, ns]] = results
     assert records == [
         "command: render",
@@ -193,10 +195,10 @@ def test_generate_add_variables(tmpdir):
 
 def test_generate_no_defaults(tmpdir):
     tmpdir = str(tmpdir)
-    task = Task(copy, False, {}, ["README.md"], ["public/README.md"])
+    gen = BuildGenerator(copy, False, {}, ["README.md"], ["public/README.md"])
     outputs = {"README.md"}
     with contextlib.chdir(tmpdir):
-        results = list(task.generate(outputs, set()))
+        results = list(gen(outputs, set()))
     [[records, ns]] = results
     assert records == [
         "command: copy",
@@ -224,10 +226,10 @@ def test_generate_not_scanned(tmpdir):
     tmpdir = str(tmpdir)
     with open(os.path.join(tmpdir, "main.tex"), "w") as fh:
         fh.write(MAIN_TEX)
-    task = Task(latex, False, {}, ["main.tex"], [])
+    gen = BuildGenerator(latex, False, {}, ["main.tex"], [])
     outputs = {}
     with contextlib.chdir(tmpdir):
-        results = list(task.generate(outputs, set()))
+        results = list(gen(outputs, set()))
     [[records, ns]] = results
     assert records == [
         "command: latex",
@@ -246,11 +248,11 @@ def test_generate_not_scanned(tmpdir):
 
 def test_generate_barrier(tmpdir):
     tmpdir = str(tmpdir)
-    task = BarrierTask("hold")
+    gen = BarrierGenerator("hold")
     outputs = {"foo.txt", "bar.txt", "ignored.txt"}
     defaults = {"foo.txt", "bar.txt"}
     with contextlib.chdir(tmpdir):
-        results = list(task.generate(outputs, defaults))
+        results = list(gen(outputs, defaults))
     [[records, ns]] = results
     assert records == [{"inputs": ["bar.txt", "foo.txt"], "outputs": ["hold"], "rule": "phony"}]
     assert ns == []

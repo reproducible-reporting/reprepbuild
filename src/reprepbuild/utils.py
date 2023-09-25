@@ -41,6 +41,7 @@ import os
 import re
 import string
 import sys
+from collections.abc import Collection
 
 from parse import parse
 
@@ -101,7 +102,7 @@ def hide_path(visible_path: str) -> str:
     return os.path.join(parent, name)
 
 
-def _filter_local_files(all_paths: list[str]) -> list[str]:
+def _filter_local_files(all_paths: Collection[str]) -> list[str]:
     """Return only those paths under the cwd, without duplicates, sorted and normalized."""
     local = set()
     for any_path in all_paths:
@@ -111,7 +112,7 @@ def _filter_local_files(all_paths: list[str]) -> list[str]:
     return sorted(local)
 
 
-def write_dep(path_dep: str, outputs: list[str], inputs: list[str]):
+def write_dep(path_dep: str, outputs: Collection[str], inputs: Collection[str]):
     """Write a depfile for outputs that depend on inputs.
 
     Inputs are ignored when they are not inside of the current directory (recursively).

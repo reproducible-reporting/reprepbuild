@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Generate Ninja build records for given concrete (non-glob) inputs, outputs and arguments."""
+"""RepRepBuild Commands are like generators, more specific and without glob args."""
 
 
 import attrs
@@ -50,9 +50,9 @@ class Command:
         Parameters
         ----------
         inp
-            The input paths for the task.
+            The input paths for the command.
         out
-            The output paths for the task.
+            The output paths for the command.
         arg
             Additional argument, may be anything.
         variables

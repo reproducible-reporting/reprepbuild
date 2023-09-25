@@ -24,7 +24,7 @@ import os
 
 from reprepbuild.builtin.transform import copy
 from reprepbuild.config import LoopConfig, iterate_loop_config, load_config
-from reprepbuild.task import Task
+from reprepbuild.generator import BuildGenerator
 
 TEST_CONFIG = """\
 imports:
@@ -94,15 +94,15 @@ def test_config_example(tmpdir: str):
     }
 
     assert len(tasks) == 3
-    assert tasks[0] == Task(
+    assert tasks[0] == BuildGenerator(
         copy,
         True,
         variables | {"var1": "usr", "here": "sub1"},
         ["sub1/one-foo${*id}.txt"],
         ["egg-bar/bacon/sub1/usr${*id}.txt"],
     )
-    assert tasks[1] == Task(copy, True, variables, ["egg"], ["egg-bar/bacon/"])
-    assert tasks[2] == Task(
+    assert tasks[1] == BuildGenerator(copy, True, variables, ["egg"], ["egg-bar/bacon/"])
+    assert tasks[2] == BuildGenerator(
         copy,
         False,
         variables | {"var2": "bin", "here": "sub2"},

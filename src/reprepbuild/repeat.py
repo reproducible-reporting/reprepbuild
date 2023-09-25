@@ -28,7 +28,7 @@ from glob import glob
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from .__main__ import generator, parse_args, sanity_check
+from .__main__ import generate, parse_args, sanity_check
 
 
 class AnyChangeHandler(FileSystemEventHandler):
@@ -88,7 +88,7 @@ def main():
                 continue
             event_handler.snooze()
             try:
-                generator(os.getcwd())
+                generate(os.getcwd())
                 subprocess.run(
                     ["ninja", *args],
                     check=False,

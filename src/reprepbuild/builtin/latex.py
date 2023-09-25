@@ -56,10 +56,10 @@ from ..command import Command
 __all__ = ("scan_latex_deps", "latex", "latex_flat", "latex_diff")
 
 
-RE_INPUT = re.compile(r"\\input\s*\{(.*?)\}", re.DOTALL)
-RE_INCLUDEGRAPHICS = re.compile(r"\\includegraphics(?:\s*\[.*?\])?\s*\{(.*?)\}", re.DOTALL)
-RE_BIBLIOGRAPHY = re.compile(r"\\bibliography\s*\{(.*?)\}", re.DOTALL)
-RE_IMPORT = re.compile(r"\\import\s*\{(.*?)\}\s*\{(.*?)\}", re.DOTALL)
+RE_INPUT = re.compile(r"\\input\s*\{(.*?)}", re.DOTALL)
+RE_INCLUDEGRAPHICS = re.compile(r"\\includegraphics(?:\s*\[.*?])?\s*\{(.*?)}", re.DOTALL)
+RE_BIBLIOGRAPHY = re.compile(r"\\bibliography\s*\{(.*?)}", re.DOTALL)
+RE_IMPORT = re.compile(r"\\import\s*\{(.*?)}\s*\{(.*?)}", re.DOTALL)
 
 
 def cleanup_path(path, ext=None):
@@ -183,8 +183,6 @@ class Latex(Command):
         if not path_tex.endswith(".tex"):
             raise ValueError(f"The input of the latex command must end with .tex, got {path_tex}.")
         prefix = path_tex[:-4]
-        workdir, stem = os.path.split(prefix)
-        workdir = os.path.normpath(workdir)
         if len(out) != 0:
             raise ValueError(f"Expected no outputs, got: {out}")
         if arg is not None:

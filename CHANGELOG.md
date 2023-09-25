@@ -15,7 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   This is useful for checks that require all (preceding) outputs to be present.
 - New `--translate` option for `rr-check-hrefs` to translate remote URLs to local paths.
 
-## Fixed
+### Changed
+
+- More intuitive names for some classes and modules.
+
+### Fixed
 
 - Send output of `gs` in command `pdf_raster` to `/dev/null.
 - Pass `variables` to `Command.generate` method to support more complicated build lines.

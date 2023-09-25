@@ -24,13 +24,13 @@ import argparse
 import os
 import sys
 
-from ..__main__ import generator
+from ..__main__ import generate
 
 
 def main() -> int:
     """Main program."""
     args = parse_args()
-    generator(args.root)
+    generate(args.root)
     return 0
 
 

@@ -36,12 +36,12 @@ import sys
 from ninja import Writer
 
 from .config import load_config
-from .task import BaseTask, Task
+from .generator import BaseGenerator, BuildGenerator
 
-__all__ = ("main", "generator")
+__all__ = ("main", "generate")
 
 
-def generator(root: str):
+def generate(root: str):
     """Parse ``reprebuild.yaml`` files and write a ``build.ninja`` file.
 
     Parameters
@@ -50,22 +50,22 @@ def generator(root: str):
         Directory where to start, i.e. where the top-level ``reprebuild.yaml`` is located.
     """
     # Parse the reprepbuild.yaml files (recursively)
-    tasks = []
-    load_config(os.getcwd(), "reprepbuild.yaml", tasks)
+    generators = []
+    load_config(root, "reprepbuild.yaml", generators)
 
     # Loop over all files and create pools, rules and builds for them.
     with open("build.ninja", "w") as f:
         writer = Writer(f, 100)
 
         # Write pools
-        pools = _collect_dicts(tasks, "pools")
+        pools = _collect_dicts(generators, "pools")
         writer.comment("All pools")
         for pool_name, pool in pools.items():
             writer.pool(name=pool_name, **pool)
         writer.newline()
 
         # Write all rules, even if some are not used.
-        rules = pools = _collect_dicts(tasks, "rules")
+        rules = _collect_dicts(generators, "rules")
         writer.comment("All rules (except generator)")
         for rule_name, rule in rules.items():
             writer.rule(name=rule_name, **rule)
@@ -80,8 +80,8 @@ def generator(root: str):
         outputs = set()
         defaults = set()
         not_scanned = set()
-        for task in tasks:
-            for records, new_not_scanned in task.generate(outputs, defaults):
+        for generator in generators:
+            for records, new_not_scanned in generator(outputs, defaults):
                 not_scanned.update(new_not_scanned)
                 for record in records:
                     if isinstance(record, str):
@@ -106,12 +106,12 @@ def generator(root: str):
             writer.build(rule="generator", implicit=sorted(not_scanned), outputs="build.ninja")
 
 
-def _collect_dicts(tasks: list[BaseTask], attr_name: str) -> dict[str:object]:
+def _collect_dicts(generators: list[BaseGenerator], attr_name: str) -> dict[str:object]:
     """Combine dictionaries, used for pools and rules."""
     result = {}
-    for task in tasks:
-        if isinstance(task, Task):
-            for name, kwargs in getattr(task.command, attr_name).items():
+    for generator in generators:
+        if isinstance(generator, BuildGenerator):
+            for name, kwargs in getattr(generator.command, attr_name).items():
                 if name in result:
                     if result[name] != kwargs:
                         raise ValueError(f"Same name but different {attr_name}: {name}")
@@ -141,7 +141,7 @@ def main():
     """Main program."""
     sanity_check()
     args = parse_args()
-    generator(os.getcwd())
+    generate(os.getcwd())
     subprocess.run(
         ["ninja", *args],
         check=False,

@@ -17,11 +17,11 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""A RepRepBuild task is a command with (fancyglob) arguments."""
+"""A RepRepBuild Generator can produce multiple build steps for Ninja build."""
 
 import os
 import re
-from collections.abc import Iterator
+from collections.abc import Collection, Iterator
 from glob import glob
 
 import attrs
@@ -35,27 +35,24 @@ from .fancyglob import (
 )
 from .utils import CaseSensitiveTemplate
 
-__all__ = ("Task",)
+__all__ = ("BaseGenerator", "BarrierGenerator", "BuildGenerator")
 
 
 def _split_if_string(arg):
     return arg.split() if isinstance(arg, str) else arg
 
 
-# TODO: Task is not a good name, They are essentially build generators, not tasks.
-#   We have a CommandGenerator (old Task) and a BarrierGenerator (BarrierTask)
-#   generate method can be become __call__
-
-
 @attrs.define
-class BaseTask:
-    def generate(self, outputs: set[str]) -> Iterator[tuple[(str | list | dict), list[str]]]:
-        """Generate records for the Ninja build file associated with this task.
+class BaseGenerator:
+    def __call__(
+        self, outputs: set[str], defaults: set[str]
+    ) -> Iterator[tuple[(str | list | dict), list[str]]]:
+        """Generate records for the Ninja build file associated with one task.
 
         Parameters
         ----------
         outputs
-            A set filenames that preceding tasks will create.
+            A set filenames that preceding build steps will create.
             These will be treated as potential inputs,
             in addition to the ones found with glob.
 
@@ -72,12 +69,15 @@ class BaseTask:
 
 
 @attrs.define
-class BarrierTask(BaseTask):
+class BarrierGenerator(BaseGenerator):
+    """A generator to complete all builds up to a barrier, before doing the rest."""
+
     name: str = attrs.field(validator=attrs.validators.instance_of(str))
 
-    def generate(
+    def __call__(
         self, outputs: set[str], defaults: set[str]
     ) -> Iterator[tuple[(str | list | dict), list[str]]]:
+        """See BaseGenerator.__call__"""
         build = {
             "outputs": [self.name],
             "rule": "phony",
@@ -87,12 +87,12 @@ class BarrierTask(BaseTask):
 
 
 @attrs.define
-class Task(BaseTask):
-    """A task from which multiple build records can be derived."""
+class BuildGenerator(BaseGenerator):
+    """A generator from which multiple build records can be derived."""
 
     # A Command sub class
     command: Command = attrs.field(validator=attrs.validators.instance_of(Command))
-    # If the output of the tasks must be built, even when not required by others.
+    # If the output of that must be built, even when not required by future steps.
     default: bool = attrs.field(validator=attrs.validators.instance_of(bool))
     # The variables from the config
     variables: dict[str, str] = attrs.field(validator=attrs.validators.instance_of(dict))
@@ -112,17 +112,17 @@ class Task(BaseTask):
     re_ignore_safe: re.Pattern = attrs.field(init=False, default=None)
 
     @inp.validator
-    def _validate_inp(self, attribute, inp):
+    def _validate_inp(self, _attribute, inp):
         if len(inp) == 0:
             raise ValueError(
-                "A task must have least one input, "
+                "A generator must have least one input, "
                 f"got command {self.command.name} with arguments."
             )
         if not all(isinstance(inp_path, str) for inp_path in inp):
             raise TypeError("All input paths must be strings.")
 
     @out.validator
-    def _validate_out(self, attribute, out):
+    def _validate_out(self, _attribute, out):
         if not all(isinstance(out_path, str) for out_path in out):
             raise TypeError("All output paths must be strings.")
 
@@ -134,10 +134,10 @@ class Task(BaseTask):
             )
         )
 
-    def generate(
+    def __call__(
         self, outputs: set[str], defaults: set[str]
     ) -> Iterator[tuple[(str | list | dict), list[str]]]:
-        """See BaseTask.generate"""
+        """See BaseGenerator.__call__"""
         # Get a file list of potentially relevant filenames for the first input
         filenames = set(glob(convert_fancy_to_normal(self.inp[0]), recursive=True))
         filenames.update(outputs)
@@ -157,7 +157,7 @@ class Task(BaseTask):
                     inp, out, self.arg, self.variables
                 )
             except Exception as exc:
-                exc.add_note(f"While processing task {self}")
+                exc.add_note(f"While processing generator {self}")
                 raise
 
             # Prepare informative and cleaned-up records
@@ -168,8 +168,8 @@ class Task(BaseTask):
             yield records, not_scanned
 
     def _extend_inp_out(
-        self, inp: list[str], keys: list[str], values: list[str], outputs: set[str]
-    ) -> list[str] | None:
+        self, inp: list[str], keys: Collection[str], values: Collection[str], outputs: set[str]
+    ) -> tuple[list[str] | None, list[str] | None]:
         """Search for additional inputs (after the first)."""
         variables = {"*" + key: value for key, value in zip(keys, values, strict=True)}
         for inp_path in self.inp[1:]:
@@ -177,7 +177,7 @@ class Task(BaseTask):
             filenames = set(glob(inp_path, recursive=True))
             filenames.update(outputs)
             _, inp1_mapping = fancy_filter(filenames, inp_path)
-            # If no files found, skip this task.
+            # If no files found, skip this generator.
             if len(inp1_mapping) == 0:
                 return None, None
             inp.extend(inp1_mapping[()])
