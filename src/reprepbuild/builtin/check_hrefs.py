@@ -46,12 +46,14 @@ class CheckHRefs(Command):
         # Check parameters
         if not all(path_doc.endswith(".md") or path_doc.endswith(".pdf") for path_doc in inp):
             raise ValueError(
-                f"The inputs for check_hrefs must be a MarkDown or PDF files, got {inp}."
+                f"The inputs for check_hrefs must be a Markdown or PDF files, got {inp}."
             )
         if len(out) != 0:
             raise ValueError(f"Expected no outputs, got: {out}")
-        if arg is not None:
-            raise ValueError(f"Expected no arguments, got {arg}")
+        if arg is None:
+            translate = ""
+        else:
+            translate = "--translate " + " ".join(arg)
 
         # Write builds
         builds = []
@@ -60,6 +62,7 @@ class CheckHRefs(Command):
                 "rule": "check_hrefs",
                 "inputs": [inp_path],
                 "outputs": [hide_path(f"{inp_path}-check_hrefs.log")],
+                "variables": {"translate": translate},
             }
             builds.append(build)
         return builds, []

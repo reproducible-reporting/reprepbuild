@@ -27,11 +27,13 @@ BUILDS_CHECK_HREFS = [
         "rule": "check_hrefs",
         "inputs": ["sub/boo.md"],
         "outputs": ["sub/.boo.md-check_hrefs.log"],
+        "variables": {"translate": ""},
     },
     {
         "rule": "check_hrefs",
         "inputs": ["foo/plop.pdf"],
         "outputs": ["foo/.plop.pdf-check_hrefs.log"],
+        "variables": {"translate": ""},
     },
 ]
 

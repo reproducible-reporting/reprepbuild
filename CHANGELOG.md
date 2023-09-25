@@ -44,7 +44,7 @@ repository is just fine.
 
 - New script `rr-generator`, which just writes the `build.ninja` file without calling `ninja`.
 - Conversion of Open Document files to to `.pdf`.
-- Rendering of source files (e.g. LaTeX or MarkDown) with Jinja2, with `rr-render`.
+- Rendering of source files (e.g. LaTeX or Markdown) with Jinja2, with `rr-render`.
 - Paths of external tools (like `inkscape`, `pdflatex`, ...) are configurable.
 - A rule for merging PDFs with `mutool`: `pdf_merge`.
 - A rule for rastering PDFs with `gs`: `pdf_raser`.

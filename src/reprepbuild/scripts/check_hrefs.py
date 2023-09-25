@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Check hyper references in MarkDown and PDF files."""
+"""Check hyper references in Markdown and PDF files."""
 
 import argparse
 import os
@@ -35,20 +35,31 @@ def main() -> int:
     """Main program."""
     args = parse_args()
     hrefs = collect_hrefs(args.fn_src)
-    return check_hrefs(hrefs, args.fn_src, args.fn_log)
+    if args.translate is not None:
+        make_url_substitutions(hrefs, args.translate)
+    check_hrefs(hrefs, args.fn_src, args.fn_log)
+    return 0
 
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        "rr-check-hrefs", description="Check hyper references MarkDown or PDF file."
+        "rr-check-hrefs", description="Check hyper references Markdown or PDF file."
     )
     parser.add_argument("fn_src", help="Markdown or PDF file.")
     parser.add_argument("fn_log", help="Log file with overview of check references.")
+    parser.add_argument(
+        "--translate",
+        default=None,
+        nargs="*",
+        help="Pairs of pattern and replacement strings. "
+        "This can be used to translate hyperlinks to local paths for faster checking, "
+        "and is also useful when some links are behind a login.",
+    )
     return parser.parse_args()
 
 
-@attrs.define(frozen=True)
+@attrs.define()
 class HRef:
     """A hyper reference to be checked."""
 
@@ -67,7 +78,7 @@ def collect_hrefs(fn_src: str) -> list[HRef]:
 
 
 def collect_hrefs_md(fn_md: str) -> list[HRef]:
-    """Find all hyper references in one MarkDown file."""
+    """Find all hyper references in one Markdown file."""
     with open(fn_md) as f:
         html = markdown.markdown(f.read())
     soup = BeautifulSoup(html, "html.parser")
@@ -88,6 +99,15 @@ def collect_hrefs_pdf(fn_pdf: str) -> list[HRef]:
     return hrefs
 
 
+def make_url_substitutions(hrefs: list[HRef], translate: list[str]):
+    if len(translate) % 2 != 0:
+        print("Expecting an even number of arguments to --translate.")
+        return 1
+    for orig, repl in zip(translate[::2], translate[1::2], strict=True):
+        for href in hrefs:
+            href.url = href.url.replace(orig, repl)
+
+
 class HRefStatus(StrEnum):
     PASSED = auto()
     FAILED = auto()
@@ -97,24 +117,20 @@ class HRefStatus(StrEnum):
 def check_hrefs(hrefs: list[HRef], fn_src: str, fn_log: str):
     """Check the hyper references."""
     seen = set()
-    screen = []
     log = []
+    broken = False
     for href in hrefs:
         if href.url in seen:
             continue
         status = check_href(href, fn_src)
-        line = f"{status}: {href.url}"
         if status == HRefStatus.FAILED:
-            screen.append(line)
-        log.append(line)
+            print(f"\033[1;31;40mBROKEN LINK:\033[0;0m {href.url}")
+            broken = True
+        log.append(f"{status}: {href.url}\n")
         seen.add(href.url)
-
-    with open(fn_log, "w") as f:
-        for line in log:
-            f.write(line + "\n")
-    if len(screen) > 0:
-        print("\n".join(screen))
-        return 1
+    if not broken:
+        with open(fn_log, "w") as fh:
+            fh.write("".join(log))
     return 0
 
 
@@ -122,9 +138,14 @@ def check_href(href: HRef, fn_src: str) -> str:
     if href.url.startswith("mailto:"):
         return HRefStatus.IGNORED
     elif "://" in href.url:
+        session = requests.Session()
+        session.headers["User-Agent"] = (
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36"
+        )
         try:
-            status_code = str(requests.get(href.url).status_code)
-            if status_code[0] in "23":
+            status_code = str(session.head(href.url).status_code)
+            if status_code[0] == "2":
                 return HRefStatus.PASSED
             else:
                 return HRefStatus.FAILED
