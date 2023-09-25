@@ -62,7 +62,7 @@ Thank you very much!
 """
 
 
-def main():
+def main() -> int:
     """Main program."""
     args = parse_args()
 

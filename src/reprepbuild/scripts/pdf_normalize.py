@@ -27,9 +27,10 @@ import fitz
 __all__ = ("pdf_normalize",)
 
 
-def main():
+def main() -> int:
     """Main program."""
     pdf_normalize(parse_args().path_pdf)
+    return 0
 
 
 def parse_args() -> argparse.Namespace:

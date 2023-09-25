@@ -36,7 +36,7 @@ import tqdm
 from setuptools.command.egg_info import FileList
 
 
-def main():
+def main() -> int:
     """Main program."""
     fn_manifest_in = parse_args()
     if not fn_manifest_in.endswith(".in"):
@@ -57,6 +57,7 @@ def main():
         for fn in tqdm.tqdm(filelist.files, delay=1):
             size, sha256 = compute_sha256(fn)
             f.write(f"{size:15d} {sha256} {fn}\n")
+    return 0
 
 
 def parse_args() -> argparse.Namespace:

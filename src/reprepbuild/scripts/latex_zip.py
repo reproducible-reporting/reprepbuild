@@ -28,7 +28,7 @@ from .manifest import compute_sha256
 from .zip import reprozip
 
 
-def main():
+def main() -> int:
     """Main program."""
     args = parse_args()
     return article_zip(args.path_fls, args.path_zip)
@@ -44,7 +44,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def article_zip(path_fls: str, path_zip: str):
+def article_zip(path_fls: str, path_zip: str) -> int:
     """Zip the sources of the article."""
     if not path_fls.endswith(".fls"):
         print(f"The input must have a `.fls` extension. Got {path_fls}")

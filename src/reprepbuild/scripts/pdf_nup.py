@@ -24,12 +24,13 @@ import fitz
 __all__ = ("pdf_nup",)
 
 
-def main():
+def main() -> int:
     """Main program."""
     args = parse_args()
     pdf_nup(
         args.path_src, args.nrow, args.ncol, args.margin, args.width, args.height, args.path_dst
     )
+    return 0
 
 
 def parse_args() -> argparse.Namespace:

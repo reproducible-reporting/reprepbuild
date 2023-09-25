@@ -38,7 +38,7 @@ __all__ = ("reprozip",)
 TIMESTAMP = datetime.datetime(1980, 1, 1).timestamp()
 
 
-def main():
+def main() -> int:
     """Main program."""
     args = parse_args()
     return reprozip(args.path_man, args.path_zip)

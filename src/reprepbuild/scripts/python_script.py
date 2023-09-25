@@ -31,7 +31,7 @@ import sys
 from ..utils import hide_path, import_python_path, parse_case_args, write_dep
 
 
-def main():
+def main() -> int:
     """Main program."""
     args = parse_args()
     return run_script(args.path_py, args.argstr)

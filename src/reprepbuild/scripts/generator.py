@@ -22,14 +22,16 @@
 
 import argparse
 import os
+import sys
 
 from ..__main__ import generator
 
 
-def main():
+def main() -> int:
     """Main program."""
     args = parse_args()
     generator(args.root)
+    return 0
 
 
 def parse_args() -> argparse.Namespace:
@@ -42,4 +44,4 @@ def parse_args() -> argparse.Namespace:
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

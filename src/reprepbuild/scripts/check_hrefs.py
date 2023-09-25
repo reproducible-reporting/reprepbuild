@@ -21,6 +21,7 @@
 
 import argparse
 import os
+import sys
 from enum import StrEnum, auto
 
 import attrs
@@ -30,7 +31,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def main():
+def main() -> int:
     """Main program."""
     args = parse_args()
     hrefs = collect_hrefs(args.fn_src)
@@ -136,4 +137,4 @@ def check_href(href: HRef, fn_src: str) -> str:
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -24,10 +24,11 @@ import fitz
 __all__ = ("pdf_add_notes",)
 
 
-def main():
+def main() -> int:
     """Main program."""
     args = parse_args()
     pdf_add_notes(args.path_src, args.path_notes, args.path_dst)
+    return 0
 
 
 def parse_args() -> argparse.Namespace:

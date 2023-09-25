@@ -44,7 +44,7 @@ import sys
 from typing import TextIO
 
 
-def main():
+def main() -> int:
     """Main program."""
     args = parse_args()
     with open(args.path_flat, "w") as fh_out:

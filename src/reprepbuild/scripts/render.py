@@ -28,7 +28,7 @@ import sys
 import jinja2
 
 
-def main():
+def main() -> int:
     """Main program."""
     args = parse_args()
     with open(args.variables) as fh:
@@ -43,6 +43,7 @@ def main():
     result = render(args.path_in, variables, latex, dir_out=dir_out)
     with open(args.path_out, "w") as fh:
         fh.write(result)
+    return 0
 
 
 def parse_args() -> argparse.Namespace:
