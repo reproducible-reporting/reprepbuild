@@ -105,6 +105,7 @@ def pdf_nup(
                 src,
                 ifine,
             )
+    dst.xref_set_key(-1, "ID", "null")
     dst.save(path_dst, garbage=4, deflate=True)
     dst.close()
     src.close()

@@ -48,6 +48,7 @@ def pdf_normalize(path_pdf: str):
     pdf = fitz.open(path_pdf)
     pdf.set_metadata({})
     pdf.del_xml_metadata()
+    pdf.xref_set_key(-1, "ID", "null")
     pdf.scrub()
     with tempfile.TemporaryDirectory(suffix="normalize-pdf", prefix="rr") as dn:
         path_out = os.path.join(dn, "out.pdf")

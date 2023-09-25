@@ -56,6 +56,7 @@ def pdf_add_notes(path_src: str, path_notes: str, path_dst: str):
         dst.insert_pdf(src, from_page=isrc, to_page=isrc, final=final)
         inotes = isrc % len(notes)
         dst.insert_pdf(notes, from_page=inotes, to_page=inotes, final=final)
+    dst.xref_set_key(-1, "ID", "null")
     dst.save(path_dst, garbage=4, deflate=True)
     dst.close()
     src.close()
