@@ -30,7 +30,7 @@ import yaml
 
 from .command import Command
 from .fancyglob import NoFancyTemplate
-from .task import Task
+from .task import BarrierTask, Task
 from .utils import CaseSensitiveTemplate
 
 __all__ = ("load_config",)
@@ -96,14 +96,15 @@ def iterate_loop_config(loop: list[LoopConfig]):
 class CommandConfig(TaskConfig):
     command: str = attrs.field(validator=attrs.validators.instance_of(str))
     inp: str = attrs.field(validator=attrs.validators.instance_of(str))
-    out: str = attrs.field(
-        validator=attrs.validators.optional(attrs.validators.instance_of(str)),
-        default="",
-    )
+    out: str = attrs.field(validator=attrs.validators.instance_of(str), default="")
     arg = attrs.field(default=None)
     loop: list[LoopConfig] = attrs.field(
         validator=attrs.validators.instance_of(list),
         default=attrs.Factory(list),
+    )
+    phony: str | None = attrs.field(
+        validator=attrs.validators.optional(attrs.validators.instance_of(str)),
+        default=None,
     )
 
 
@@ -113,10 +114,17 @@ class SubDirConfig(TaskConfig):
 
 
 @attrs.define
+class BarrierConfig(TaskConfig):
+    barrier: str = attrs.field(validator=attrs.validators.instance_of(str))
+
+
+@attrs.define
 class Config:
     imports: list[str] = attrs.field(default=attrs.Factory(list))
     variables: dict[str, str] = attrs.field(default=attrs.Factory(dict))
-    tasks: list[CommandConfig | SubDirConfig] = attrs.field(default=attrs.Factory(list))
+    tasks: list[CommandConfig | SubDirConfig | BarrierConfig] = attrs.field(
+        default=attrs.Factory(list)
+    )
 
     @imports.validator
     def validate_imports(self, attribute, imports):
@@ -247,8 +255,11 @@ def load_config(
                     rewrite_paths(task_config.inp, variables | loop_variables, True),
                     rewrite_paths(task_config.out, variables | loop_variables, True),
                     task_config.arg,
+                    task_config.phony,
                 )
                 tasks.append(task)
+        elif isinstance(task_config, BarrierConfig):
+            tasks.append(BarrierTask(task_config.barrier))
         else:
             raise TypeError(f"Cannot use task_config of type {type(task_config)}: {task_config}")
 

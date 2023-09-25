@@ -79,6 +79,7 @@ def test_write_build_render():
 BUILDS_CONVERT_SVG_PDF1 = [
     {
         "rule": "convert_svg_pdf",
+        "pool": "convert_svg_pdf",
         "inputs": ["sub/foo.svg"],
         "outputs": ["/dst/sub/foo.pdf"],
         "variables": {"inkscape": "inkscape"},
@@ -94,6 +95,7 @@ def test_write_build_convert_svg_pdf1():
 BUILDS_CONVERT_SVG_PDF2 = [
     {
         "rule": "convert_svg_pdf",
+        "pool": "convert_svg_pdf",
         "inputs": ["sub/foo.svg"],
         "outputs": ["sub/foo.pdf"],
         "variables": {"inkscape": "inkscape"},
@@ -109,12 +111,14 @@ def test_write_build_convert_svg_pdf2():
 BUILDS_CONVERT_SVG_PDF3 = [
     {
         "rule": "convert_svg_pdf",
+        "pool": "convert_svg_pdf",
         "inputs": ["sub/foo.svg"],
         "outputs": ["sub/foo.pdf"],
         "variables": {"inkscape": "inkscape"},
     },
     {
         "rule": "convert_svg_pdf",
+        "pool": "convert_svg_pdf",
         "inputs": ["sub/bar.svg"],
         "outputs": ["sub/bar.pdf"],
         "variables": {"inkscape": "inkscape"},
@@ -130,6 +134,7 @@ def test_write_build_convert_svg_pdf3():
 BUILDS_CONVERT_ODF_PDF = [
     {
         "rule": "convert_odf_pdf",
+        "pool": "convert_odf_pdf",
         "inputs": ["sub/foo.odp"],
         "outputs": ["/dst/sub/foo.pdf"],
         "variables": {"libreoffice": "libreoffice"},

@@ -11,10 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add the `relpath` Jinja2 filter to the ``rr-render``.
 - Add option to configure DPI to `pdf_raster`.
+- Added `barrier` feature to postpone later builds until all previous ones have completed.
+  This is useful for checks that require all (preceding) outputs to be present.
+- New `--translate` option for `rr-check-hrefs` to translate remote URLs to local paths.
 
 ## Fixed
 
 - Send output of `gs` in command `pdf_raster` to `/dev/null.
+- Pass `variables` to `Command.generate` method to support more complicated build lines.
+- Place `convert_odf_pdf` and `convert_svg_pdf` into their respective pools with depth 1,
+  as a workaround for concurrency issues.
+- Minor cleanups.
+- When relevant, the (random) PDF trailer ID is removed in the scripts `rr-pdf-add-notes`,
+  `rr-pdf-normalize` and `rr-pdf-nup`.
 
 ## [1.1.0] - 2023-09-21
 

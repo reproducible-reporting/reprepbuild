@@ -34,13 +34,18 @@ class Transform(Command):
         validator=attrs.validators.instance_of(list),
         default=attrs.Factory(list),
     )
+    variables: dict[str, str] = attrs.field(
+        validator=attrs.validators.instance_of(dict), default=attrs.Factory(dict)
+    )
     new_ext: (str | None) = attrs.field(
         kw_only=True,
         validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         default=None,
     )
-    variables: dict[str, str] = attrs.field(
-        validator=attrs.validators.instance_of(dict), default=attrs.Factory(dict)
+    pool_depth: (int | None) = attrs.field(
+        kw_only=True,
+        validator=attrs.validators.optional(attrs.validators.instance_of(int)),
+        default=None,
     )
 
     @implicit.validator
@@ -53,6 +58,10 @@ class Transform(Command):
     def name(self) -> str:
         """The name of the command in ``reprepbuild.yaml``."""
         return self._name
+
+    @property
+    def pools(self) -> dict[str, int]:
+        return {} if self.pool_depth is None else {self._name: {"depth": self.pool_depth}}
 
     @property
     def rules(self) -> dict[str, dict]:
@@ -95,6 +104,8 @@ class Transform(Command):
                 build["implicit"] = self.implicit
             if len(self.variables) > 0:
                 build["variables"] = self.variables
+            if self.pool_depth is not None:
+                build["pool"] = self._name
             builds.append(build)
         return builds, []
 
@@ -107,9 +118,12 @@ render = Transform(
 )
 convert_svg_pdf = Transform(
     "convert_svg_pdf",
-    "${inkscape} ${in} -T --export-filename=${out} --export-type=pdf && rr-pdf-normalize ${out}",
-    new_ext=".pdf",
+    "${inkscape} ${in} -T --export-filename=${out} --export-type=pdf > /dev/null"
+    "&& rr-pdf-normalize ${out}",
     variables={"inkscape": "inkscape"},
+    new_ext=".pdf",
+    # The conversion seems to crash when running concurrently.
+    pool_depth=1,
 )
 convert_odf_pdf = Transform(
     "convert_odf_pdf",
@@ -117,9 +131,13 @@ convert_odf_pdf = Transform(
     "WORK=`mktemp -d --suffix=reprepbuild` && "
     "${libreoffice} --convert-to pdf ${in} --outdir $$WORK > /dev/null && "
     "cp $$WORK/*.pdf ${out} && "
-    "rm -r $$WORK",
-    new_ext=".pdf",
+    "rm -r $$WORK &&"
+    # Libreoffice inserts random PDF Trailer IDs, which we don't like...
+    "rr-pdf-normalize ${out}",
     variables={"libreoffice": "libreoffice"},
+    new_ext=".pdf",
+    # The conversion seems to crash when running concurrently.
+    pool_depth=1,
 )
 pdf_raster = Transform(
     "pdf_raster",

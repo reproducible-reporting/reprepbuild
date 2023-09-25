@@ -36,6 +36,7 @@ import sys
 from ninja import Writer
 
 from .config import load_config
+from .task import BaseTask, Task
 
 __all__ = ("main", "generator")
 
@@ -52,38 +53,42 @@ def generator(root: str):
     tasks = []
     load_config(os.getcwd(), "reprepbuild.yaml", tasks)
 
-    # Loop over all files and create rules and builds for them.
+    # Loop over all files and create pools, rules and builds for them.
     with open("build.ninja", "w") as f:
         writer = Writer(f, 100)
 
+        # Write pools
+        pools = _collect_dicts(tasks, "pools")
+        writer.comment("All pools")
+        for pool_name, pool in pools.items():
+            writer.pool(name=pool_name, **pool)
+        writer.newline()
+
         # Write all rules, even if some are not used.
-        writer.comment("All rules")
-        rules = {}
-        for task in tasks:
-            for rule_name, rule in task.command.rules.items():
-                if rule_name in rules:
-                    if rules[rule_name] != rule:
-                        raise ValueError(f"Same name but different rules: {rule_name}")
-                else:
-                    rules[rule_name] = rule
-                    mkdir_rule = rule.copy()
-                    mkdir_rule["command"] = "mkdir -p ${dstdirs} && " + rule["command"]
-                    rules[rule_name + "_mkdir"] = mkdir_rule
+        rules = pools = _collect_dicts(tasks, "rules")
+        writer.comment("All rules (except generator)")
         for rule_name, rule in rules.items():
             writer.rule(name=rule_name, **rule)
+        writer.newline()
+        writer.comment("All rules with mkdir (except generator)")
+        for rule_name, rule in rules.items():
+            rule["command"] = "mkdir -p ${dstdirs} && " + rule["command"]
+            writer.rule(name=rule_name + "_mkdir", **rule)
         writer.newline()
 
         # Write all build lines with comments and defaults
         outputs = set()
+        defaults = set()
         not_scanned = set()
         for task in tasks:
-            for records, new_not_scanned in task.generate(outputs):
+            for records, new_not_scanned in task.generate(outputs, defaults):
                 not_scanned.update(new_not_scanned)
                 for record in records:
                     if isinstance(record, str):
                         writer.comment(record)
                     elif isinstance(record, list):
                         writer.default(record)
+                        defaults.update(record)
                     elif isinstance(record, dict):
                         writer.build(**record)
                         outputs.update(record["outputs"])
@@ -99,6 +104,20 @@ def generator(root: str):
             writer.comment("This means the build.ninja file needs to be regenerated.")
             writer.rule("generator", command="rr-generator .", generator=True)
             writer.build(rule="generator", implicit=sorted(not_scanned), outputs="build.ninja")
+
+
+def _collect_dicts(tasks: list[BaseTask], attr_name: str) -> dict[str:object]:
+    """Combine dictionaries, used for pools and rules."""
+    result = {}
+    for task in tasks:
+        if isinstance(task, Task):
+            for name, kwargs in getattr(task.command, attr_name).items():
+                if name in result:
+                    if result[name] != kwargs:
+                        raise ValueError(f"Same name but different {attr_name}: {name}")
+                else:
+                    result[name] = kwargs
+    return result
 
 
 def parse_args():

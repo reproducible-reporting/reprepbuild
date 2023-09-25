@@ -42,8 +42,52 @@ def _split_if_string(arg):
     return arg.split() if isinstance(arg, str) else arg
 
 
+# TODO: Task is not a good name, They are essentially build generators, not tasks.
+#   We have a CommandGenerator (old Task) and a BarrierGenerator (BarrierTask)
+#   generate method can be become __call__
+
+
 @attrs.define
-class Task:
+class BaseTask:
+    def generate(self, outputs: set[str]) -> Iterator[tuple[(str | list | dict), list[str]]]:
+        """Generate records for the Ninja build file associated with this task.
+
+        Parameters
+        ----------
+        outputs
+            A set filenames that preceding tasks will create.
+            These will be treated as potential inputs,
+            in addition to the ones found with glob.
+
+        Yields
+        ------
+        records
+            A list of records to be written to ``build.ninja``.
+            A comment has type ``str``, defaults have type ``list``, build statements
+            have type ``dict`` (and contain keyword arguments for ``Writer.build``).
+        not_scanned
+            A list of filenames that could not be read to find dependencies.
+        """
+        raise NotImplementedError
+
+
+@attrs.define
+class BarrierTask(BaseTask):
+    name: str = attrs.field(validator=attrs.validators.instance_of(str))
+
+    def generate(
+        self, outputs: set[str], defaults: set[str]
+    ) -> Iterator[tuple[(str | list | dict), list[str]]]:
+        build = {
+            "outputs": [self.name],
+            "rule": "phony",
+            "inputs": sorted(defaults),
+        }
+        yield [build], []
+
+
+@attrs.define
+class Task(BaseTask):
     """A task from which multiple build records can be derived."""
 
     # A Command sub class
@@ -58,6 +102,11 @@ class Task:
     out: list[str] = attrs.field(validator=attrs.validators.instance_of(list))
     # Arguments
     arg = attrs.field(default=None)
+    # Phony dependencies, if any
+    phony: str | None = attrs.field(
+        validator=attrs.validators.optional(attrs.validators.instance_of(str)),
+        default=None,
+    )
 
     # Derive attributes
     re_ignore_safe: re.Pattern = attrs.field(init=False, default=None)
@@ -85,25 +134,10 @@ class Task:
             )
         )
 
-    def generate(self, outputs: set[str]) -> Iterator[tuple[(str | list | dict), list[str]]]:
-        """Generate records for the Ninja build file associated with this task.
-
-        Parameters
-        ----------
-        outputs
-            A set filenames that preceding tasks will create.
-            These will be treated as potential inputs,
-            in addition to the ones found with glob.
-
-        Yields
-        ------
-        records
-            A list of records to be written to ``build.ninja``.
-            A comment has type ``str``, defaults have type ``list``, build statements
-            have type ``dict`` (and contain keyword arguments for ``Writer.build``).
-        not_scanned
-            A list of filenames that could not be read to find dependencies.
-        """
+    def generate(
+        self, outputs: set[str], defaults: set[str]
+    ) -> Iterator[tuple[(str | list | dict), list[str]]]:
+        """See BaseTask.generate"""
         # Get a file list of potentially relevant filenames for the first input
         filenames = set(glob(convert_fancy_to_normal(self.inp[0]), recursive=True))
         filenames.update(outputs)
@@ -174,6 +208,8 @@ class Task:
                 _add_variables(record, self.command.rules[record["rule"]], self.variables)
                 _add_mkdir(record)
                 _clean_build(record)
+                if self.phony is not None:
+                    record.setdefault("order_only", []).append(self.phony)
                 yield record
                 if self.default:
                     yield record["outputs"]
@@ -200,12 +236,12 @@ def _expand_variables(build: dict, variables: dict[str, str]):
             path = os.path.relpath(path, variables["root"])
         return os.path.normpath(path)
 
+    if "variables" in build:
+        build["variables"] = {key: _expand(path) for key, path in build["variables"].items()}
     for key in "outputs", "inputs", "implicit", "order_only", "implicit_outputs":
         values = build.get(key)
         if values is not None:
             build[key] = [_expand(path) for path in values]
-    if "variables" in build:
-        build["variables"] = {key: _expand(path) for key, path in build["variables"].items()}
     depfile = build.get("depfile")
     if depfile is not None:
         build["depfile"] = _expand(depfile)

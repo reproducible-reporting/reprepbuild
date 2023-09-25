@@ -33,8 +33,13 @@ class Command:
         raise NotImplementedError
 
     @property
+    def pools(self) -> dict[str, dict]:
+        """A dict of (name, kwargs) for Ninja's ``Writer.pool()``."""
+        return {}
+
+    @property
     def rules(self) -> dict[str, dict]:
-        """A dict of kwargs for Ninja's ``Writer.rule()``."""
+        """A dict of (name, kwargs) for Ninja's ``Writer.rule()``."""
         raise NotImplementedError
 
     def generate(
