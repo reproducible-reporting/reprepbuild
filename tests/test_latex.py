@@ -305,11 +305,9 @@ LATEX_LOG1_MESSAGE = r"""
 ! Undefined control sequence.
 l.396         \begin{center}\foo
 
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
+> If the above extract from the log file can be improved,
+> open a new issue with the log file attached:
+> https://github.com/reproducible-reporting/reprepbuild/issues
 """
 
 
@@ -332,3 +330,48 @@ def test_parse_latex_log2():
     assert error_info.program == "LaTeX"
     assert error_info.src == "(could not detect source file)"
     assert error_info.message == DEFAULT_MESSAGE
+
+
+LATEX_LOG3 = r"""
+LaTeX Font Info:    Font shape `T1/mdput/m/sl' will be
+(Font)              scaled to size 11.28003pt on input line 24.
+[1
+
+] (./kwart_cirkelboog_e/divergent.inc.tex
+
+! LaTeX Error: Something's wrong--perhaps a missing \item.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...
+
+l.2 \item E
+           lektrisch veld opgewekt door continue ladingsverdeling: $\vec{E} ...
+
+Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+LaTeX Font Info:    Font shape `OML/mdput/b/n' will be
+(Font)              scaled to size 11.28003pt on input line 2.
+LaTeX Font Info:    Font shape `OML/mdput/b/n' will be
+(Font)              scaled to size 7.52002pt on input line 2.
+"""
+
+LATEX_LOG3_MESSAGE = r"""
+! LaTeX Error: Something's wrong--perhaps a missing \item.
+
+l.2 \item E
+           lektrisch veld opgewekt door continue ladingsverdeling: $\vec{E} ...
+
+> If the above extract from the log file can be improved,
+> open a new issue with the log file attached:
+> https://github.com/reproducible-reporting/reprepbuild/issues
+"""
+
+
+def test_parse_latex_log3():
+    rebuild, error_info = parse_latex_log(io.StringIO(LATEX_LOG3))
+    assert not rebuild
+    assert error_info.program == "LaTeX"
+    assert error_info.src == "./kwart_cirkelboog_e/divergent.inc.tex"
+    assert error_info.message.strip() == LATEX_LOG3_MESSAGE.strip()

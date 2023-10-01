@@ -51,14 +51,20 @@ class ErrorInfo:
 
 
 DEFAULT_MESSAGE = """\
-The error message could not be isolated from the log file.
-You can open the log file in a text editor and manually locate the error.
+> The error message could not be isolated from the log file.
+> You can open the log file in a text editor and manually locate the error.
+>
+> Please open a new issue with the log file attached,
+> which will help improve the script to detect the error message:
+> https://github.com/reproducible-reporting/reprepbuild/issues
+>
+> Thank you very much!
+"""
 
-Please open a new issue with the log file attached,
-which will help improve the script to detect the error message:
-https://github.com/reproducible-reporting/reprepbuild/issues
-
-Thank you very much!
+MESSAGE_SUFFIX = """
+> If the above extract from the log file can be improved,
+> open a new issue with the log file attached:
+> https://github.com/reproducible-reporting/reprepbuild/issues
 """
 
 
@@ -162,31 +168,39 @@ def parse_latex_log(fh: TextIO) -> tuple[bool, (ErrorInfo | None)]:
         Structured info for printing error, or None
     """
     last_src = "(could not detect source file)"
-    error = False
+    record = False
     recompile = False
-    num_empty = 0
     recorded = []
     for line in fh.readlines():
-        if error:
-            recorded.append(line.strip())
-            if recorded[-1] == "":
-                num_empty += 1
-            if num_empty == 2:
-                break
+        if record:
+            recorded.append(line[:-1])
+            if recorded[-1].strip() == "":
+                record = False
         elif line.startswith("("):
-            last_file = line[1:].strip()
-            if not ("(" in last_file or ")" in last_file or last_file.startswith("/")):
-                last_src = last_file
-                continue
+            last_src = update_last_src(line[1:].strip(), last_src)
+        elif line.startswith("] ("):
+            last_src = update_last_src(line[3:].strip(), last_src)
         elif line.startswith("!"):
-            error = True
+            record = True
+            recorded.append(line[:-1])
+        elif line.startswith("l."):
+            record = True
             recorded.append(line[:-1])
         elif "Rerun to get cross-references right." in line:
             recompile = True
             break
 
-    message = "\n".join(recorded) if error else DEFAULT_MESSAGE
+    if len(recorded) > 0:
+        message = "\n".join(recorded) + MESSAGE_SUFFIX
+    else:
+        message = DEFAULT_MESSAGE
     return recompile, ErrorInfo("LaTeX", last_src, message=message)
+
+
+def update_last_src(line, last_src):
+    if not ("(" in line or ")" in line or line.startswith("/")):
+        last_src = line
+    return last_src
 
 
 def parse_bibtex_log(fh: TextIO) -> ErrorInfo | None:
