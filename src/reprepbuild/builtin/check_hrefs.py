@@ -37,7 +37,7 @@ class CheckHRefs(Command):
     @property
     def rules(self) -> dict[str, dict]:
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
-        return {"check_hrefs": {"command": "rr-check-hrefs ${in} ${out}"}}
+        return {"check_hrefs": {"command": "rr-check-hrefs ${in} ${out} ${translate}"}}
 
     def generate(
         self, inp: list[str], out: list[str], arg, variables: dict[str, str]
@@ -53,7 +53,7 @@ class CheckHRefs(Command):
         if arg is None:
             translate = ""
         else:
-            translate = "--translate " + " ".join(arg)
+            translate = " ".join(["--translate", *arg])
 
         # Write builds
         builds = []

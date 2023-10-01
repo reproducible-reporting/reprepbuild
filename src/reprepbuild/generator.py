@@ -232,9 +232,11 @@ def _expand_variables(build: dict, variables: dict[str, str]):
 
     def _expand(path):
         path = CaseSensitiveTemplate(path).substitute(variables)
+        # TODO: Improve detection of path, or implement it differently.
+        #       The current test may have false positives.
         if path.startswith(os.sep):
-            path = os.path.relpath(path, variables["root"])
-        return os.path.normpath(path)
+            path = os.path.normpath(os.path.relpath(path, variables["root"]))
+        return path
 
     if "variables" in build:
         build["variables"] = {key: _expand(path) for key, path in build["variables"].items()}

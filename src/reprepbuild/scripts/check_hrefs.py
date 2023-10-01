@@ -35,8 +35,7 @@ def main() -> int:
     """Main program."""
     args = parse_args()
     hrefs = collect_hrefs(args.fn_src)
-    if args.translate is not None:
-        make_url_substitutions(hrefs, args.translate)
+    make_url_substitutions(hrefs, args.translate)
     check_hrefs(hrefs, args.fn_src, args.fn_log)
     return 0
 
@@ -64,6 +63,7 @@ class HRef:
     """A hyper reference to be checked."""
 
     url: str = attrs.field()
+    translated: str = attrs.field(default=None)
     allow_local: bool = attrs.field(default=True, kw_only=True)
 
 
@@ -103,9 +103,11 @@ def make_url_substitutions(hrefs: list[HRef], translate: list[str]):
     if len(translate) % 2 != 0:
         print("Expecting an even number of arguments to --translate.")
         return 1
+    for href in hrefs:
+        href.translated = href.url
     for orig, repl in zip(translate[::2], translate[1::2], strict=True):
         for href in hrefs:
-            href.url = href.url.replace(orig, repl)
+            href.translated = href.translated.replace(orig, repl)
 
 
 class HRefStatus(StrEnum):
@@ -137,22 +139,22 @@ def check_hrefs(hrefs: list[HRef], fn_src: str, fn_log: str):
 def check_href(href: HRef, fn_src: str) -> str:
     if href.url.startswith("mailto:"):
         return HRefStatus.IGNORED
-    elif "://" in href.url:
+    elif "://" in href.translated:
         session = requests.Session()
         session.headers["User-Agent"] = (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
             "(KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
         )
         try:
-            status_code = str(session.head(href.url).status_code)
+            status_code = str(session.head(href.translated).status_code)
             if status_code[0] == "2":
                 return HRefStatus.PASSED
             else:
                 return HRefStatus.FAILED
         except requests.RequestException:
             return HRefStatus.FAILED
-    elif href.allow_local:
-        if os.path.exists(os.path.join(os.path.dirname(fn_src), href.url)):
+    elif href.allow_local or "://" in href.url:
+        if os.path.exists(os.path.join(os.path.dirname(fn_src), href.translated)):
             return HRefStatus.PASSED
     return HRefStatus.FAILED
 
