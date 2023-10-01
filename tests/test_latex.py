@@ -24,7 +24,12 @@ import io
 import os
 
 from reprepbuild.builtin.latex import latex, latex_diff, latex_flat
-from reprepbuild.scripts.latex import DEFAULT_MESSAGE, parse_bibtex_log, parse_latex_log
+from reprepbuild.scripts.latex import (
+    DEFAULT_MESSAGE,
+    MESSAGE_SUFFIX,
+    parse_bibtex_log,
+    parse_latex_log,
+)
 
 BUILDS_LATEX = [
     {
@@ -304,10 +309,6 @@ File: fig2.pdf Graphic file (type pdf)
 LATEX_LOG1_MESSAGE = r"""
 ! Undefined control sequence.
 l.396         \begin{center}\foo
-
-> If the above extract from the log file can be improved,
-> open a new issue with the log file attached:
-> https://github.com/reproducible-reporting/reprepbuild/issues
 """
 
 
@@ -316,7 +317,7 @@ def test_parse_latex_log1():
     assert not rebuild
     assert error_info.program == "LaTeX"
     assert error_info.src == "./article.tex"
-    assert error_info.message.strip() == LATEX_LOG1_MESSAGE.strip()
+    assert error_info.message.strip() == (LATEX_LOG1_MESSAGE + MESSAGE_SUFFIX).strip()
 
 
 LATEX_LOG2 = r"""
@@ -357,15 +358,12 @@ LaTeX Font Info:    Font shape `OML/mdput/b/n' will be
 (Font)              scaled to size 7.52002pt on input line 2.
 """
 
+
 LATEX_LOG3_MESSAGE = r"""
 ! LaTeX Error: Something's wrong--perhaps a missing \item.
 
 l.2 \item E
            lektrisch veld opgewekt door continue ladingsverdeling: $\vec{E} ...
-
-> If the above extract from the log file can be improved,
-> open a new issue with the log file attached:
-> https://github.com/reproducible-reporting/reprepbuild/issues
 """
 
 
@@ -374,4 +372,76 @@ def test_parse_latex_log3():
     assert not rebuild
     assert error_info.program == "LaTeX"
     assert error_info.src == "./kwart_cirkelboog_e/divergent.inc.tex"
-    assert error_info.message.strip() == LATEX_LOG3_MESSAGE.strip()
+    assert error_info.message.strip() == (LATEX_LOG3_MESSAGE + MESSAGE_SUFFIX).strip()
+
+
+LATEX_LOG4 = r"""
+**foo
+) (./review.tex
+
+) (/usr/share/texlive/texmf-dist/tex/latex/mathdesign/mdttfont.def
+
+
+Package hyperref Info: Link coloring ON on input line 29.
+(./review.out) (./review.out)
+\@outlinefile=\write4
+\openout4 = `review.out'.
+
+! Missing $ inserted.
+<inserted text>
+                $
+l.116 \end{gather*}
+
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+LaTeX Font Info:    Font shape `T1/mdput/m/n' will be
+(Font)              scaled to size 4.70001pt on input line 116.
+! Extra }, or forgotten $.
+<template> }
+            }\savetaglength@ \endtemplate
+l.116 \end{gather*}
+
+I've deleted a group-closing symbol because it seems to be
+spurious, as in `$x}$'. But perhaps the } is legitimate and
+you forgot something else, as in `\hbox{$x}'. In such cases
+the way to recover is to insert both the forgotten and the
+deleted material, e.g., by typing `I$}'.
+
+! Extra }, or forgotten $.
+<template> }}
+             \savetaglength@ \endtemplate
+l.116 \end{gather*}
+
+I've deleted a group-closing symbol because it seems to be
+spurious, as in `$x}$'. But perhaps the } is legitimate and
+you forgot something else, as in `\hbox{$x}'. In such cases
+the way to recover is to insert both the forgotten and the
+deleted material, e.g., by typing `I$}'.
+
+! Missing $ inserted.
+<inserted text>
+                $
+l.116 \end{gather*}
+
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+"""
+
+LATEX_LOG4_MESSAGE = r"""
+! Missing $ inserted.
+<inserted text>
+                $
+l.116 \end{gather*}
+"""
+
+
+def test_parse_latex_log4():
+    rebuild, error_info = parse_latex_log(io.StringIO(LATEX_LOG4))
+    assert not rebuild
+    assert error_info.program == "LaTeX"
+    assert error_info.src == "./review.tex"
+    print(error_info.message.strip())
+    print()
+    print((LATEX_LOG4_MESSAGE + MESSAGE_SUFFIX).strip())
+    assert error_info.message.strip() == (LATEX_LOG4_MESSAGE + MESSAGE_SUFFIX).strip()

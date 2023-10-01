@@ -169,23 +169,29 @@ def parse_latex_log(fh: TextIO) -> tuple[bool, (ErrorInfo | None)]:
     """
     last_src = "(could not detect source file)"
     record = False
+    found_line = False
     recompile = False
     recorded = []
     for line in fh.readlines():
         if record:
-            recorded.append(line[:-1])
+            recorded.append(line.rstrip())
             if recorded[-1].strip() == "":
                 record = False
-        elif line.startswith("("):
+                if found_line:
+                    break
+        if line.startswith("("):
             last_src = update_last_src(line[1:].strip(), last_src)
-        elif line.startswith("] ("):
+        elif line.startswith("] (") or line.startswith(") ("):
             last_src = update_last_src(line[3:].strip(), last_src)
         elif line.startswith("!"):
+            if not record:
+                recorded.append(line.rstrip())
             record = True
-            recorded.append(line[:-1])
         elif line.startswith("l."):
+            if not record:
+                recorded.append(line.rstrip())
             record = True
-            recorded.append(line[:-1])
+            found_line = True
         elif "Rerun to get cross-references right." in line:
             recompile = True
             break
