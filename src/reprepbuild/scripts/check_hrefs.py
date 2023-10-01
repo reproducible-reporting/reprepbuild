@@ -49,7 +49,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("fn_log", help="Log file with overview of check references.")
     parser.add_argument(
         "--translate",
-        default=None,
+        default=[],
         nargs="*",
         help="Pairs of pattern and replacement strings. "
         "This can be used to translate hyperlinks to local paths for faster checking, "

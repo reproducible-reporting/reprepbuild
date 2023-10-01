@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix detection if relevant part of LaTeX log for the case `! LaTeX Error: Something's wrong`
+- Fix several issues with `rr-check-hrefs`.
 
 ## [1.2.0] - 2023-09-25
 
