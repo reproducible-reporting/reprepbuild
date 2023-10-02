@@ -233,6 +233,7 @@ class Latex(Command):
         return [build], not_scanned
 
 
+@attrs.define()
 class LatexFlat(Command):
     """Flatten a LaTeX file with \\input and/or \\import into a single file."""
 
@@ -279,6 +280,7 @@ class LatexFlat(Command):
         return builds, not_scanned
 
 
+@attrs.define()
 class LatexDiff(Command):
     """Compile a LaTeX Diff out of two *compiled* source documents."""
 

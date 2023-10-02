@@ -27,13 +27,13 @@ BUILDS_CHECK_HREFS = [
         "rule": "check_hrefs",
         "inputs": ["sub/boo.md"],
         "outputs": ["sub/.boo.md-check_hrefs.log"],
-        "variables": {"translate": ""},
+        "variables": {"cli_args": ""},
     },
     {
         "rule": "check_hrefs",
         "inputs": ["foo/plop.pdf"],
         "outputs": ["foo/.plop.pdf-check_hrefs.log"],
-        "variables": {"translate": ""},
+        "variables": {"cli_args": ""},
     },
 ]
 
@@ -41,3 +41,35 @@ BUILDS_CHECK_HREFS = [
 def test_write_build_check_hrefs():
     builds, _ = check_hrefs.generate(["sub/boo.md", "foo/plop.pdf"], [], None, {})
     assert BUILDS_CHECK_HREFS == builds
+
+
+BUILDS_CHECK_HREFS_TRANSLATE = [
+    {
+        "rule": "check_hrefs",
+        "inputs": ["sub/boo.md"],
+        "outputs": ["sub/.boo.md-check_hrefs.log"],
+        "variables": {"cli_args": "--translate foo bar egg spam"},
+    },
+]
+
+
+def test_write_build_check_hrefs_translate():
+    arg = {"translate": [["foo", "bar"], ["egg", "spam"]]}
+    builds, _ = check_hrefs.generate(["sub/boo.md"], [], arg, {})
+    assert BUILDS_CHECK_HREFS_TRANSLATE == builds
+
+
+BUILDS_CHECK_HREFS_IGNORE = [
+    {
+        "rule": "check_hrefs",
+        "inputs": ["sub/boo.md"],
+        "outputs": ["sub/.boo.md-check_hrefs.log"],
+        "variables": {"cli_args": "--ignore foo bar egg"},
+    },
+]
+
+
+def test_write_build_check_hrefs_ignore():
+    arg = {"ignore": ["foo", "bar", "egg"]}
+    builds, _ = check_hrefs.generate(["sub/boo.md"], [], arg, {})
+    assert BUILDS_CHECK_HREFS_IGNORE == builds

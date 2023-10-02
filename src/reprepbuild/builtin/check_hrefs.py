@@ -19,6 +19,10 @@
 # --
 """Check hyper references."""
 
+from itertools import chain
+
+import attrs
+import cattrs
 
 from ..command import Command
 from ..utils import hide_path
@@ -26,6 +30,13 @@ from ..utils import hide_path
 __all__ = ("check_hrefs",)
 
 
+@attrs.define
+class CheckHRefsArg:
+    translate: list[tuple[str, str]] = attrs.field(default=[])
+    ignore: list[str] = attrs.field(default=[])
+
+
+@attrs.define
 class CheckHRefs(Command):
     """Check hyper references."""
 
@@ -37,7 +48,7 @@ class CheckHRefs(Command):
     @property
     def rules(self) -> dict[str, dict]:
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
-        return {"check_hrefs": {"command": "rr-check-hrefs ${in} ${out} ${translate}"}}
+        return {"check_hrefs": {"command": "rr-check-hrefs ${in} ${out} ${cli_args}"}}
 
     def generate(
         self, inp: list[str], out: list[str], arg, variables: dict[str, str]
@@ -50,10 +61,16 @@ class CheckHRefs(Command):
             )
         if len(out) != 0:
             raise ValueError(f"Expected no outputs, got: {out}")
-        if arg is None:
-            translate = ""
-        else:
-            translate = " ".join(["--translate", *arg])
+        cli_args = []
+        if arg is not None:
+            converter = cattrs.Converter(forbid_extra_keys=True)
+            arg = converter.structure(arg, CheckHRefsArg)
+            if len(arg.translate) > 0:
+                cli_args.append("--translate")
+                cli_args.extend(chain(*arg.translate))
+            if len(arg.ignore) > 0:
+                cli_args.append("--ignore")
+                cli_args.extend(arg.ignore)
 
         # Write builds
         builds = []
@@ -62,7 +79,7 @@ class CheckHRefs(Command):
                 "rule": "check_hrefs",
                 "inputs": [inp_path],
                 "outputs": [hide_path(f"{inp_path}-check_hrefs.log")],
-                "variables": {"translate": translate},
+                "variables": {"cli_args": " ".join(cli_args)},
             }
             builds.append(build)
         return builds, []

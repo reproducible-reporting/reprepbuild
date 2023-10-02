@@ -20,11 +20,14 @@
 """Make reproducible ZIP archives."""
 
 
+import attrs
+
 from ..command import Command
 
 __all__ = ("repro_zip", "repro_latex_zip")
 
 
+@attrs.define()
 class ReproZip(Command):
     """Create a Reproducible Zip file."""
 
@@ -70,6 +73,7 @@ class ReproZip(Command):
         return [build], []
 
 
+@attrs.define()
 class ReproLatexZip(Command):
     """Create a Reproducible Zip file of a LaTeX source."""
 

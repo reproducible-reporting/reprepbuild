@@ -34,7 +34,7 @@ from bs4 import BeautifulSoup
 def main() -> int:
     """Main program."""
     args = parse_args()
-    hrefs = collect_hrefs(args.fn_src)
+    hrefs = collect_hrefs(args.fn_src, args.ignore)
     make_url_substitutions(hrefs, args.translate)
     check_hrefs(hrefs, args.fn_src, args.fn_log)
     return 0
@@ -50,10 +50,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--translate",
         default=[],
-        nargs="*",
+        nargs="+",
         help="Pairs of pattern and replacement strings. "
         "This can be used to translate hyperlinks to local paths for faster checking, "
         "and is also useful when some links are behind a login.",
+    )
+    parser.add_argument(
+        "--ignore", default=[], nargs="+", help="Ignore URLs contain any of the given strings."
     )
     return parser.parse_args()
 
@@ -65,16 +68,22 @@ class HRef:
     url: str = attrs.field()
     translated: str = attrs.field(default=None)
     allow_local: bool = attrs.field(default=True, kw_only=True)
+    ignore: bool = attrs.field(default=False, init=False)
 
 
-def collect_hrefs(fn_src: str) -> list[HRef]:
+def collect_hrefs(fn_src: str, ignore: list[str]) -> list[HRef]:
     """Find all hyper references in one file."""
     if fn_src.endswith(".md"):
-        return collect_hrefs_md(fn_src)
+        result = collect_hrefs_md(fn_src)
     elif fn_src.endswith(".pdf"):
-        return collect_hrefs_pdf(fn_src)
+        result = collect_hrefs_pdf(fn_src)
     else:
         raise ValueError(f"Source file type not supported: {fn_src}")
+    # tag hrefs that should be ignored.
+    for href in result:
+        if any(substring in href.url for substring in ignore):
+            href.ignore = True
+    return result
 
 
 def collect_hrefs_md(fn_md: str) -> list[HRef]:
@@ -137,7 +146,9 @@ def check_hrefs(hrefs: list[HRef], fn_src: str, fn_log: str):
 
 
 def check_href(href: HRef, fn_src: str) -> str:
-    if href.url.startswith("mailto:"):
+    if href.ignore:
+        return HRefStatus.IGNORED
+    elif href.url.startswith("mailto:"):
         return HRefStatus.IGNORED
     elif "://" in href.translated:
         session = requests.Session()

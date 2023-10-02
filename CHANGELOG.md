@@ -7,10 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Add `--ignore` options to `rr-check-hrefs`.
+- Extend `arg` of `check_hrefs` in `reprepbuild.yaml` to be a dictionary with
+  optional `translate` and `ignore` arguments passed on to `rr-check-hrefs`.
+
 ### Fixed
 
 - Fix detection if relevant part of LaTeX log for the case `! LaTeX Error: Something's wrong`
 - Fix several issues with `rr-check-hrefs`.
+- Minor cleanups
 
 ## [1.2.0] - 2023-09-25
 

@@ -22,12 +22,15 @@
 import contextlib
 import os
 
+import attrs
+
 from ..command import Command
 from ..utils import format_case_args, hide_path, import_python_path
 
 __all__ = ("python_script",)
 
 
+@attrs.define()
 class PythonScript(Command):
     """Execute a Python script."""
 

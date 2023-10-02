@@ -74,7 +74,7 @@ target-version = ['py311']
 select = ["E", "F", "UP", "B", "I", "PGH", "PL", "RUF", "C"]
 line-length = 100
 target-version = "py311"
-ignore = ["PLR2004", "PLR0913", "PLR0912", "PLW2901", "PLR0915", "C901"]
+ignore = ["PLR0911", "PLR0912", "PLR0913", "PLR0915", "PLR2004", "PLW2901", "C901"]
 
 [tool.setuptools_scm]
 write_to = "src/reprepbuild/_version.py"
