@@ -21,6 +21,7 @@ r"""Print the error message from a LaTeX log file."""
 
 import argparse
 import os
+import re
 import subprocess
 import sys
 from typing import TextIO
@@ -152,6 +153,49 @@ def main() -> int:
             return 0
 
 
+@attrs.define
+class LatexSourceStack:
+    stack: list[str] = attrs.field(init=False, default=attrs.Factory(list))
+    unfinished: (str | None) = attrs.field(init=False, default=None)
+    unmatched: bool = attrs.field(init=False, default=False)
+
+    @property
+    def current(self) -> str:
+        """The current file to which the error message belongs."""
+        if len(self.stack) == 0:
+            return "(could not detect source file)"
+        else:
+            return self.stack[-1]
+
+    def feed(self, line: str):
+        # Check if we need to anticipate line wrapping
+        full = len(line) == 80
+
+        # Continue from previous line if needed
+        if self.unfinished is not None:
+            path = self.unfinished + line.rstrip()
+            if full:
+                self.unfinished = path
+            else:
+                self.unfinished = None
+                self.stack.append(path)
+
+        # Pop from stack
+        while line.startswith(")"):
+            if len(self.stack) == 0:
+                self.unmatched = True
+            else:
+                del self.stack[-1]
+            line = line[1:]
+
+        # Add to stack, possibly dealing with line wrapping
+        paths = re.findall(r"\(((?:\./|\.\./|/)[-_./a-zA-Z0-9]+)(?:\s|$)", line)
+        if full and len(paths) > 0:
+            self.unfinished = paths[-1]
+            del paths[-1]
+        self.stack.extend(paths)
+
+
 def parse_latex_log(fh: TextIO) -> tuple[bool, (ErrorInfo | None)]:
     """Parse a LaTeX log file.
 
@@ -167,7 +211,8 @@ def parse_latex_log(fh: TextIO) -> tuple[bool, (ErrorInfo | None)]:
     error_info
         Structured info for printing error, or None
     """
-    last_src = "(could not detect source file)"
+    lss = LatexSourceStack()
+    src = "(could not detect source file)"
     record = False
     found_line = False
     recompile = False
@@ -179,14 +224,11 @@ def parse_latex_log(fh: TextIO) -> tuple[bool, (ErrorInfo | None)]:
                 record = False
                 if found_line:
                     break
-        if line.startswith("("):
-            last_src = update_last_src(line[1:].strip(), last_src)
-        elif line.startswith("] (") or line.startswith(") ("):
-            last_src = update_last_src(line[3:].strip(), last_src)
-        elif line.startswith("!"):
+        if line.startswith("!"):
             if not record:
                 recorded.append(line.rstrip())
             record = True
+            src = lss.current
         elif line.startswith("l."):
             if not record:
                 recorded.append(line.rstrip())
@@ -195,12 +237,16 @@ def parse_latex_log(fh: TextIO) -> tuple[bool, (ErrorInfo | None)]:
         elif "Rerun to get cross-references right." in line:
             recompile = True
             break
+        else:
+            lss.feed(line)
 
     if len(recorded) > 0:
         message = "\n".join(recorded) + MESSAGE_SUFFIX
     else:
         message = DEFAULT_MESSAGE
-    return recompile, ErrorInfo("LaTeX", last_src, message=message)
+    if lss.unmatched:
+        message += "> [warning: unmatched closing parenthesis]\n"
+    return recompile, ErrorInfo("LaTeX", src, message=message)
 
 
 def update_last_src(line, last_src):

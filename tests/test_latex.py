@@ -23,10 +23,12 @@ import contextlib
 import io
 import os
 
+import pytest
 from reprepbuild.builtin.latex import latex, latex_diff, latex_flat
 from reprepbuild.scripts.latex import (
     DEFAULT_MESSAGE,
     MESSAGE_SUFFIX,
+    LatexSourceStack,
     parse_bibtex_log,
     parse_latex_log,
 )
@@ -377,10 +379,10 @@ def test_parse_latex_log3():
 
 LATEX_LOG4 = r"""
 **foo
-) (./review.tex
+] (./review.tex
 
-) (/usr/share/texlive/texmf-dist/tex/latex/mathdesign/mdttfont.def
-
+(/usr/share/texlive/texmf-dist/tex/latex/mathdesign/mdttfont.def
+)
 
 Package hyperref Info: Link coloring ON on input line 29.
 (./review.out) (./review.out)
@@ -441,7 +443,94 @@ def test_parse_latex_log4():
     assert not rebuild
     assert error_info.program == "LaTeX"
     assert error_info.src == "./review.tex"
-    print(error_info.message.strip())
-    print()
-    print((LATEX_LOG4_MESSAGE + MESSAGE_SUFFIX).strip())
     assert error_info.message.strip() == (LATEX_LOG4_MESSAGE + MESSAGE_SUFFIX).strip()
+
+
+LATEX_LOG5 = r"""
+This is XeTeX, Version 3.141592653-2.6-0.999994 (TeX Live 2022/CVE-2023-32700 patched)
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**solutions
+(./solutions.tex
+LaTeX2e <2022-06-01> patch level 5
+L3 programming layer <2022-12-17> (/usr/share/texlive/texmf-dist/tex/latex/base
+/article.cls
+Document Class: article 2021/10/04 v1.4n Standard LaTeX document class
+(/usr/share/texlive/texmf-dist/tex/latex/base/size12.clo
+File: size12.clo 2021/10/04 v1.4n Standard LaTeX file (size option)
+)
+\bibindent=\dimen140
+) (../../../../preamble.inc.tex (/usr/share/texlive/texmf-dist/tex/latex/mathde
+sign/mathdesign.sty
+))
+
+[1
+
+] (./example/solution.inc.tex
+LaTeX Font Info:    Font shape `T1/mdput/m/n' will be
+(Font)              scaled to size 7.52002pt on input line 5.
+LaTeX Font Info:    Font shape `T1/mdput/m/n' will be
+(Font)              scaled to size 4.70001pt on input line 5.
+)
+
+! LaTeX Error: Something's wrong--perhaps a missing \item.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...
+
+l.40 \end{enumerate}
+
+Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+"""
+
+LATEX_LOG5_MESSAGE = r"""
+! LaTeX Error: Something's wrong--perhaps a missing \item.
+
+l.40 \end{enumerate}
+"""
+
+
+def test_parse_latex_log5():
+    rebuild, error_info = parse_latex_log(io.StringIO(LATEX_LOG5))
+    assert not rebuild
+    assert error_info.program == "LaTeX"
+    assert error_info.src == "./solutions.tex"
+    assert error_info.message.strip() == (LATEX_LOG5_MESSAGE + MESSAGE_SUFFIX).strip()
+
+
+@pytest.mark.parametrize(
+    "nline, stack, unfinished",
+    [
+        (7, ["./solutions.tex"], None),
+        (9, ["./solutions.tex"], "/usr/share/texlive/texmf-dist/tex/latex/base"),
+        (10, ["./solutions.tex", "/usr/share/texlive/texmf-dist/tex/latex/base/article.cls"], None),
+        (
+            16,
+            ["./solutions.tex", "../../../../preamble.inc.tex"],
+            "/usr/share/texlive/texmf-dist/tex/latex/mathde",
+        ),
+        (
+            17,
+            [
+                "./solutions.tex",
+                "../../../../preamble.inc.tex",
+                "/usr/share/texlive/texmf-dist/tex/latex/mathdesign/mathdesign.sty",
+            ],
+            None,
+        ),
+        (18, ["./solutions.tex"], None),
+        (24, ["./solutions.tex", "./example/solution.inc.tex"], None),
+        (30, ["./solutions.tex"], None),
+    ],
+)
+def test_latex_source_stack(nline, stack, unfinished):
+    lines = LATEX_LOG5.split("\n")[:nline]
+    lss = LatexSourceStack()
+    for line in lines:
+        lss.feed(line + "\n")
+    assert lss.stack == stack
+    assert lss.unfinished == unfinished
+    assert not lss.unmatched
