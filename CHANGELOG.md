@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- More sensible variable, module and script names.
+  To facilitate extensibility, `latex_zip` is renamed `zip_latex`.
+  Other name changes are more internal.
+
 ### Fixed
 
 - Fix for the LaTeX log parser.

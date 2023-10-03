@@ -25,26 +25,26 @@ import sys
 
 from ..utils import parse_inputs_fls
 from .manifest import compute_sha256
-from .zip import reprozip
+from .zip import repro_zip
 
 
 def main() -> int:
     """Main program."""
     args = parse_args()
-    return article_zip(args.path_fls, args.path_zip)
+    return repro_zip_latex(args.path_fls, args.path_zip)
 
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        "rr-latex-zip", description="Zip a LaTeX file with required files."
+        "rr-zip-latex", description="Zip a LaTeX source with all required files."
     )
     parser.add_argument("path_fls", help="The LaTeX fls file.")
     parser.add_argument("path_zip", help="The output zip file with the sources.")
     return parser.parse_args()
 
 
-def article_zip(path_fls: str, path_zip: str) -> int:
+def repro_zip_latex(path_fls: str, path_zip: str) -> int:
     """Zip the sources of the article."""
     if not path_fls.endswith(".fls"):
         print(f"The input must have a `.fls` extension. Got {path_fls}")
@@ -54,14 +54,14 @@ def article_zip(path_fls: str, path_zip: str) -> int:
 
     # Make a manifest file
     paths_in = parse_inputs_fls(path_fls)
-    path_manifest = f"{workdir}/{prefix}.sha256"
+    path_manifest = os.path.join(workdir, prefix + ".sha256")
     with open(path_manifest, "w") as f:
         for path_in in paths_in:
             size, sha256 = compute_sha256(path_in)
             f.write(f"{size:15d} {sha256} {path_in[len(workdir) + 1:]}\n")
 
     # Collect files to be zipped and write zip
-    return reprozip(path_manifest, path_zip, check_sha256=False)
+    return repro_zip(path_manifest, path_zip, check_sha256=False)
 
 
 if __name__ == "__main__":

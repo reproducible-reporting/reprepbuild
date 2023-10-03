@@ -32,7 +32,7 @@ import tqdm
 
 from .manifest import compute_sha256
 
-__all__ = ("reprozip",)
+__all__ = ("repro_zip",)
 
 
 TIMESTAMP = datetime.datetime(1980, 1, 1).timestamp()
@@ -41,7 +41,7 @@ TIMESTAMP = datetime.datetime(1980, 1, 1).timestamp()
 def main() -> int:
     """Main program."""
     args = parse_args()
-    return reprozip(args.path_man, args.path_zip)
+    return repro_zip(args.path_man, args.path_zip)
 
 
 def parse_args() -> argparse.Namespace:
@@ -57,7 +57,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def reprozip(path_man: str, path_zip: str, check_sha256: bool = True) -> int:
+def repro_zip(path_man: str, path_zip: str, check_sha256: bool = True) -> int:
     """Create a reproducible zip file."""
     if not path_zip.endswith(".zip"):
         print(f"Destination must have a `.zip` extension. Got {path_zip}")

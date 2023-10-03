@@ -24,7 +24,7 @@ import attrs
 
 from ..command import Command
 
-__all__ = ("repro_zip", "repro_latex_zip")
+__all__ = ("repro_zip", "repro_zip_latex")
 
 
 @attrs.define()
@@ -74,18 +74,18 @@ class ReproZip(Command):
 
 
 @attrs.define()
-class ReproLatexZip(Command):
+class ReproZipLatex(Command):
     """Create a Reproducible Zip file of a LaTeX source."""
 
     @property
     def name(self) -> str:
         """The name of the command in ``reprepbuild.yaml``."""
-        return "repro_latex_zip"
+        return "repro_zip_latex"
 
     @property
     def rules(self) -> dict[str, dict]:
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
-        return {"repro_latex_zip": {"command": "rr-latex-zip ${in} ${out}"}}
+        return {"repro_zip_latex": {"command": "rr-zip-latex ${in} ${out}"}}
 
     def generate(
         self, inp: list[str], out: list[str], arg, variables: dict[str, str]
@@ -96,13 +96,15 @@ class ReproLatexZip(Command):
             raise ValueError(f"Expecting one input, the LaTeX fls file, got: {inp}")
         path_fls = inp[0]
         if not path_fls.endswith(".fls"):
-            raise ValueError(f"The input latex_zip command must end with .fls, got {path_fls}.")
+            raise ValueError(
+                f"The input repro_zip_latex command must end with .fls, got {path_fls}."
+            )
         if len(out) != 1:
             raise ValueError(f"Expecting one output, the zip file, got: {out}")
         path_zip = out[0]
         if not path_zip.endswith(".zip"):
             raise ValueError(
-                f"The output of the repro_zip command must end with .zip, got {path_zip}."
+                f"The output of the repro_zip_latex command must end with .zip, got {path_zip}."
             )
         if arg is not None:
             raise ValueError(f"Expected no arguments, got {arg}")
@@ -110,7 +112,7 @@ class ReproLatexZip(Command):
         # Write builds
         build = {
             "outputs": [path_zip],
-            "rule": "repro_latex_zip",
+            "rule": "repro_zip_latex",
             "inputs": [path_fls],
             "pool": "console",
         }
@@ -118,4 +120,4 @@ class ReproLatexZip(Command):
 
 
 repro_zip = ReproZip()
-repro_latex_zip = ReproLatexZip()
+repro_zip_latex = ReproZipLatex()

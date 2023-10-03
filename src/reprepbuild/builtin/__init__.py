@@ -22,7 +22,7 @@ from .latex import latex, latex_diff, latex_flat
 from .mupdf import pdf_add_notes, pdf_merge, pdf_nup
 from .python_script import python_script
 from .transform import convert_odf_pdf, convert_svg_pdf, copy, pdf_raster, render
-from .zip import repro_latex_zip, repro_zip
+from .zip import repro_zip, repro_zip_latex
 
 __all__ = ("get_commands",)
 
@@ -42,6 +42,6 @@ def get_commands():
         copy,
         pdf_raster,
         render,
-        repro_latex_zip,
         repro_zip,
+        repro_zip_latex,
     ]

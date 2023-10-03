@@ -57,7 +57,6 @@ rr-check-hrefs = "reprepbuild.scripts.check_hrefs:main"
 rr-generator = "reprepbuild.scripts.generator:main"
 rr-latex = "reprepbuild.scripts.latex:main"
 rr-latex-flat = "reprepbuild.scripts.latex_flat:main"
-rr-latex-zip = "reprepbuild.scripts.latex_zip:main"
 rr-manifest = "reprepbuild.scripts.manifest:main"
 rr-pdf-add-notes = "reprepbuild.scripts.pdf_add_notes:main"
 rr-pdf-normalize = "reprepbuild.scripts.pdf_normalize:main"
@@ -65,6 +64,7 @@ rr-pdf-nup = "reprepbuild.scripts.pdf_nup:main"
 rr-python-script = "reprepbuild.scripts.python_script:main"
 rr-render = "reprepbuild.scripts.render:main"
 rr-zip = "reprepbuild.scripts.zip:main"
+rr-zip-latex = "reprepbuild.scripts.zip_latex:main"
 
 [tool.black]
 line-length = 100
