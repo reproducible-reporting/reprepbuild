@@ -113,7 +113,7 @@ def make_url_substitutions(hrefs: list[HRef], translate: list[str]):
         print("Expecting an even number of arguments to --translate.")
         return 1
     for href in hrefs:
-        href.translated = href.url
+        href.translated = href.url[: href.url.find("#")] if "#" in href.url else href.url
     for orig, repl in zip(translate[::2], translate[1::2], strict=True):
         for href in hrefs:
             href.translated = href.translated.replace(orig, repl)
