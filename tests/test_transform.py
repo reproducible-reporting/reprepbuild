@@ -20,7 +20,14 @@
 """Unit tests for reprepbuild.builtin.transform"""
 
 
-from reprepbuild.builtin.transform import convert_odf_pdf, convert_svg_pdf, copy, pdf_raster, render
+from reprepbuild.builtin.transform import (
+    convert_odf_pdf,
+    convert_svg_pdf,
+    copy,
+    markdown_pdf,
+    pdf_raster,
+    render,
+)
 
 BUILDS_COPY = [
     {
@@ -160,3 +167,17 @@ BUILDS_CONVERT_PDF_RASTER = [
 def test_write_build_pdf_raster():
     builds, _ = pdf_raster.generate(["original.pdf"], ["/public/rastered.pdf"], None, {})
     assert BUILDS_CONVERT_PDF_RASTER == builds
+
+
+BUILDS_CONVERT_MARKDOWN_PDF = [
+    {
+        "rule": "markdown_pdf",
+        "inputs": ["original.md"],
+        "outputs": ["/public/original.pdf"],
+    }
+]
+
+
+def test_write_build_markdown_pdf():
+    builds, _ = markdown_pdf.generate(["original.md"], ["/public/"], None, {})
+    assert BUILDS_CONVERT_MARKDOWN_PDF == builds

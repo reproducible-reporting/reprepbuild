@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Script to convert Markdown to HTML and PDF, with KaTeX support: `rr-markdown-pdf`.
+  (Corresponding build rules are also included, only for PDF.)
+
 ### Changed
 
 - More sensible variable, module and script names.

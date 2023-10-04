@@ -32,6 +32,7 @@ dependencies = [
     "bibsane",
     "jinja2",
     "markdown",
+    "markdown_katex",
     "ninja",
     "numpy",
     "parse",
@@ -42,6 +43,7 @@ dependencies = [
     "setuptools",
     "tqdm",
     "watchdog",
+    "weasyprint",
 ]
 dynamic = ["version"]
 
@@ -58,6 +60,7 @@ rr-generator = "reprepbuild.scripts.generator:main"
 rr-latex = "reprepbuild.scripts.latex:main"
 rr-latex-flat = "reprepbuild.scripts.latex_flat:main"
 rr-manifest = "reprepbuild.scripts.manifest:main"
+rr-markdown-pdf = "reprepbuild.scripts.markdown_pdf:main"
 rr-pdf-add-notes = "reprepbuild.scripts.pdf_add_notes:main"
 rr-pdf-normalize = "reprepbuild.scripts.pdf_normalize:main"
 rr-pdf-nup = "reprepbuild.scripts.pdf_nup:main"

@@ -145,3 +145,4 @@ pdf_raster = Transform(
     "-r${raster_dpi} -sOutputFile=${out} ${in} > /dev/null",
     variables={"gs": "gs", "raster_dpi": "150"},
 )
+markdown_pdf = Transform("markdown_pdf", "rr-markdown-pdf ${in} --pdf ${out}", new_ext=".pdf")
