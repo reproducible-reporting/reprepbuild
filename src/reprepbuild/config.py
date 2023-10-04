@@ -33,7 +33,7 @@ from .fancyglob import NoFancyTemplate
 from .generator import BarrierGenerator, BaseGenerator, BuildGenerator
 from .utils import CaseSensitiveTemplate
 
-__all__ = ("load_config",)
+__all__ = ("load_config", "rewrite_path")
 
 
 RE_IMPORT = re.compile(r"[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*")
