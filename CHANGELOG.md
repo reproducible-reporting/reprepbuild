@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [1.4.1] - 2023-10-05
+
 - Ignore ID (`#`) in URLs in the script `rr-check-hrefs`.
 
 ## [1.4.0] - 2023-10-04
