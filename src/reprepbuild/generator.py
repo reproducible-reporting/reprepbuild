@@ -62,8 +62,9 @@ class BaseGenerator:
             A list of records to be written to ``build.ninja``.
             A comment has type ``str``, defaults have type ``list``, build statements
             have type ``dict`` (and contain keyword arguments for ``Writer.build``).
-        not_scanned
-            A list of filenames that could not be read to find dependencies.
+        gendeps
+            A list of filenames that were (or should have been) read
+            to determine the build records.
         """
         raise NotImplementedError
 
@@ -153,9 +154,7 @@ class BuildGenerator(BaseGenerator):
 
             # Generate the raw build statements
             try:
-                body_records, not_scanned = self.command.generate(
-                    inp, out, self.arg, self.variables
-                )
+                body_records, gendeps = self.command.generate(inp, out, self.arg, self.variables)
             except Exception as exc:
                 exc.add_note(f"While processing generator {self}")
                 raise
@@ -165,7 +164,7 @@ class BuildGenerator(BaseGenerator):
             records.extend(self._post_process_records(body_records))
 
             # Done
-            yield records, not_scanned
+            yield records, gendeps
 
     def _extend_inp_out(
         self, inp: list[str], keys: Collection[str], values: Collection[str], outputs: set[str]

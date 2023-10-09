@@ -64,9 +64,7 @@ class Command:
             New records to be written to ``build.ninja`` for this command, using said
             inputs, outputs and arguments.
             A record can be a ``str`` (comment) or ``dict`` (build).
-        not_scanned
-            A list of files that are not present and could not be scanned for dependencies.
-            These are expected to (be created by other builds).
-            Only include files that should be scanned to complete the build.ninja file.
+        gendeps
+            A list of files that are (or should be) read to determine all builds.
         """
         raise NotImplementedError

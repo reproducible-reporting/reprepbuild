@@ -111,14 +111,13 @@ def scan_latex_deps(path_tex, tex_root=None):
     -------
     implicit
         Filenames to be added to the implicit dependencies.
-    not_scanned
-        Names of files that should have been scanned, but
-        are not present yet.
+    gendeps
+        Files from which dependencies were (or should have been) read.
     bib
         BibTeX files.
     """
     implicit = set()
-    not_scanned = set()
+    gendeps = {path_tex}
     bib = set()
 
     if os.path.isfile(path_tex):
@@ -133,16 +132,11 @@ def scan_latex_deps(path_tex, tex_root=None):
                 else:
                     implicit.add(path_inc)
                 if ext == ".tex":
-                    sub_implicit, sub_not_scanned, sub_bib = scan_latex_deps(path_inc, new_root)
+                    sub_implicit, sub_gendeps, sub_bib = scan_latex_deps(path_inc, new_root)
                     implicit.update(sub_implicit)
-                    not_scanned.update(sub_not_scanned)
+                    gendeps.update(sub_gendeps)
                     bib.update(sub_bib)
-    else:
-        # not_scanned is only relevant for missing files,
-        # which should be scanned by this function,
-        # as soon as they become available.
-        not_scanned.add(cleanup_path(path_tex))
-    return sorted(implicit), sorted(not_scanned), sorted(bib)
+    return sorted(implicit), sorted(gendeps), sorted(bib)
 
 
 RULES = {
@@ -189,7 +183,7 @@ class Latex(Command):
             raise ValueError(f"Expected no arguments, got {arg}")
 
         # Scan Tex file for dependencies.
-        implicit, not_scanned, bib = scan_latex_deps(path_tex)
+        implicit, gendeps, bib = scan_latex_deps(path_tex)
 
         # Create builds
         if len(bib) > 0:
@@ -230,7 +224,7 @@ class Latex(Command):
                 },
             }
 
-        return [build], not_scanned
+        return [build], gendeps
 
 
 @attrs.define()
@@ -266,7 +260,7 @@ class LatexFlat(Command):
             raise ValueError(f"Expected no arguments, got {arg}")
 
         # Scan for (missing) dependencies
-        implicit, not_scanned, bib = scan_latex_deps(path_src)
+        implicit, gendeps, bib = scan_latex_deps(path_src)
 
         # Create builds
         builds = [
@@ -277,7 +271,7 @@ class LatexFlat(Command):
                 "implicit": implicit,
             }
         ]
-        return builds, not_scanned
+        return builds, gendeps
 
 
 @attrs.define()

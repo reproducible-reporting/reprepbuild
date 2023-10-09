@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.2] - 2023-10-09
+
 ### Fixed
 
+- Regenerate `ninja.build` when files change from which dependencies were derived.
+  Previously, it would only be regenerated when missing files were created,
+  which is insufficient.
+
 ## [1.4.1] - 2023-10-05
+
+### Fixed
 
 - Ignore ID (`#`) in URLs in the script `rr-check-hrefs`.
 

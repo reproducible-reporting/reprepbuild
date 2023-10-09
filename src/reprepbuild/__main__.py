@@ -79,10 +79,10 @@ def generate(root: str):
         # Write all build lines with comments and defaults
         outputs = set()
         defaults = set()
-        not_scanned = set()
+        gendeps = set()
         for generator in generators:
-            for records, new_not_scanned in generator(outputs, defaults):
-                not_scanned.update(new_not_scanned)
+            for records, new_gendeps in generator(outputs, defaults):
+                gendeps.update(new_gendeps)
                 for record in records:
                     if isinstance(record, str):
                         writer.comment(record)
@@ -98,12 +98,12 @@ def generate(root: str):
                 writer.newline()
 
         # Insert generator if some files could not be scanned
-        if len(not_scanned) > 0:
+        if len(gendeps) > 0:
             writer.newline()
-            writer.comment("Some dependencies were absent, which could induce additional builds.")
-            writer.comment("This means the build.ninja file needs to be regenerated.")
+            writer.comment("Some files influence the generation of the build files.")
+            writer.comment("When they change, the build.ninja file must be regenerated.")
             writer.rule("generator", command="rr-generator .", generator=True)
-            writer.build(rule="generator", implicit=sorted(not_scanned), outputs="build.ninja")
+            writer.build(rule="generator", implicit=sorted(gendeps), outputs="build.ninja")
 
 
 def _collect_dicts(generators: list[BaseGenerator], attr_name: str) -> dict[str:object]:

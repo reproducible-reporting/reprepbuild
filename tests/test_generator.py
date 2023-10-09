@@ -230,7 +230,7 @@ def test_generate_not_scanned(tmpdir):
     outputs = {}
     with contextlib.chdir(tmpdir):
         results = list(gen(outputs, set()))
-    [[records, ns]] = results
+    [[records, gd]] = results
     assert records == [
         "command: latex",
         "inp: main.tex",
@@ -243,7 +243,7 @@ def test_generate_not_scanned(tmpdir):
             "variables": {"latex": "pdflatex"},
         },
     ]
-    assert ns == ["table.tex"]
+    assert gd == ["main.tex", "table.tex"]
 
 
 def test_generate_barrier(tmpdir):

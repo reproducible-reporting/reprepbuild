@@ -46,8 +46,8 @@ BUILDS_LATEX = [
 
 
 def test_write_build_latex():
-    builds, not_scanned = latex.generate(["sub/main.tex"], [], None, {})
-    assert not_scanned == ["sub/main.tex"]
+    builds, gendeps = latex.generate(["sub/main.tex"], [], None, {})
+    assert gendeps == ["sub/main.tex"]
     assert BUILDS_LATEX == builds
 
 
@@ -94,8 +94,8 @@ def test_write_build_latex_bibtex1(tmpdir):
     with open(os.path.join(tmpdir, "main.tex"), "w") as fh:
         fh.write(MAIN1_TEX)
     with contextlib.chdir(tmpdir):
-        builds, not_scanned = latex.generate(["main.tex"], [], None, {})
-    assert not_scanned == ["sub/foo.tex", "table.tex"]
+        builds, gendeps = latex.generate(["main.tex"], [], None, {})
+    assert gendeps == ["main.tex", "sub/foo.tex", "table.tex"]
     assert BUILDS_LATEX_BIBTEX1 == builds
 
 
@@ -138,8 +138,8 @@ def test_write_build_latex_bibtex_foo1(tmpdir):
     with open(os.path.join(subdir, "foo.tex"), "w") as fh:
         fh.write(SUB1_FOO_TEX)
     with contextlib.chdir(tmpdir):
-        builds, not_scanned = latex.generate(["main.tex"], [], None, {})
-    assert not_scanned == ["table.tex"]
+        builds, gendeps = latex.generate(["main.tex"], [], None, {})
+    assert gendeps == ["main.tex", "sub/foo.tex", "table.tex"]
     assert BUILDS_LATEX_BIBTEX_FOO1 == builds
 
 
@@ -193,8 +193,8 @@ def test_write_build_latex_bibtex_table2(tmpdir):
     with open(os.path.join(subdir, "table.tex"), "w") as fh:
         fh.write(TABLE2_TEX)
     with contextlib.chdir(tmpdir):
-        builds, not_scanned = latex.generate(["sub/main.tex"], [], None, {})
-    assert not_scanned == []
+        builds, gendeps = latex.generate(["sub/main.tex"], [], None, {})
+    assert gendeps == ["sub/main.tex", "sub/table.tex"]
     assert BUILDS_LATEX_BIBTEX_TABLE2 == builds
 
 
@@ -209,8 +209,8 @@ BUILDS_LATEX_FLAT = [
 
 
 def test_write_build_latex_flat():
-    builds, not_scanned = latex_flat.generate(["sub/main.tex"], ["sub/main-flat.tex"], None, {})
-    assert not_scanned == ["sub/main.tex"]
+    builds, gendeps = latex_flat.generate(["sub/main.tex"], ["sub/main-flat.tex"], None, {})
+    assert gendeps == ["sub/main.tex"]
     assert BUILDS_LATEX_FLAT == builds
 
 
@@ -239,10 +239,10 @@ BUILDS_LATEX_DIFF = [
 
 
 def test_write_build_latex_diff():
-    builds, not_scanned = latex_diff.generate(
+    builds, gendeps = latex_diff.generate(
         ["sub/main.tex", "sub/old/main.tex"], ["sub/main-diff.tex"], None, {}
     )
-    assert not_scanned == []
+    assert gendeps == []
     assert BUILDS_LATEX_DIFF == builds
 
 
