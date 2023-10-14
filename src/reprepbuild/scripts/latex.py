@@ -170,30 +170,34 @@ class LatexSourceStack:
     def feed(self, line: str):
         # Check if we need to anticipate line wrapping
         full = len(line) == 80
+        if full:
+            # Some exceptions: guess when 80-char lines end exactly with a filename.
+            # This is fragile, but LaTeX log files are just a mess to parse.
+            for end in ".tex\n", ".sty\n", ".cls\n", ".def\n", ".cfg\n", ".clo\n":
+                if line.endswith(end):
+                    full = False
+                    break
 
         # Continue from previous line if needed
         if self.unfinished is not None:
-            path = self.unfinished + line.rstrip()
-            if full:
-                self.unfinished = path
-            else:
-                self.unfinished = None
-                self.stack.append(path)
+            line = self.unfinished + line
+            self.unfinished = None
 
-        # Pop from stack
-        while line.startswith(")"):
-            if len(self.stack) == 0:
-                self.unmatched = True
-            else:
-                del self.stack[-1]
-            line = line[1:]
+        if full:
+            self.unfinished = line[:-1]
+            return
 
-        # Add to stack, possibly dealing with line wrapping
-        paths = re.findall(r"\(((?:\./|\.\./|/)[-_./a-zA-Z0-9]+)(?:\s|$)", line)
-        if full and len(paths) > 0:
-            self.unfinished = paths[-1]
-            del paths[-1]
-        self.stack.extend(paths)
+        # Update to stack
+        brackets = re.findall(r"\((?:(?:\./|\.\./|/)[-_./a-zA-Z0-9]+)?|\)", line)
+        for bracket in brackets:
+            if bracket == ")":
+                if len(self.stack) == 0:
+                    self.unmatched = True
+                else:
+                    del self.stack[-1]
+            else:
+                assert bracket.startswith("(")
+                self.stack.append(bracket[1:])
 
 
 def parse_latex_log(fh: TextIO) -> tuple[bool, (ErrorInfo | None)]:

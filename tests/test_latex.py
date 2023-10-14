@@ -501,16 +501,30 @@ def test_parse_latex_log5():
     assert error_info.message.strip() == (LATEX_LOG5_MESSAGE + MESSAGE_SUFFIX).strip()
 
 
+def check_source_stack(latex_log, nline, stack, unfinished):
+    lines = latex_log.split("\n")[:nline]
+    lss = LatexSourceStack()
+    for line in lines:
+        lss.feed(line + "\n")
+    assert lss.stack == stack
+    assert lss.unfinished == unfinished
+    assert not lss.unmatched
+
+
 @pytest.mark.parametrize(
     "nline, stack, unfinished",
     [
         (7, ["./solutions.tex"], None),
-        (9, ["./solutions.tex"], "/usr/share/texlive/texmf-dist/tex/latex/base"),
+        (
+            9,
+            ["./solutions.tex"],
+            "L3 programming layer <2022-12-17> (/usr/share/texlive/texmf-dist/tex/latex/base",
+        ),
         (10, ["./solutions.tex", "/usr/share/texlive/texmf-dist/tex/latex/base/article.cls"], None),
         (
             16,
-            ["./solutions.tex", "../../../../preamble.inc.tex"],
-            "/usr/share/texlive/texmf-dist/tex/latex/mathde",
+            ["./solutions.tex", "/usr/share/texlive/texmf-dist/tex/latex/base/article.cls"],
+            ") (../../../../preamble.inc.tex (/usr/share/texlive/texmf-dist/tex/latex/mathde",
         ),
         (
             17,
@@ -526,11 +540,130 @@ def test_parse_latex_log5():
         (30, ["./solutions.tex"], None),
     ],
 )
-def test_latex_source_stack(nline, stack, unfinished):
-    lines = LATEX_LOG5.split("\n")[:nline]
-    lss = LatexSourceStack()
-    for line in lines:
-        lss.feed(line + "\n")
-    assert lss.stack == stack
-    assert lss.unfinished == unfinished
-    assert not lss.unmatched
+def test_latex_source_stack5(nline, stack, unfinished):
+    check_source_stack(LATEX_LOG5, nline, stack, unfinished)
+
+
+LATEX_LOG6 = r"""
+This is XeTeX, Version 3.141592653-2.6-0.999994 (TeX Live 2022/CVE-2023-32700 patched)
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**review
+(./review.tex
+
+[5] (./weerstand_serie_en_parallel2/method.inc.tex) (./weerstand_serie_en_paral
+lel2/answer.inc.tex)
+Overfull \hbox (6.20514pt too wide) in paragraph at lines 315--336
+\T1/mdput/m/n/12 -  []
+ []
+
+(./weerstand_serie_en_parallel2/solution.inc.tex
+File: weerstand_serie_en_parallel2//stappen12.pdf Graphic file (type pdf)
+<use weerstand_serie_en_parallel2//stappen12.pdf>
+[6]
+File: weerstand_serie_en_parallel2//stappen34.pdf Graphic file (type pdf)
+<use weerstand_serie_en_parallel2//stappen34.pdf>
+) (./interactie_eindige_dipolen/stem.inc.tex
+File: interactie_eindige_dipolen//paar_dipolen.pdf Graphic file (type pdf)
+<use interactie_eindige_dipolen//paar_dipolen.pdf>
+) [7] (./interactie_eindige_dipolen/validation.inc.tex)
+! Missing $ inserted.
+<inserted text>
+                $
+l.355
+
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+"""
+
+LATEX_LOG6_MESSAGE = r"""
+! Missing $ inserted.
+<inserted text>
+                $
+l.355
+"""
+
+
+def test_parse_latex_log6():
+    rebuild, error_info = parse_latex_log(io.StringIO(LATEX_LOG6))
+    assert not rebuild
+    assert error_info.program == "LaTeX"
+    assert error_info.src == "./review.tex"
+    assert error_info.message.strip() == (LATEX_LOG6_MESSAGE + MESSAGE_SUFFIX).strip()
+
+
+LATEX_LOG7 = r"""
+(./pdftexcmds.sty
+Package: pdftexcmds 2020-06-27 v0.33 Utility functions of pdfTeX for LuaTeX (HO
+)
+(./infwarerr.sty
+Package: infwarerr 2019/12/03 v1.5 Providing info/warning/error messages (HO)
+)
+)
+"""
+
+
+@pytest.mark.parametrize(
+    "nline, stack, unfinished",
+    [
+        (2, ["./pdftexcmds.sty"], None),
+        (
+            3,
+            ["./pdftexcmds.sty"],
+            "Package: pdftexcmds 2020-06-27 v0.33 Utility functions of pdfTeX for LuaTeX (HO",
+        ),
+        (4, ["./pdftexcmds.sty"], None),
+        (5, ["./pdftexcmds.sty", "./infwarerr.sty"], None),
+        (6, ["./pdftexcmds.sty", "./infwarerr.sty"], None),
+        (7, ["./pdftexcmds.sty"], None),
+        (8, [], None),
+    ],
+)
+def test_latex_source_stack7(nline, stack, unfinished):
+    check_source_stack(LATEX_LOG7, nline, stack, unfinished)
+
+
+LATEX_LOG8 = r"""
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorequick.code.tex
+File: pgfcorequick.code.tex 2021/05/15 v3.1.9a (3.1.9a)
+)
+"""
+
+
+@pytest.mark.parametrize(
+    "nline, stack, unfinished",
+    [
+        (
+            3,
+            ["/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorequick.code.tex"],
+            None,
+        ),
+    ],
+)
+def test_latex_source_stack8(nline, stack, unfinished):
+    check_source_stack(LATEX_LOG8, nline, stack, unfinished)
+
+
+LATEX_LOG9 = r"""
+(./first.tex
+Bluh
+(./second.tex))
+Blah
+"""
+
+
+@pytest.mark.parametrize(
+    "nline, stack, unfinished",
+    [
+        (2, ["./first.tex"], None),
+        (3, ["./first.tex"], None),
+        (4, [], None),
+        (5, [], None),
+    ],
+)
+def test_latex_source_stack9(nline, stack, unfinished):
+    check_source_stack(LATEX_LOG9, nline, stack, unfinished)

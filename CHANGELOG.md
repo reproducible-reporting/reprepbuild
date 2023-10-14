@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix for the LaTeX log parser.
+  In some cases, the wrong the LaTeX source file was identified.
+
 ## [1.4.2] - 2023-10-09
 
 ### Fixed
@@ -37,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix for the LaTeX log parser.
-  In some cases, the wrong the LaTeX source file was identificed.
+  In some cases, the wrong the LaTeX source file was identified.
 
 ## [1.3.0] - 2023-10-02
 
