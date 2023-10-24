@@ -25,7 +25,7 @@ import attrs
 __all__ = ("Command",)
 
 
-@attrs.define()
+@attrs.define
 class Command:
     @property
     def name(self) -> str:

@@ -227,7 +227,7 @@ class Latex(Command):
         return [build], gendeps
 
 
-@attrs.define()
+@attrs.define
 class LatexFlat(Command):
     """Flatten a LaTeX file with \\input and/or \\import into a single file."""
 
@@ -274,7 +274,7 @@ class LatexFlat(Command):
         return builds, gendeps
 
 
-@attrs.define()
+@attrs.define
 class LatexDiff(Command):
     """Compile a LaTeX Diff out of two *compiled* source documents."""
 

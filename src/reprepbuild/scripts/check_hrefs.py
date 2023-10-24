@@ -61,7 +61,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-@attrs.define()
+@attrs.define
 class HRef:
     """A hyper reference to be checked."""
 
