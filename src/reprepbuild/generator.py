@@ -204,7 +204,6 @@ class BuildGenerator(BaseGenerator):
                 if self._skip_build(record):
                     continue
                 _expand_variables(record, self.variables)
-                _add_variables(record, self.command.rules[record["rule"]], self.variables)
                 _add_mkdir(record)
                 _clean_build(record)
                 if self.phony is not None:
@@ -246,39 +245,6 @@ def _expand_variables(build: dict, variables: dict[str, str]):
     depfile = build.get("depfile")
     if depfile is not None:
         build["depfile"] = _expand(depfile)
-
-
-def _add_variables(build: dict, rule: dict, variables: dict[str, str]):
-    """Detect variables in a build record and add known variables to the record.
-
-    Parameters
-    ----------
-    build
-        A build record, which is a kwargs dict for Writer.build.
-        This argument is modified in place: build["variables"] is updated.
-    rule
-        The rule kwargs (for Writer.rule) associated with this build record.
-    variables
-        A dictionary with variables, which may be relevant for the build record.
-    """
-    # Get a list of strings to be checked for the presence of variables.
-    strings = [rule.get(key) for key in ["command", "description", "depfile"]]
-    strings += [
-        build.get(key)
-        for key in ["outputs", "inputs", "implicit", "order_only", "implicit_outputs", "dyndep"]
-    ]
-    strings = [item for item in strings if item is not None]
-    strings = [[item] if isinstance(item, str) else item for item in strings]
-    strings = sum(strings, [])
-
-    # Detect variables present and add them to the build.
-    build.setdefault("variables", {})
-    for template in strings:
-        for name in CaseSensitiveTemplate(template).get_identifiers():
-            if name in variables:
-                build["variables"][name] = variables[name]
-    if len(build["variables"]) == 0:
-        del build["variables"]
 
 
 def _add_mkdir(build: dict):

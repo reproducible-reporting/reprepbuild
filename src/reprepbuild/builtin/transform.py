@@ -103,7 +103,9 @@ class Transform(Command):
             if len(self.implicit) > 0:
                 build["implicit"] = self.implicit
             if len(self.variables) > 0:
-                build["variables"] = self.variables
+                build["variables"] = {
+                    key: variables.get(key, value) for key, value in self.variables.items()
+                }
             if self.pool_depth is not None:
                 build["pool"] = self._name
             builds.append(build)

@@ -201,10 +201,10 @@ class Latex(Command):
                 ],
                 "implicit": implicit + bib,
                 "variables": {
-                    "latex": "pdflatex",
-                    "bibtex": "bibtex",
-                    "bibsane": "bibsane",
-                    "bibsane_config": "${root}/bibsane.yaml",
+                    "latex": variables.get("latex", "pdflatex"),
+                    "bibtex": variables.get("bibtex", "bibtex"),
+                    "bibsane": variables.get("bibsane", "bibsane"),
+                    "bibsane_config": variables.get("bibsane_config", "${root}/bibsane.yaml"),
                 },
             }
         else:
@@ -220,7 +220,7 @@ class Latex(Command):
                 ],
                 "implicit": implicit + bib,
                 "variables": {
-                    "latex": "pdflatex",
+                    "latex": variables.get("latex", "pdflatex"),
                 },
             }
 
@@ -274,6 +274,12 @@ class LatexFlat(Command):
         return builds, gendeps
 
 
+DEFAULT_CONTEXT2CMD = (
+    "abstract,supplementary,dataavailability,funding,"
+    "authorcontributions,conflictsofinterest,abbreviations"
+)
+
+
 @attrs.define
 class LatexDiff(Command):
     """Compile a LaTeX Diff out of two *compiled* source documents."""
@@ -320,9 +326,8 @@ class LatexDiff(Command):
 
         # Create builds
         latex_diff_variables = {
-            "latexdiff_context2cmd": "abstract,supplementary,dataavailability,funding,"
-            "authorcontributions,conflictsofinterest,abbreviations",
-            "latexdiff": "latexdiff",
+            "latexdiff_context2cmd": variables.get("latexdiff_context2cmd", DEFAULT_CONTEXT2CMD),
+            "latexdiff": variables.get("latexdiff", "latexdiff"),
         }
         builds = [
             {

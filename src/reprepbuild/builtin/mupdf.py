@@ -61,7 +61,7 @@ class PDFMerge(Command):
             "rule": "pdf_merge",
             "outputs": [path_out],
             "inputs": inp,
-            "variables": {"mutool": "mutool"},
+            "variables": {"mutool": variables.get("mutool", "mutool")},
         }
         return [build], []
 
