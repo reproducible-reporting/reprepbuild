@@ -55,6 +55,9 @@ class BaseGenerator:
             A set filenames that preceding build steps will create.
             These will be treated as potential inputs,
             in addition to the ones found with glob.
+        defaults
+            A list of files to be build by default when ninja is not called with
+            any targets on the command line.
 
         Yields
         ------
