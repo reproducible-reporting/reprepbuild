@@ -56,7 +56,8 @@ class Command:
         arg
             Additional argument, may be anything.
         variables
-            The dictionary of variables set in ``reprepbuild.yaml``.
+            The dictionary of variables set in ``reprepbuild.yaml``,
+            possibly with local overrides.
 
         Returns
         -------

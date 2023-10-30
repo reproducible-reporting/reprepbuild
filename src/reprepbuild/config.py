@@ -98,6 +98,9 @@ class BuildConfig(TaskConfig):
     inp: str = attrs.field(validator=attrs.validators.instance_of(str))
     out: str = attrs.field(validator=attrs.validators.instance_of(str), default="")
     arg = attrs.field(default=None)
+    override: dict[str, str] = attrs.field(
+        validator=attrs.validators.instance_of(dict), default=attrs.Factory(dict)
+    )
     loop: list[LoopConfig] = attrs.field(
         validator=attrs.validators.instance_of(list),
         default=attrs.Factory(list),
@@ -252,12 +255,15 @@ def load_config(
             if command is None:
                 raise ValueError(f"In {path_config}, unknown command: {command_name}")
             for loop_variables in iterate_loop_config(task_config.loop):
+                command_variables = variables
+                if task_config.override != {}:
+                    command_variables = command_variables | task_config.override
                 generator = BuildGenerator(
                     command,
                     default,
-                    variables,
-                    rewrite_paths(task_config.inp, variables | loop_variables, True),
-                    rewrite_paths(task_config.out, variables | loop_variables, True),
+                    command_variables,
+                    rewrite_paths(task_config.inp, command_variables | loop_variables, True),
+                    rewrite_paths(task_config.out, command_variables | loop_variables, True),
                     task_config.arg,
                     task_config.phony,
                 )

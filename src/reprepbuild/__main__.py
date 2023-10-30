@@ -87,12 +87,29 @@ def generate(root: str):
                     if isinstance(record, str):
                         writer.comment(record)
                     elif isinstance(record, list):
-                        writer.default(record)
-                        defaults.update(record)
+                        for default in record:
+                            if default not in defaults:
+                                writer.default(record)
+                                defaults.update(record)
                     elif isinstance(record, dict):
-                        writer.build(**record)
-                        outputs.update(record["outputs"])
-                        outputs.update(record.get("implicit_outputs", []))
+                        new_outputs = set(record["outputs"])
+                        new_outputs |= set(record.get("implicit_outputs", []))
+                        if outputs.isdisjoint(new_outputs):
+                            writer.build(**record)
+                            outputs.update(new_outputs)
+                        else:
+                            # Some outputs are repeated, in which case no new build lines are
+                            # written. It is assumed that the preceding builds are more specific
+                            # and therefore should take priority over later ones.
+                            # To maintain sanity, ambiguous cases are not allowed, i.e. all
+                            # new outputs should already exist.
+                            if not new_outputs.issubset(outputs):
+                                raise ValueError(
+                                    "Outputs are partially generated in previous builds. "
+                                    f"New: {new_outputs - outputs} "
+                                    f"Existing: {new_outputs & outputs}"
+                                )
+                            writer.comment("Skipping due to overlap with previous builds.")
                     else:
                         raise TypeError("Cannot process ")
                 writer.newline()

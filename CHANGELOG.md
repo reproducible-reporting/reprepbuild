@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- More customization features:
+  - A more specific build config can precede a more general one,
+    where the latter also defines build outputs of the former.
+    In this case, the preceding command will get priority and no duplicate
+    build outputs are written to `build.ninja`.
+  - Each command in `reprepbuild.yaml` now also accepts an `override`
+    field, to override variables locally.
+    These overrides are only used when writing `build.ninja`.
+    and are not included in `.reprepbuild/variables.json`.
+
 ### Fixed
 
 - Fix for the LaTeX log parser.
