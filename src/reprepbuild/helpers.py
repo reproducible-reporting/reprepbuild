@@ -40,7 +40,14 @@ class SubFigure:
 
 
 def layout_sub_figures(
-    fn_pdf, sub_figures, fontname="hebo", fontfile=None, fontsize=7, lineheight=10, padding=5
+    fn_pdf,
+    sub_figures,
+    fontname="hebo",
+    fontfile=None,
+    fontsize=7,
+    lineheight=10,
+    padding=5,
+    hshift=0,
 ):
     """Combine PDF sub-figures into a single PDF with labels on top of each sub-figure.
 
@@ -62,10 +69,12 @@ def layout_sub_figures(
     padding
         The padding added added to the subfigures before combining them.
         This parameter is also used as margin between the label and the figure.
+    hshift
+        An optional horizontal displacement of the subfigure label.
     """
     _load_pdfs(sub_figures)
     for sub_figure in sub_figures:
-        _add_label(sub_figure, fontname, fontfile, fontsize, lineheight, padding)
+        _add_label(sub_figure, fontname, fontfile, fontsize, lineheight, padding, hshift)
     out = _combine_figures(sub_figures)
     out.set_metadata({})
     out.del_xml_metadata()
@@ -83,38 +92,36 @@ def _load_pdfs(sub_figures):
             )
 
 
-def _add_label(sub_figure, fontname, fontfile, fontsize, lineheight, padding):
+def _add_label(sub_figure, fontname, fontfile, fontsize, lineheight, padding, hshift):
     new = fitz.open()
-    oldpage = sub_figure.pdf[0]
-    newpage = new.new_page(
-        width=oldpage.rect.x1 - oldpage.rect.x0 + 2 * padding,
-        height=oldpage.rect.y1 - oldpage.rect.y0 + lineheight + 3 * padding,
+    old_page = sub_figure.pdf[0]
+    new_page = new.new_page(
+        width=old_page.rect.x1 - old_page.rect.x0 + 2 * padding,
+        height=old_page.rect.y1 - old_page.rect.y0 + lineheight + 3 * padding,
     )
     top = lineheight + 2 * padding
-    newpage.show_pdf_page(
+    new_page.show_pdf_page(
         fitz.Rect(
             padding,
             top,
-            oldpage.rect.x1 - oldpage.rect.x0 + padding,
-            oldpage.rect.y1 - oldpage.rect.y0 + top,
+            old_page.rect.x1 - old_page.rect.x0 + padding,
+            old_page.rect.y1 - old_page.rect.y0 + top,
         ),
         sub_figure.pdf,
         0,
     )
-    newpage.insert_textbox(
-        fitz.Rect(
-            padding,
-            padding,
-            oldpage.rect.x1 - oldpage.rect.x0 + padding,
-            padding + lineheight,
+    font = fitz.Font(fontname, fontfile)
+    length = font.text_length(sub_figure.label, fontsize=fontsize)
+    text_writer = fitz.TextWriter(new_page.rect)
+    text_writer.append(
+        fitz.Point(
+            (new_page.rect.x1 - new_page.rect.x0 - length) / 2 + hshift, padding + lineheight
         ),
         sub_figure.label,
+        font=font,
         fontsize=fontsize,
-        fontname=fontname,
-        fontfile=fontfile,
-        lineheight=lineheight,
-        align=fitz.TEXT_ALIGN_CENTER,
     )
+    text_writer.write_text(new_page)
     sub_figure.pdf = new
 
 

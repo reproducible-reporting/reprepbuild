@@ -5,7 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [unreleased]
+
+
+## [1.6.0] - 2023-11-15
+
+### Added
+
+- A new `hshift` optional argument for `layout_sub_figures` in `reprepbuild.helpers`
+  can be used to tweak the placement of subfigure labels.
+
+
+### Fixed
+
+- Labels were not shown on subfigures (reason unclear).
+  The function `layout_sub_figures` now uses the `TextWriter` API of PyMuPDF,
+  which seems to work better.
+
 
 ## [1.5.0] - 2023-10-30
 
@@ -26,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix for the LaTeX log parser.
   In some cases, the wrong the LaTeX source file was identified.
 
+
 ## [1.4.2] - 2023-10-09
 
 ### Fixed
@@ -34,11 +51,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Previously, it would only be regenerated when missing files were created,
   which is insufficient.
 
+
 ## [1.4.1] - 2023-10-05
 
 ### Fixed
 
 - Ignore ID (`#`) in URLs in the script `rr-check-hrefs`.
+
 
 ## [1.4.0] - 2023-10-04
 
@@ -58,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix for the LaTeX log parser.
   In some cases, the wrong the LaTeX source file was identified.
 
+
 ## [1.3.0] - 2023-10-02
 
 ### Changed
@@ -71,6 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix detection if relevant part of LaTeX log for the case `! LaTeX Error: Something's wrong`
 - Fix several issues with `rr-check-hrefs`.
 - Minor cleanups
+
 
 ## [1.2.0] - 2023-09-25
 
@@ -96,6 +117,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - When relevant, the (random) PDF trailer ID is removed in the scripts `rr-pdf-add-notes`,
   `rr-pdf-normalize` and `rr-pdf-nup`.
 
+
 ## [1.1.0] - 2023-09-21
 
 ### Added
@@ -112,6 +134,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set `SOURCE_DATE_EPOCH` as late as possible, inside `rr-latex` and `rr-python-script` to
   make sure this variable is set in all scenarios.
 - Perform variable substitution in pre-defined variables defined in `reprepbuild.builtin`.
+
 
 ## [1.0.0] - 2023-09-19
 
@@ -161,11 +184,13 @@ repository is just fine.
 - The special `\warninput` LaTeX command is no longer needed.
   Use ordinary `\input` instead.
 
+
 ## [0.13.3] - 2023-09-13
 
 ### Fixed
 
 - Catch and print exceptions in `write_ninja` function in `rrr` command.
+
 
 ## [0.13.2] - 2023-08-09
 
@@ -173,11 +198,13 @@ repository is just fine.
 
 - Fix dependency for `latexflat` once more.
 
+
 ## [0.13.1] - 2023-08-09
 
 ### Fixed
 
 - Fix dependency for `latexflat`.
+
 
 ## [0.13.0] - 2023-08-09
 
@@ -186,11 +213,13 @@ repository is just fine.
 - Before calling latexdiff, the LaTeX source is flattened with `rr-latexflat`, which correctly
   handles the `\warninput` command, unlike `latexdiff --flatten`.
 
+
 ## [0.12.1] - 2023-08-02
 
 ### Fixed
 
 - Fix dependency for `latexdiff`.
+
 
 ## [0.12.0] - 2023-08-02
 
@@ -204,6 +233,7 @@ repository is just fine.
   instead of relying on `*-old.tex` suffix.
   `latexdiff --flatten` is always used, which makes the diff work for sources distributed
   over multiple tex files.
+
 
 ## [0.11.0] - 2023-07-07
 
@@ -225,11 +255,13 @@ repository is just fine.
   subdirectories, without deeper recursions, for the same reason as in the previous point.
 - Use script prefix in log files (and others) when `REPREPBUILD_CASE_FMT` is not specified.
 
+
 ## [0.10.1] - 2023-06-27
 
 ### Fixed
 
 - Convert SVG to PDF with text to path conversion. This reduces the risk of font issues.
+
 
 ## [0.10.0] - 2023-06-23
 
@@ -241,11 +273,13 @@ repository is just fine.
   (2) An additional check is introduced to make sure the ZIP file contains the right files,
   i.e. the same as when the SHA256 sums were created.
 
+
 ## [0.9.1] - 2023-06-21
 
 ### Fixed
 
 - Print out BibTeX error messages from the correct `.blg` file.
+
 
 ## [0.9.0] - 2023-06-16
 
@@ -255,6 +289,7 @@ repository is just fine.
   to create filenames for log and dependency files.
   Instead, it is used as such, without prefixing anything to it.
 - A plain `dataset` directory is now also recognized and turned into a ZIP file.
+
 
 ## [0.8.0] - 2023-05-26
 
@@ -267,17 +302,20 @@ repository is just fine.
 - Optional customization of formatting and parsing of script arguments when using
   `reprepbuild_cases`.
 
+
 ## [0.7.4] - 2023-05-15
 
 ### Fixed
 
 - Make local imports of Python scripts work when executed through RepRepBuild.
 
+
 ## [0.7.3] - 2023-05-10
 
 ### Fixed
 
 - Also detect bare `results` folder without suffix.
+
 
 ## [0.7.2] - 2023-04-27
 
@@ -287,6 +325,7 @@ repository is just fine.
 - Ignore Python scripts that cannot be imported.
   When this happens, a comment is added to `build.ninja`.
 
+
 ## [0.7.1] - 2023-04-19
 
 ### Fixed
@@ -294,6 +333,7 @@ repository is just fine.
 - Enfore a different extension than `.tex` for autogenerated LaTeX sources
   to break circular dependencies.
 - Fix mistakes in depfile for Python scripts.
+
 
 ## [0.7.0] - 2023-04-17
 
@@ -306,6 +346,7 @@ repository is just fine.
 - Also ZIP the supporting information sources, which is needed in some scenario's,
   such as submission of a preprint to arXiv.
 
+
 ## [0.6.0] - 2023-04-12
 
 ### Fixed
@@ -317,11 +358,13 @@ repository is just fine.
 - Run bibsane directly after bibtex, using the configuration file `bibsane.yaml` located
   next to the `build.ninja` file.
 
+
 ## [0.5.1] - 2023-04-11
 
 ### Fixed
 
 - Get latexdiff to work.
+
 
 ## [0.5.0] - 2023-03-30
 
@@ -335,11 +378,13 @@ repository is just fine.
 - When the compression of the ZIP file takes more than 1 second, a progress bar appears.
   This introduces a dependency on [`tqdm`](https://github.com/tqdm/tqdm).
 
+
 ## [0.4.2] - 2023-03-25
 
 ### Fixed
 
 - Fix typo in `rr-bibtex` script.
+
 
 ## [0.4.1] - 2023-03-25
 
@@ -347,6 +392,7 @@ repository is just fine.
 
 - Add missing depfile lines to `latexdep` and `bibtex` build rules.
 - Let the build fail when `bibtex` finds no `.bib` file.
+
 
 ## [0.4.0] - 2023-03-24
 
@@ -364,11 +410,13 @@ repository is just fine.
 - The regular expression has been updated to be more permissive and now matches Python files with numbers in their name.
 - Fix minor typos and update the regular expression for function arguments to allow for strings containing both letters and numbers to be valid function arguments.
 
+
 ## [0.3.1] - 2023-03-21
 
 ### Fixed
 
 - Discard existing intermediates when recompiling LaTeX source.
+
 
 ## [0.3.0] - 2023-03-21
 
@@ -391,6 +439,7 @@ repository is just fine.
 - Load LaTeX log file as binary, because its encoding is unpredictable.
 - Sort files inside ZIP to make their order reproducible.
 
+
 ## [0.2.0] - 2023-03-16
 
 ### Fixed
@@ -405,6 +454,7 @@ repository is just fine.
 - Alpha status
 - Aim for Python 3.6
 - All command-line arguments of `rr` and `rrr` are given to the `ninja` subprocess.
+
 
 ## [0.1.2] - 2023-03-15
 
