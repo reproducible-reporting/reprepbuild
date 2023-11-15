@@ -89,21 +89,25 @@ class PythonScript(Command):
             def fix_path(fn_local):
                 return os.path.normpath(os.path.join(workdir, fn_local))
 
+            def get_paths(build_info, name):
+                """Extract a list of paths, type check and fix."""
+                paths = build_info.get(name, [])
+                if not (isinstance(paths, list) and all(isinstance(item, str) for item in paths)):
+                    raise TypeError(f"Field {name} must be a list of str, got {paths}.")
+                return [fix_path(path) for path in paths]
+
             # Loop over all cases to make build records
             builds = []
             for script_args in build_cases:
                 build_info = reprepbuild_info(*script_args)
                 argstr = format_case_args(script_args, script_prefix, case_fmt)
                 out_prefix = hide_path(fix_path(script_prefix if argstr == "" else argstr))
-                fn_log = f"{out_prefix}.log"
-                implicit_inputs = [fix_path(ipath) for ipath in build_info.get("inputs", [])]
-                implicit_outputs = [fix_path(opath) for opath in build_info.get("outputs", [])]
                 build = {
                     "inputs": [path_py],
-                    "implicit": implicit_inputs,
+                    "implicit": get_paths(build_info, "inputs"),
                     "rule": "python_script",
-                    "implicit_outputs": implicit_outputs,
-                    "outputs": [fn_log],
+                    "implicit_outputs": get_paths(build_info, "outputs"),
+                    "outputs": [f"{out_prefix}.log"],
                     "variables": {"argstr": argstr, "out_prefix": out_prefix},
                 }
                 builds.append(build)
