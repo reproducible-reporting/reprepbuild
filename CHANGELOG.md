@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix missing `here` variables in render command.
+- Fixed `reprepbuild.__version__`.
 
 
 ## [1.6.0] - 2023-11-15
