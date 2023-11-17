@@ -68,18 +68,20 @@ BUILDS_RENDER = [
         "implicit": ["${here}/.reprepbuild/variables.json"],
         "inputs": ["sub/foo.md"],
         "outputs": ["/dst/sub/foo.md"],
+        "variables": {"here": "foo"},
     },
     {
         "rule": "render",
         "implicit": ["${here}/.reprepbuild/variables.json"],
         "inputs": ["sub/bar.tex"],
         "outputs": ["/dst/sub/bar.tex"],
+        "variables": {"here": "foo"},
     },
 ]
 
 
 def test_write_build_render():
-    builds, _ = render.generate(["sub/foo.md", "sub/bar.tex"], ["/dst/sub/"], None, {})
+    builds, _ = render.generate(["sub/foo.md", "sub/bar.tex"], ["/dst/sub/"], None, {"here": "foo"})
     assert BUILDS_RENDER == builds
 
 
