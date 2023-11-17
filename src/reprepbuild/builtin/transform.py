@@ -27,21 +27,32 @@ __all__ = ("copy", "render", "convert_svg_pdf", "convert_odf_pdf", "pdf_raster")
 
 @attrs.define
 class Transform(Command):
+    # The name used in reprepbuild.yaml
     _name: str = attrs.field(validator=attrs.validators.instance_of(str))
+    # The command-line in the Ninja build rule
     command: str = attrs.field(validator=attrs.validators.instance_of(str))
+    # A list of implicit inputs
     implicit: list[str] = attrs.field(
         kw_only=True,
         validator=attrs.validators.instance_of(list),
         default=attrs.Factory(list),
     )
+    # Variables used in the command and there default values.
+    # This dictionary contains default values,
+    # which may be replaced by the values defined in reprepbuild.yaml
+    # or by REPREPBUIKD_VARIABLE_* environment variables.
     variables: dict[str, str] = attrs.field(
         validator=attrs.validators.instance_of(dict), default=attrs.Factory(dict)
     )
+    # The new file extension of the conversion output.
     new_ext: (str | None) = attrs.field(
         kw_only=True,
         validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         default=None,
     )
+    # If at most a given number of transformations can run in parallel,
+    # specify this number as the pool depth.
+    # When not specified, parallelism is not constrained.
     pool_depth: (int | None) = attrs.field(
         kw_only=True,
         validator=attrs.validators.optional(attrs.validators.instance_of(int)),
@@ -117,6 +128,7 @@ render = Transform(
     "render",
     "rr-render ${in} ${out} --variables=${here}/.reprepbuild/variables.json",
     implicit=["${here}/.reprepbuild/variables.json"],
+    variables={"here": "."},
 )
 convert_svg_pdf = Transform(
     "convert_svg_pdf",
