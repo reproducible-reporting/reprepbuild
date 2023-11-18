@@ -159,7 +159,10 @@ class BuildGenerator(BaseGenerator):
             try:
                 body_records, gendeps = self.command.generate(inp, out, self.arg, self.variables)
             except Exception as exc:
-                exc.add_note(f"While processing generator {self}")
+                exc.add_note(f"- Generator: {self}")
+                exc.add_note(f"- inp: {inp}")
+                exc.add_note(f"- out: {out}")
+                exc.add_note(f"- arg: {self.arg}")
                 raise
 
             # Prepare informative and cleaned-up records

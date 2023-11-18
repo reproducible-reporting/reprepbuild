@@ -73,8 +73,8 @@ def layout_sub_figures(
         An optional horizontal displacement of the subfigure label.
     """
     _load_pdfs(sub_figures)
-    for sub_figure in sub_figures:
-        _add_label(sub_figure, fontname, fontfile, fontsize, lineheight, padding, hshift)
+    # for sub_figure in sub_figures:
+    #    _add_label(sub_figure, fontname, fontfile, fontsize, lineheight, padding, hshift)
     out = _combine_figures(sub_figures)
     out.set_metadata({})
     out.del_xml_metadata()
@@ -96,16 +96,16 @@ def _add_label(sub_figure, fontname, fontfile, fontsize, lineheight, padding, hs
     new = fitz.open()
     old_page = sub_figure.pdf[0]
     new_page = new.new_page(
-        width=old_page.rect.x1 - old_page.rect.x0 + 2 * padding,
-        height=old_page.rect.y1 - old_page.rect.y0 + lineheight + 3 * padding,
+        width=old_page.width + 2 * padding,
+        height=old_page.rect.height + lineheight + 3 * padding,
     )
     top = lineheight + 2 * padding
     new_page.show_pdf_page(
         fitz.Rect(
             padding,
             top,
-            old_page.rect.x1 - old_page.rect.x0 + padding,
-            old_page.rect.y1 - old_page.rect.y0 + top,
+            old_page.rect.width + padding,
+            old_page.rect.height + top,
         ),
         sub_figure.pdf,
         0,
@@ -114,9 +114,7 @@ def _add_label(sub_figure, fontname, fontfile, fontsize, lineheight, padding, hs
     length = font.text_length(sub_figure.label, fontsize=fontsize)
     text_writer = fitz.TextWriter(new_page.rect)
     text_writer.append(
-        fitz.Point(
-            (new_page.rect.x1 - new_page.rect.x0 - length) / 2 + hshift, padding + lineheight
-        ),
+        fitz.Point((new_page.rect.width - length) / 2 + hshift, padding + lineheight),
         sub_figure.label,
         font=font,
         fontsize=fontsize,
@@ -151,14 +149,14 @@ def _combine_figures(sub_figures):
         else:
             a_ub[ieq, row_vars[sf.irow + sf.nrow - 1]] = -1
             a_ub[ieq, row_vars[sf.irow - 1]] = 1
-        b_ub[ieq] = -(sf.pdf[0].rect.y1 - sf.pdf[0].rect.y0)
+        b_ub[ieq] = -(sf.pdf[0].rect.height)
         ieq += 1
         if sf.icol == 0:
             a_ub[ieq, col_vars[sf.ncol - 1]] = -1
         else:
             a_ub[ieq, col_vars[sf.icol + sf.ncol - 1]] = -1
             a_ub[ieq, col_vars[sf.icol - 1]] = 1
-        b_ub[ieq] = -(sf.pdf[0].rect.x1 - sf.pdf[0].rect.x0)
+        b_ub[ieq] = -(sf.pdf[0].rect.width)
         ieq += 1
 
     # Optimize the layout
