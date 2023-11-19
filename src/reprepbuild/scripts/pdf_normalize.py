@@ -22,7 +22,11 @@ import shutil
 import sys
 import tempfile
 
-import fitz
+try:
+    import fitz_new as fitz
+except ImportError:
+    import fitz
+
 
 __all__ = ("pdf_normalize",)
 

@@ -19,7 +19,11 @@
 import argparse
 import sys
 
-import fitz
+try:
+    import fitz_new as fitz
+except ImportError:
+    import fitz
+
 
 __all__ = ("pdf_nup",)
 
@@ -62,11 +66,11 @@ def pdf_nup(
     ncol
         The number of columns in the layout.
     margin
-        The margin and (minimal) spacing between small pages.
+        The margin and (minimal) spacing between small pages in millimeter.
     width
-        The output page width.
+        The output page width in millimeter.
     height
-        The output page height.
+        The output page height in millimeter.
     path_dst
         The destination PDF filename.
     """

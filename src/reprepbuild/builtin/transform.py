@@ -22,7 +22,7 @@ import attrs
 
 from ..command import Command
 
-__all__ = ("copy", "render", "convert_svg_pdf", "convert_odf_pdf", "pdf_raster")
+__all__ = ("copy", "render", "convert_svg_pdf", "convert_odf_pdf", "pdf_raster", "markdown_pdf")
 
 
 @attrs.define

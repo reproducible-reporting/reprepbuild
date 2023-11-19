@@ -19,7 +19,11 @@
 import argparse
 import sys
 
-import fitz
+try:
+    import fitz_new as fitz
+except ImportError:
+    import fitz
+
 
 __all__ = ("pdf_add_notes",)
 
