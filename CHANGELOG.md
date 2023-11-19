@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [1.6.2] - 2023-11-19
+
 ### Fixed
 
 - Use `fitz_new` when available to work around the following issue:
