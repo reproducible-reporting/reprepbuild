@@ -25,10 +25,14 @@ import sys
 from enum import StrEnum, auto
 
 import attrs
-import fitz
 import markdown
 import requests
 from bs4 import BeautifulSoup
+
+try:
+    import fitz_new as fitz
+except ImportError:
+    import fitz
 
 
 def main() -> int:

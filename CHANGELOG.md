@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Constrain PyMuPDF version due to https://github.com/pymupdf/PyMuPDF/issues/2815
+- Use `fitz_new` when available to work around the following issue:
+  https://github.com/pymupdf/PyMuPDF/issues/2815
 - More informative error messages when writing `build.ninja`.
 
 
