@@ -19,11 +19,7 @@
 import argparse
 import sys
 
-try:
-    import fitz_new as fitz
-except ImportError:
-    import fitz
-
+import fitz
 
 __all__ = ("pdf_nup",)
 

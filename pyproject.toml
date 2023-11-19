@@ -36,7 +36,7 @@ dependencies = [
     "ninja",
     "numpy",
     "parse",
-    "pymupdf",
+    "pymupdf<1.22.0",
     "pyyaml",
     "requests",
     "scipy",

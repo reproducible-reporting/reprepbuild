@@ -21,14 +21,9 @@
 
 
 import attrs
+import fitz
 import numpy as np
 from scipy import optimize
-
-try:
-    import fitz_new as fitz
-except ImportError:
-    import fitz
-
 
 __all__ = ("SubFigure", "layout_sub_figures")
 
