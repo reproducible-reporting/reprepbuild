@@ -73,8 +73,8 @@ def layout_sub_figures(
         An optional horizontal displacement of the subfigure label.
     """
     _load_pdfs(sub_figures)
-    # for sub_figure in sub_figures:
-    #    _add_label(sub_figure, fontname, fontfile, fontsize, lineheight, padding, hshift)
+    for sub_figure in sub_figures:
+        _add_label(sub_figure, fontname, fontfile, fontsize, lineheight, padding, hshift)
     out = _combine_figures(sub_figures)
     out.set_metadata({})
     out.del_xml_metadata()
@@ -96,7 +96,7 @@ def _add_label(sub_figure, fontname, fontfile, fontsize, lineheight, padding, hs
     new = fitz.open()
     old_page = sub_figure.pdf[0]
     new_page = new.new_page(
-        width=old_page.width + 2 * padding,
+        width=old_page.rect.width + 2 * padding,
         height=old_page.rect.height + lineheight + 3 * padding,
     )
     top = lineheight + 2 * padding
