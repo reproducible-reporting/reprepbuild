@@ -41,6 +41,7 @@ BUILDS_ZIP_LATEX = [
     {
         "rule": "zip_latex",
         "inputs": ["latex-sub/sub.fls"],
+        "implicit_outputs": ["latex-sub/sub.sha256"],
         "outputs": ["sub.zip"],
         "pool": "console",
     }
@@ -55,7 +56,8 @@ def test_write_build_zip_latex():
 BUILDS_ZIP_PLAIN = [
     {
         "rule": "zip_plain",
-        "inputs": ["data1.txt", "data2.txt", "fig.png"],
+        "inputs": ["a/data1.txt", "a/data2.txt", "a/fig.png"],
+        "implicit_outputs": ["a/something.sha256"],
         "outputs": ["something.zip"],
         "pool": "console",
     }
@@ -64,6 +66,6 @@ BUILDS_ZIP_PLAIN = [
 
 def test_write_build_zip_plain():
     builds, _ = zip_plain.generate(
-        ["data1.txt", "data2.txt", "fig.png"], ["something.zip"], None, {}
+        ["a/data1.txt", "a/data2.txt", "a/fig.png"], ["something.zip"], None, {}
     )
     assert BUILDS_ZIP_PLAIN == builds
