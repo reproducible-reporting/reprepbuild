@@ -45,10 +45,8 @@ def make_zip_plain(paths_in: str, path_zip: str) -> int:
     """Zip the sources of the article."""
     if not path_zip.endswith(".zip"):
         raise ValueError("The ZIP file must end with extension .zip.")
-    prefix = path_zip[:-4]
-    # The manifest is stored as deep in the dir tree as possible, using commonpath.
-    workdir = os.path.commonpath(paths_in)
-    path_manifest = os.path.join(workdir, os.path.basename(prefix) + ".sha256")
+    path_manifest = get_path_manifest(paths_in, path_zip)
+    workdir = os.path.dirname(path_manifest)
     with open(path_manifest, "w") as f:
         for path_in in paths_in:
             size, sha256 = compute_sha256(path_in)
@@ -56,6 +54,12 @@ def make_zip_plain(paths_in: str, path_zip: str) -> int:
 
     # Collect files to be zipped and write zip
     return make_zip_manifest(path_manifest, path_zip, check_sha256=False)
+
+
+def get_path_manifest(paths_in: str, path_zip: str) -> str:
+    """Derive the path of the manifest file."""
+    # The manifest is stored as deep in the dir tree as possible, using commonpath.
+    return os.path.join(os.path.commonpath(paths_in), os.path.basename(path_zip)[:-4] + ".sha256")
 
 
 if __name__ == "__main__":

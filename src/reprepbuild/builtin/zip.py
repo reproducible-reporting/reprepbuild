@@ -23,6 +23,7 @@
 import attrs
 
 from ..command import Command
+from ..scripts.zip_plain import get_path_manifest as get_path_manifest_plain
 
 __all__ = ("zip_manifest", "zip_latex", "zip_plain")
 
@@ -114,6 +115,7 @@ class ZipLatex(Command):
             "outputs": [path_zip],
             "rule": "zip_latex",
             "inputs": [path_fls],
+            "implicit_outputs": [path_fls[:-4] + ".sha256"],
             "pool": "console",
         }
         return [build], []
@@ -155,6 +157,7 @@ class ZipPlain(Command):
             "outputs": [path_zip],
             "rule": "zip_plain",
             "inputs": inp,
+            "implicit_outputs": [get_path_manifest_plain(inp, path_zip)],
             "pool": "console",
         }
         return [build], []
