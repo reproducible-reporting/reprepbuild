@@ -24,22 +24,22 @@ import attrs
 
 from ..command import Command
 
-__all__ = ("repro_zip", "repro_zip_latex")
+__all__ = ("zip_manifest", "zip_latex", "zip_plain")
 
 
 @attrs.define
-class ReproZip(Command):
+class ZipManifest(Command):
     """Create a Reproducible Zip file."""
 
     @property
     def name(self) -> str:
         """The name of the command in ``reprepbuild.yaml``."""
-        return "repro_zip"
+        return "zip_manifest"
 
     @property
     def rules(self) -> dict[str, dict]:
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
-        return {"repro_zip": {"command": "rr-zip ${in} ${out}"}}
+        return {"zip_manifest": {"command": "rr-zip ${in} ${out}"}}
 
     def generate(
         self, inp: list[str], out: list[str], arg, variables: dict[str, str]
@@ -66,7 +66,7 @@ class ReproZip(Command):
         # Write builds
         build = {
             "outputs": [path_zip],
-            "rule": "repro_zip",
+            "rule": "zip_manifest",
             "inputs": [path_sha256],
             "pool": "console",
         }
@@ -74,18 +74,18 @@ class ReproZip(Command):
 
 
 @attrs.define
-class ReproZipLatex(Command):
+class ZipLatex(Command):
     """Create a Reproducible Zip file of a LaTeX source."""
 
     @property
     def name(self) -> str:
         """The name of the command in ``reprepbuild.yaml``."""
-        return "repro_zip_latex"
+        return "zip_latex"
 
     @property
     def rules(self) -> dict[str, dict]:
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
-        return {"repro_zip_latex": {"command": "rr-zip-latex ${in} ${out}"}}
+        return {"zip_latex": {"command": "rr-zip-latex ${in} ${out}"}}
 
     def generate(
         self, inp: list[str], out: list[str], arg, variables: dict[str, str]
@@ -112,12 +112,54 @@ class ReproZipLatex(Command):
         # Write builds
         build = {
             "outputs": [path_zip],
-            "rule": "repro_zip_latex",
+            "rule": "zip_latex",
             "inputs": [path_fls],
             "pool": "console",
         }
         return [build], []
 
 
-repro_zip = ReproZip()
-repro_zip_latex = ReproZipLatex()
+@attrs.define
+class ZipPlain(Command):
+    """Create a Reproducible Zip file without checking hashes."""
+
+    @property
+    def name(self) -> str:
+        """The name of the command in ``reprepbuild.yaml``."""
+        return "zip_plain"
+
+    @property
+    def rules(self) -> dict[str, dict]:
+        """A dict of kwargs for Ninja's ``Writer.rule()``."""
+        return {"zip_plain": {"command": "rr-zip-plain ${in} ${out}"}}
+
+    def generate(
+        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
+    ) -> tuple[list, list[str]]:
+        """See Command.generate."""
+        # Check parameters
+        if len(inp) == 0:
+            raise ValueError("Expecting at least one input")
+        if len(out) != 1:
+            raise ValueError(f"Expecting one output, the zip file, got: {out}")
+        path_zip = out[0]
+        if not path_zip.endswith(".zip"):
+            raise ValueError(
+                f"The output of the repro_zip command must end with .zip, got {path_zip}."
+            )
+        if arg is not None:
+            raise ValueError(f"Expected no arguments, got {arg}")
+
+        # Write builds
+        build = {
+            "outputs": [path_zip],
+            "rule": "zip_plain",
+            "inputs": inp,
+            "pool": "console",
+        }
+        return [build], []
+
+
+zip_manifest = ZipManifest()
+zip_latex = ZipLatex()
+zip_plain = ZipPlain()

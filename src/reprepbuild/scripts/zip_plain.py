@@ -17,13 +17,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Create a reproducible zip file of the main document sources."""
+"""Create reproducible zip files of files provided on the command line."""
 
 import argparse
 import os
 import sys
 
-from ..utils import parse_inputs_fls
 from .manifest import compute_sha256
 from .zip_manifest import make_zip_manifest
 
@@ -31,30 +30,25 @@ from .zip_manifest import make_zip_manifest
 def main() -> int:
     """Main program."""
     args = parse_args()
-    return make_zip_latex(args.path_fls, args.path_zip)
+    return make_zip_plain(args.paths_in, args.path_zip)
 
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(
-        "rr-zip-latex", description="Zip a LaTeX source with all required files."
-    )
-    parser.add_argument("path_fls", help="The LaTeX fls file.")
+    parser = argparse.ArgumentParser("rr-zip-plain", description="Zip a set of files.")
+    parser.add_argument("paths_in", help="Paths to include in the ZIP file.", nargs="+")
     parser.add_argument("path_zip", help="The output zip file with the sources.")
     return parser.parse_args()
 
 
-def make_zip_latex(path_fls: str, path_zip: str) -> int:
+def make_zip_plain(paths_in: str, path_zip: str) -> int:
     """Zip the sources of the article."""
-    if not path_fls.endswith(".fls"):
-        print(f"The input must have a `.fls` extension. Got {path_fls}")
-        return 2
-    workdir, fn_fls = os.path.split(path_fls)
-    prefix = fn_fls[:-4]
-
-    # Make a manifest file
-    paths_in = parse_inputs_fls(path_fls)
-    path_manifest = os.path.join(workdir, prefix + ".sha256")
+    if not path_zip.endswith(".zip"):
+        raise ValueError("The ZIP file must end with extension .zip.")
+    prefix = path_zip[:-4]
+    # The manifest is stored as deep in the dir tree as possible, using commonpath.
+    workdir = os.path.commonpath(paths_in)
+    path_manifest = os.path.join(workdir, os.path.basename(prefix) + ".sha256")
     with open(path_manifest, "w") as f:
         for path_in in paths_in:
             size, sha256 = compute_sha256(path_in)

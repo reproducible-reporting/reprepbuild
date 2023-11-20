@@ -7,11 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Added
+
+- `rr-zip-plain` command to make ZIP files without prior `MANIFEST.in` file.
+
+### Fixed
+
+- Constrain PyMuPDF version due to [pymupdf/PyMuPDF#2815](https://github.com/pymupdf/PyMuPDF/issues/2815)
+  **TODO:** This solution is still not ideal because it may occasionally result in segfaults.
+
+## Changed
+
+- The command `rr-zip` was renamed to `rr-zip-manifest`
+- Some zip-related build rules were renamed:
+  - `repro_zip` -> `zip_manifest`
+  - `repro_zip_latex` -> `zip_latex`
+
+
 ## [1.6.2] - 2023-11-19
 
 ### Fixed
 
-- Constrain PyMuPDF version due to https://github.com/pymupdf/PyMuPDF/issues/2815
+- Use fitz_new when available to work around the following issue: [pymupdf/PyMuPDF#2815](https://github.com/pymupdf/PyMuPDF/issues/2815)
 - More informative error messages when writing `build.ninja`.
 
 

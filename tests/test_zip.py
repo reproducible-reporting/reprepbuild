@@ -20,11 +20,11 @@
 """Unit tests for reprepbuild.builtin.zip"""
 
 
-from reprepbuild.builtin.zip import repro_zip, repro_zip_latex
+from reprepbuild.builtin.zip import zip_latex, zip_manifest, zip_plain
 
-BUILDS_REPRO_ZIP = [
+BUILDS_ZIP_MANIFEST = [
     {
-        "rule": "repro_zip",
+        "rule": "zip_manifest",
         "inputs": ["sub/WAWA.sha256"],
         "outputs": ["sub.zip"],
         "pool": "console",
@@ -32,14 +32,14 @@ BUILDS_REPRO_ZIP = [
 ]
 
 
-def test_write_build_repro_zip():
-    builds, _ = repro_zip.generate(["sub/WAWA.sha256"], ["sub.zip"], None, {})
-    assert BUILDS_REPRO_ZIP == builds
+def test_write_build_zip_manifest():
+    builds, _ = zip_manifest.generate(["sub/WAWA.sha256"], ["sub.zip"], None, {})
+    assert BUILDS_ZIP_MANIFEST == builds
 
 
-BUILDS_REPRO_ZIP_LATEX = [
+BUILDS_ZIP_LATEX = [
     {
-        "rule": "repro_zip_latex",
+        "rule": "zip_latex",
         "inputs": ["latex-sub/sub.fls"],
         "outputs": ["sub.zip"],
         "pool": "console",
@@ -47,6 +47,23 @@ BUILDS_REPRO_ZIP_LATEX = [
 ]
 
 
-def test_write_build_repro_zip_latex():
-    builds, _ = repro_zip_latex.generate(["latex-sub/sub.fls"], ["sub.zip"], None, {})
-    assert BUILDS_REPRO_ZIP_LATEX == builds
+def test_write_build_zip_latex():
+    builds, _ = zip_latex.generate(["latex-sub/sub.fls"], ["sub.zip"], None, {})
+    assert BUILDS_ZIP_LATEX == builds
+
+
+BUILDS_ZIP_PLAIN = [
+    {
+        "rule": "zip_plain",
+        "inputs": ["data1.txt", "data2.txt", "fig.png"],
+        "outputs": ["something.zip"],
+        "pool": "console",
+    }
+]
+
+
+def test_write_build_zip_plain():
+    builds, _ = zip_plain.generate(
+        ["data1.txt", "data2.txt", "fig.png"], ["something.zip"], None, {}
+    )
+    assert BUILDS_ZIP_PLAIN == builds

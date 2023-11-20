@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Create reproducible zip files, by ignoring time stamps."""
+"""Create reproducible zip files from a MANIFEST.in file."""
 
 
 import argparse
@@ -32,7 +32,7 @@ import tqdm
 
 from .manifest import compute_sha256
 
-__all__ = ("repro_zip",)
+__all__ = ("make_zip_manifest",)
 
 
 TIMESTAMP = datetime.datetime(1980, 1, 1).timestamp()
@@ -41,12 +41,14 @@ TIMESTAMP = datetime.datetime(1980, 1, 1).timestamp()
 def main() -> int:
     """Main program."""
     args = parse_args()
-    return repro_zip(args.path_man, args.path_zip)
+    return make_zip_manifest(args.path_man, args.path_zip)
 
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser("rr-zip", description="Create a reproducible ZIP file.")
+    parser = argparse.ArgumentParser(
+        "rr-zip-manifest", description="Create a reproducible ZIP file."
+    )
     parser.add_argument(
         "path_man",
         help="The MANIFEST.sha256 with all files to be zipped. "
@@ -57,7 +59,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def repro_zip(path_man: str, path_zip: str, check_sha256: bool = True) -> int:
+def make_zip_manifest(path_man: str, path_zip: str, check_sha256: bool = True) -> int:
     """Create a reproducible zip file."""
     if not path_zip.endswith(".zip"):
         print(f"Destination must have a `.zip` extension. Got {path_zip}")
