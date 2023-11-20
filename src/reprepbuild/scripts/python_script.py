@@ -25,6 +25,8 @@ https://matplotlib.org/stable/users/prev_whats_new/whats_new_2.1.0.html#reproduc
 
 import argparse
 import contextlib
+import inspect
+import json
 import os
 import sys
 
@@ -34,7 +36,7 @@ from ..utils import hide_path, import_python_path, parse_case_args, write_dep
 def main() -> int:
     """Main program."""
     args = parse_args()
-    return run_script(args.path_py, args.argstr)
+    return run_script(args.path_py, args.argstr, args.variables)
 
 
 def parse_args() -> argparse.Namespace:
@@ -44,10 +46,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "argstr", nargs="?", default="", help="Command-line argument for the script, if any"
     )
+    parser.add_argument(
+        "--variables",
+        help="JSON file with dictionary of variables",
+        default=".reprepbuild/variables.json",
+    )
     return parser.parse_args()
 
 
-def run_script(path_py, argstr) -> int:
+def run_script(path_py, argstr, path_variables) -> int:
     """Run the python script and collect module dependencies.
 
     Parameters
@@ -58,6 +65,9 @@ def run_script(path_py, argstr) -> int:
     argstr
         The arguments to the ``main`` function, encoded with
         ``reprepbuild.utils.format_case_args``.
+    path_variables
+        The JSON file with RepRepBuild variables
+        (if any, may be ignored by script).
 
     Returns
     -------
@@ -69,6 +79,9 @@ def run_script(path_py, argstr) -> int:
         return 2
     workdir, fn_py = os.path.split(path_py)
     script_prefix = fn_py[:-3]
+
+    # Turn path_variables into an absolute path before changing workdir
+    path_variables = os.path.abspath(path_variables)
 
     with contextlib.chdir(workdir):
         # Load the script in its own directory
@@ -85,8 +98,17 @@ def run_script(path_py, argstr) -> int:
             return -1
         case_fmt = getattr(pythonscript, "REPREPBUILD_CASE_FMT", None)
 
-        # Execute the functions as if the script is running inside its own dir.
+        # Extract arguments and keyword arguments.
         script_args, script_kwargs = parse_case_args(argstr, script_prefix, case_fmt)
+
+        # Add special keyword arg variables if needed.
+        if "variables" in inspect.signature(reprepbuild_info).parameters:
+            with open(path_variables) as fh:
+                variables = json.load(fh)
+            variables["here"] = workdir
+            script_kwargs["variables"] = variables
+
+        # Execute the functions as if the script is running inside its own dir.
         build_info = reprepbuild_info(*script_args, **script_kwargs)
         os.environ["SOURCE_DATE_EPOCH"] = "315532800"
         result = script_main(**build_info)

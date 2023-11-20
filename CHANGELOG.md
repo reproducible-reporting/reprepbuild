@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `rr-zip-plain` command to make ZIP files without prior `MANIFEST.in` file.
+- Optionally provide `variables` argument to `reprepbuild_info`.
 
 ### Fixed
 

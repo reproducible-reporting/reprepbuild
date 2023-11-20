@@ -20,6 +20,7 @@
 """Execute Python scripts."""
 
 import contextlib
+import inspect
 import os
 
 import attrs
@@ -86,6 +87,15 @@ class PythonScript(Command):
                 build_cases = reprepbuild_cases()
             case_fmt = getattr(pythonscript, "REPREPBUILD_CASE_FMT", None)
 
+            # Determine the keyword arguments for reprepbuild_info
+            info_kwargs = {}
+            implicit = []
+            if "variables" in inspect.signature(reprepbuild_info).parameters:
+                local_variables = variables.copy()
+                local_variables["here"] = workdir
+                info_kwargs["variables"] = local_variables
+                implicit = [".reprepbuild/variables.json"]
+
             def fix_path(fn_local):
                 return os.path.normpath(os.path.join(workdir, fn_local))
 
@@ -99,12 +109,15 @@ class PythonScript(Command):
             # Loop over all cases to make build records
             builds = []
             for script_args in build_cases:
-                build_info = reprepbuild_info(*script_args)
+                build_info = reprepbuild_info(*script_args, **info_kwargs)
                 argstr = format_case_args(script_args, script_prefix, case_fmt)
                 out_prefix = hide_path(fix_path(script_prefix if argstr == "" else argstr))
                 build = {
                     "inputs": [path_py],
-                    "implicit": get_paths(build_info, "inputs"),
+                    "implicit": [
+                        *get_paths(build_info, "inputs"),
+                        *implicit,
+                    ],
                     "rule": "python_script",
                     "implicit_outputs": get_paths(build_info, "outputs"),
                     "outputs": [f"{out_prefix}.log"],
