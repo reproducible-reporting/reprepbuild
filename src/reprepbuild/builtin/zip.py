@@ -40,7 +40,7 @@ class ZipManifest(Command):
     @property
     def rules(self) -> dict[str, dict]:
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
-        return {"zip_manifest": {"command": "rr-zip ${in} ${out}"}}
+        return {"zip_manifest": {"command": "rr-zip-manifest ${in} ${out}"}}
 
     def generate(
         self, inp: list[str], out: list[str], arg, variables: dict[str, str]
