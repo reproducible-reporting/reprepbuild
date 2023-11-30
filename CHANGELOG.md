@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   **TODO:** This solution is still not ideal because it may occasionally result in segfaults.
 - Fixed bug in detection of LaTeX dependencies: commented lines are now ignored.
 
-## Changed
+### Changed
 
 - The command `rr-zip` was renamed to `rr-zip-manifest`
 - Some zip-related build rules were renamed:
@@ -306,7 +306,7 @@ repository is just fine.
 
 ## [0.10.0] - 2023-06-23
 
-## Changed
+### Changed
 
 - The script `rr-zip` now takes a `MANIFEST.sha256` file as second argument with the complete
   file list. This change is introduced for two reasons.
@@ -324,7 +324,7 @@ repository is just fine.
 
 ## [0.9.0] - 2023-06-16
 
-## Changed
+### Changed
 
 - The variable `REPREPBUILD_CASE_FMT` is no longer prefixed with the script name
   to create filenames for log and dependency files.
