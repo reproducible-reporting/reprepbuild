@@ -24,7 +24,7 @@ import io
 import os
 
 import pytest
-from reprepbuild.builtin.latex import latex, latex_diff, latex_flat
+from reprepbuild.builtin.latex import latex, latex_diff, latex_flat, scan_latex_deps
 from reprepbuild.scripts.latex import (
     DEFAULT_MESSAGE,
     MESSAGE_SUFFIX,
@@ -667,3 +667,22 @@ Blah
 )
 def test_latex_source_stack9(nline, stack, unfinished):
     check_source_stack(LATEX_LOG9, nline, stack, unfinished)
+
+
+SCAN_LATEX_DEPS_EXAMPLE = r"""
+\input{foo.tex}
+\input{results}
+%\input{bar.tex}
+"""
+
+
+def test_scan_latex_deps(tmpdir):
+    path_main_tex = os.path.join(tmpdir, "main.tex")
+    with open(path_main_tex, "w") as fh:
+        fh.write(SCAN_LATEX_DEPS_EXAMPLE)
+    implicit, gendeps, bib = scan_latex_deps(path_main_tex, tmpdir)
+    path_foo_tex = os.path.join(tmpdir, "foo.tex")
+    path_results_tex = os.path.join(tmpdir, "results.tex")
+    assert set(implicit) == {path_foo_tex, path_results_tex}
+    assert set(gendeps) == {path_foo_tex, path_results_tex, path_main_tex}
+    assert bib == []

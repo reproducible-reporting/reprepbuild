@@ -56,10 +56,10 @@ from ..command import Command
 __all__ = ("scan_latex_deps", "latex", "latex_flat", "latex_diff")
 
 
-RE_INPUT = re.compile(r"\\input\s*\{(.*?)}", re.DOTALL)
-RE_INCLUDEGRAPHICS = re.compile(r"\\includegraphics(?:\s*\[.*?])?\s*\{(.*?)}", re.DOTALL)
-RE_BIBLIOGRAPHY = re.compile(r"\\bibliography\s*\{(.*?)}", re.DOTALL)
-RE_IMPORT = re.compile(r"\\import\s*\{(.*?)}\s*\{(.*?)}", re.DOTALL)
+RE_INPUT = re.compile(r"^[^%]*?\\input\s*\{(.*?)}", re.MULTILINE)
+RE_INCLUDEGRAPHICS = re.compile(r"^[^%]*?\\includegraphics(?:\s*\[.*?])?\s*\{(.*?)}", re.MULTILINE)
+RE_BIBLIOGRAPHY = re.compile(r"^[^%]*?\\bibliography\s*\{(.*?)}", re.MULTILINE)
+RE_IMPORT = re.compile(r"^[^%]*?\\import\s*\{(.*?)}\s*\{(.*?)}", re.MULTILINE)
 
 
 def cleanup_path(path, ext=None):

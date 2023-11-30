@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [1.7.0] - 2023-11-30
+
 ### Added
 
 - `rr-zip-plain` command to make ZIP files without prior `MANIFEST.in` file.
@@ -16,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Constrain PyMuPDF version due to [pymupdf/PyMuPDF#2815](https://github.com/pymupdf/PyMuPDF/issues/2815)
   **TODO:** This solution is still not ideal because it may occasionally result in segfaults.
+- Fixed bug in detection of LaTeX dependencies: commented lines are now ignored.
 
 ## Changed
 
