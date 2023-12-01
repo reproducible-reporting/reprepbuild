@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [1.7.1] - 2023-12-01
+
 ### Fixed
 
 - Switch back to `fitz_new` API of PyMuPDF and constrain version to PyMuPDF>=1.23.7.
