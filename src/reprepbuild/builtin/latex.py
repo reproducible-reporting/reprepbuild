@@ -56,10 +56,11 @@ from ..command import Command
 __all__ = ("scan_latex_deps", "latex", "latex_flat", "latex_diff")
 
 
-RE_INPUT = re.compile(r"^[^%]*?\\input\s*\{(.*?)}", re.MULTILINE)
-RE_INCLUDEGRAPHICS = re.compile(r"^[^%]*?\\includegraphics(?:\s*\[.*?])?\s*\{(.*?)}", re.MULTILINE)
-RE_BIBLIOGRAPHY = re.compile(r"^[^%]*?\\bibliography\s*\{(.*?)}", re.MULTILINE)
-RE_IMPORT = re.compile(r"^[^%]*?\\import\s*\{(.*?)}\s*\{(.*?)}", re.MULTILINE)
+RE_OPTIONS = re.MULTILINE | re.DOTALL
+RE_INPUT = re.compile(r"\\input\s*\{(.*?)}", RE_OPTIONS)
+RE_INCLUDEGRAPHICS = re.compile(r"\\includegraphics(?:\s*\[.*?])?\s*\{(.*?)}", RE_OPTIONS)
+RE_BIBLIOGRAPHY = re.compile(r"\\bibliography\s*\{(.*?)}", RE_OPTIONS)
+RE_IMPORT = re.compile(r"\\import\s*\{(.*?)}\s*\{(.*?)}", RE_OPTIONS)
 
 
 def cleanup_path(path, ext=None):
@@ -77,23 +78,43 @@ def cleanup_path(path, ext=None):
     path_clean
         A cleaned up file name, including the path of the dirname.
     """
-    if "." not in os.path.basename(path) and ext is not None:
-        path += ext
     path = path.replace("{", "")
     path = path.replace("}", "")
+    path = re.sub(r"\s+", " ", path)
     path = path.strip()
+    if "." not in os.path.basename(path) and ext is not None:
+        path += ext
     path = os.path.normpath(path)
     return path
 
 
-def iter_latex_references(text):
-    for fn_inc in re.findall(RE_INPUT, text):
+def iter_latex_references(tex_no_comments):
+    """Loop over file references in a TeX source without comments.
+
+    Parameters
+    ----------
+    tex_no_comments
+        The contents of a TeX source files from which comments were stripped.
+
+    Yields
+    ------
+    relative_path
+        The change in current directory implied by a TeX command.
+        (This is only relevant for \\import, no change in directory otherwise.)
+    filename
+        The filename of the file included, may include directory.
+    ext
+        The extension one may add if not given.
+        (Approximate guess, because the correct extension for figures
+        depends on details of the LaTeX compiler.)
+    """
+    for fn_inc in re.findall(RE_INPUT, tex_no_comments):
         yield ".", fn_inc, ".tex"
-    for fn_inc in re.findall(RE_INCLUDEGRAPHICS, text):
+    for fn_inc in re.findall(RE_INCLUDEGRAPHICS, tex_no_comments):
         yield ".", fn_inc, ".pdf"
-    for fn_inc in re.findall(RE_BIBLIOGRAPHY, text):
+    for fn_inc in re.findall(RE_BIBLIOGRAPHY, tex_no_comments):
         yield ".", fn_inc, ".bib"
-    for new_root, fn_inc in re.findall(RE_IMPORT, text):
+    for new_root, fn_inc in re.findall(RE_IMPORT, tex_no_comments):
         yield new_root, fn_inc, ".tex"
 
 
@@ -124,8 +145,12 @@ def scan_latex_deps(path_tex, tex_root=None):
         if tex_root is None:
             tex_root = os.path.normpath(os.path.dirname(path_tex))
         with open(path_tex) as fh:
-            for new_root, fn_inc, ext in iter_latex_references(fh.read()):
-                new_root = os.path.normpath(os.path.join(tex_root, new_root))
+            # Load the TeX source and strip the comments
+            tex_no_comments = "".join(line[: line.find("%")].rstrip() + "\n" for line in fh)
+
+            # Process the file references
+            for new_root, fn_inc, ext in iter_latex_references(tex_no_comments):
+                new_root = os.path.normpath(os.path.join(tex_root, cleanup_path(new_root)))
                 path_inc = os.path.normpath(os.path.join(new_root, cleanup_path(fn_inc, ext)))
                 if ext == ".bib":
                     bib.add(path_inc)

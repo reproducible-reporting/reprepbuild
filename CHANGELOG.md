@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Switch back to `fitz_new` API of PyMuPDF and constrain version to PyMuPDF>=1.23.7.
+- Fix more edge cases in the detection of files referenced from a LaTeX source.
 
 
 ## [1.7.0] - 2023-11-30
@@ -23,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Constrain PyMuPDF version due to [pymupdf/PyMuPDF#2815](https://github.com/pymupdf/PyMuPDF/issues/2815)
   **TODO:** This solution is still not ideal because it may occasionally result in segfaults.
-- Fixed bug in detection of LaTeX dependencies: commented lines are now ignored.
+- Fixed bug in the detection of files referenced from a LaTeX source.
 
 ### Changed
 

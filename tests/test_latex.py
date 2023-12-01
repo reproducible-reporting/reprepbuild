@@ -675,11 +675,28 @@ SCAN_LATEX_DEPS_EXAMPLE = r"""
 \includegraphics{figure}
 \includegraphics
 {plot.pdf}
-\input{results/info.tex}
+\input{
+    % comments before
+    results/info.tex
+    % comments after
+}
+\input  {
+    % comment 1
+    this
+    % comment 2 }
+    also
+    % comment 3 {
+    works % comment 4
+    % comment 5 }
+}
 %\input{bar.tex}
 \bibliography {references}
 %\bibliography{old}
-\import  {sub}    {inc.tex}
+\bibliography {
+    extra}
+\import  {sub  % poor formatting
+}    {inc.tex
+}
 %import{sub}{ex.tex}
 """
 
@@ -689,12 +706,19 @@ def test_scan_latex_deps(tmpdir):
     with open(path_main_tex, "w") as fh:
         fh.write(SCAN_LATEX_DEPS_EXAMPLE)
     implicit, gendeps, bib = scan_latex_deps(path_main_tex, tmpdir)
-    implicit_ref = ["foo.tex", "results/info.tex", "figure.pdf", "plot.pdf", "sub/inc.tex"]
+    implicit_ref = [
+        "foo.tex",
+        "results/info.tex",
+        "this also works.tex",
+        "figure.pdf",
+        "plot.pdf",
+        "sub/inc.tex",
+    ]
     implicit_ref = {os.path.join(tmpdir, name) for name in implicit_ref}
     assert set(implicit) == implicit_ref
     gendeps_ref = {path for path in implicit_ref if path.endswith(".tex")}
     gendeps_ref.add(path_main_tex)
     assert set(gendeps) == gendeps_ref
-    bib_ref = ["references.bib"]
+    bib_ref = ["references.bib", "extra.bib"]
     bib_ref = {os.path.join(tmpdir, name) for name in bib_ref}
     assert set(bib) == bib_ref
