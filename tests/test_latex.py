@@ -20,7 +20,6 @@
 """Unit tests for reprepbuild.builtin.latex and reprepbuild.scripts.latex"""
 
 import contextlib
-import io
 import os
 
 import pytest
@@ -32,6 +31,16 @@ from reprepbuild.scripts.latex import (
     parse_bibtex_log,
     parse_latex_log,
 )
+
+
+@contextlib.contextmanager
+def local_file(contents, filename, tmpdir):
+    """Change to a temporary directory and create a file with given contents."""
+    with contextlib.chdir(tmpdir):
+        with open(filename, "w") as fh:
+            fh.write(contents)
+        yield
+
 
 BUILDS_LATEX = [
     {
@@ -275,11 +284,26 @@ I'm skipping whatever remains of this entry
 """
 
 
-def test_parse_bibtex_log1():
-    error_info = parse_bibtex_log(io.StringIO(BIBTEX_BLG1))
+def test_parse_bibtex_log1(tmpdir):
+    with local_file(BIBTEX_BLG1, "bibtex.blg", tmpdir):
+        error_info = parse_bibtex_log("bibtex.blg")
     assert error_info.program == "BibTeX"
     assert error_info.src == "references.bib"
     assert error_info.message == BIBTEX_BLG1_MESSAGE.strip()
+
+
+BIBTEX_BLG2 = """\
+This is BibTeX, Version 0.99d (TeX Live 2022/CVE-2023-32700 patched)
+There are not obvious problems in the log file.
+"""
+
+
+def test_parse_bibtex_log2(tmpdir):
+    with local_file(BIBTEX_BLG2, "bibtex.blg", tmpdir):
+        error_info = parse_bibtex_log("bibtex.blg")
+    assert error_info.program == "BibTeX"
+    assert error_info.src == "(could not detect source file)"
+    assert error_info.message == DEFAULT_MESSAGE.format(path="bibtex.blg")
 
 
 LATEX_LOG1 = r"""
@@ -314,12 +338,16 @@ l.396         \begin{center}\foo
 """
 
 
-def test_parse_latex_log1():
-    rebuild, error_info = parse_latex_log(io.StringIO(LATEX_LOG1))
+def test_parse_latex_log1(tmpdir):
+    with local_file(LATEX_LOG1, "article.log", tmpdir):
+        rebuild, error_info = parse_latex_log("article.log")
     assert not rebuild
     assert error_info.program == "LaTeX"
     assert error_info.src == "./article.tex"
-    assert error_info.message.strip() == (LATEX_LOG1_MESSAGE + MESSAGE_SUFFIX).strip()
+    assert (
+        error_info.message.strip()
+        == (LATEX_LOG1_MESSAGE + MESSAGE_SUFFIX.format(path="article.log")).strip()
+    )
 
 
 LATEX_LOG2 = r"""
@@ -327,12 +355,13 @@ not so much
 """
 
 
-def test_parse_latex_log2():
-    rebuild, error_info = parse_latex_log(io.StringIO(LATEX_LOG2))
+def test_parse_latex_log2(tmpdir):
+    with local_file(LATEX_LOG2, "article.log", tmpdir):
+        rebuild, error_info = parse_latex_log("article.log")
     assert not rebuild
     assert error_info.program == "LaTeX"
     assert error_info.src == "(could not detect source file)"
-    assert error_info.message == DEFAULT_MESSAGE
+    assert error_info.message == DEFAULT_MESSAGE.format(path="article.log")
 
 
 LATEX_LOG3 = r"""
@@ -369,12 +398,16 @@ l.2 \item E
 """
 
 
-def test_parse_latex_log3():
-    rebuild, error_info = parse_latex_log(io.StringIO(LATEX_LOG3))
+def test_parse_latex_log3(tmpdir):
+    with local_file(LATEX_LOG3, "article.log", tmpdir):
+        rebuild, error_info = parse_latex_log("article.log")
     assert not rebuild
     assert error_info.program == "LaTeX"
     assert error_info.src == "./kwart_cirkelboog_e/divergent.inc.tex"
-    assert error_info.message.strip() == (LATEX_LOG3_MESSAGE + MESSAGE_SUFFIX).strip()
+    assert (
+        error_info.message.strip()
+        == (LATEX_LOG3_MESSAGE + MESSAGE_SUFFIX.format(path="article.log")).strip()
+    )
 
 
 LATEX_LOG4 = r"""
@@ -438,12 +471,16 @@ l.116 \end{gather*}
 """
 
 
-def test_parse_latex_log4():
-    rebuild, error_info = parse_latex_log(io.StringIO(LATEX_LOG4))
+def test_parse_latex_log4(tmpdir):
+    with local_file(LATEX_LOG4, "article.log", tmpdir):
+        rebuild, error_info = parse_latex_log("article.log")
     assert not rebuild
     assert error_info.program == "LaTeX"
     assert error_info.src == "./review.tex"
-    assert error_info.message.strip() == (LATEX_LOG4_MESSAGE + MESSAGE_SUFFIX).strip()
+    assert (
+        error_info.message.strip()
+        == (LATEX_LOG4_MESSAGE + MESSAGE_SUFFIX.format(path="article.log")).strip()
+    )
 
 
 LATEX_LOG5 = r"""
@@ -493,12 +530,16 @@ l.40 \end{enumerate}
 """
 
 
-def test_parse_latex_log5():
-    rebuild, error_info = parse_latex_log(io.StringIO(LATEX_LOG5))
+def test_parse_latex_log5(tmpdir):
+    with local_file(LATEX_LOG5, "article.log", tmpdir):
+        rebuild, error_info = parse_latex_log("article.log")
     assert not rebuild
     assert error_info.program == "LaTeX"
     assert error_info.src == "./solutions.tex"
-    assert error_info.message.strip() == (LATEX_LOG5_MESSAGE + MESSAGE_SUFFIX).strip()
+    assert (
+        error_info.message.strip()
+        == (LATEX_LOG5_MESSAGE + MESSAGE_SUFFIX.format(path="article.log")).strip()
+    )
 
 
 def check_source_stack(latex_log, nline, stack, unfinished):
@@ -588,12 +629,16 @@ l.355
 """
 
 
-def test_parse_latex_log6():
-    rebuild, error_info = parse_latex_log(io.StringIO(LATEX_LOG6))
+def test_parse_latex_log6(tmpdir):
+    with local_file(LATEX_LOG6, "article.log", tmpdir):
+        rebuild, error_info = parse_latex_log("article.log")
     assert not rebuild
     assert error_info.program == "LaTeX"
     assert error_info.src == "./review.tex"
-    assert error_info.message.strip() == (LATEX_LOG6_MESSAGE + MESSAGE_SUFFIX).strip()
+    assert (
+        error_info.message.strip()
+        == (LATEX_LOG6_MESSAGE + MESSAGE_SUFFIX.format(path="article.log")).strip()
+    )
 
 
 LATEX_LOG7 = r"""

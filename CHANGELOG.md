@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Fixed
+
+- Improve clarity of LaTeX and BibTeX error log processing.
+
+
 ## [1.7.1] - 2023-12-01
 
 ### Fixed

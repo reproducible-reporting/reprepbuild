@@ -24,7 +24,6 @@ import os
 import re
 import subprocess
 import sys
-from typing import TextIO
 
 import attrs
 
@@ -52,10 +51,10 @@ class ErrorInfo:
 
 
 DEFAULT_MESSAGE = """\
-> The error message could not be isolated from the log file.
-> You can open the log file in a text editor and manually locate the error.
+> The error message could not be isolated from the file {path}.
+> You can open the file {path} in a text editor and locate the error manually.
 >
-> Please open a new issue with the log file attached,
+> Please open a new issue with the file {path} attached,
 > which will help improve the script to detect the error message:
 > https://github.com/reproducible-reporting/reprepbuild/issues
 >
@@ -64,7 +63,7 @@ DEFAULT_MESSAGE = """\
 
 MESSAGE_SUFFIX = """
 > If the above extract from the log file can be improved,
-> open a new issue with the log file attached:
+> open a new issue with the file {path} attached:
 > https://github.com/reproducible-reporting/reprepbuild/issues
 """
 
@@ -92,8 +91,7 @@ def main() -> int:
         )
         if cp.returncode != 0:
             path_log = os.path.join(workdir, f"{stem}.log")
-            with open(path_log) as fh:
-                _, error_info = parse_latex_log(fh)
+            _, error_info = parse_latex_log(path_log)
             error_info.print(path_log)
             return 1
 
@@ -109,8 +107,7 @@ def main() -> int:
         )
         if cp.returncode != 0:
             path_blg = os.path.join(workdir, f"{stem}.blg")
-            with open(path_blg) as fh:
-                error_info = parse_bibtex_log(fh)
+            error_info = parse_bibtex_log(path_blg)
             error_info.print(path_blg)
             return 2
 
@@ -144,8 +141,7 @@ def main() -> int:
             env=os.environ | {"SOURCE_DATE_EPOCH": "315532800"},
         )
         path_log = os.path.join(workdir, f"{stem}.log")
-        with open(path_log) as fh:
-            recompile, error_info = parse_latex_log(fh)
+        recompile, error_info = parse_latex_log(path_log)
         if cp.returncode != 0:
             error_info.print(path_log)
             return 4
@@ -200,13 +196,13 @@ class LatexSourceStack:
                 self.stack.append(bracket[1:])
 
 
-def parse_latex_log(fh: TextIO) -> tuple[bool, (ErrorInfo | None)]:
+def parse_latex_log(path_log: str) -> tuple[bool, (ErrorInfo | None)]:
     """Parse a LaTeX log file.
 
     Parameters
     ----------
-    fh
-        The opened log file
+    path_log
+        The log file
 
     Returns
     -------
@@ -221,33 +217,34 @@ def parse_latex_log(fh: TextIO) -> tuple[bool, (ErrorInfo | None)]:
     found_line = False
     recompile = False
     recorded = []
-    for line in fh.readlines():
-        if record:
-            recorded.append(line.rstrip())
-            if recorded[-1].strip() == "":
-                record = False
-                if found_line:
-                    break
-        if line.startswith("!"):
-            if not record:
+    with open(path_log) as fh:
+        for line in fh.readlines():
+            if record:
                 recorded.append(line.rstrip())
-            record = True
-            src = lss.current
-        elif line.startswith("l."):
-            if not record:
-                recorded.append(line.rstrip())
-            record = True
-            found_line = True
-        elif "Rerun to get cross-references right." in line:
-            recompile = True
-            break
-        else:
-            lss.feed(line)
+                if recorded[-1].strip() == "":
+                    record = False
+                    if found_line:
+                        break
+            if line.startswith("!"):
+                if not record:
+                    recorded.append(line.rstrip())
+                record = True
+                src = lss.current
+            elif line.startswith("l."):
+                if not record:
+                    recorded.append(line.rstrip())
+                record = True
+                found_line = True
+            elif "Rerun to get cross-references right." in line:
+                recompile = True
+                break
+            else:
+                lss.feed(line)
 
     if len(recorded) > 0:
-        message = "\n".join(recorded) + MESSAGE_SUFFIX
+        message = "\n".join(recorded) + MESSAGE_SUFFIX.format(path=path_log)
     else:
-        message = DEFAULT_MESSAGE
+        message = DEFAULT_MESSAGE.format(path=path_log)
     if lss.unmatched:
         message += "> [warning: unmatched closing parenthesis]\n"
     return recompile, ErrorInfo("LaTeX", src, message=message)
@@ -259,13 +256,13 @@ def update_last_src(line, last_src):
     return last_src
 
 
-def parse_bibtex_log(fh: TextIO) -> ErrorInfo | None:
+def parse_bibtex_log(path_blg: str) -> ErrorInfo | None:
     """Parse a BibTeX log file.
 
     Parameters
     ----------
-    fh
-        The opened blg file
+    path_blg
+        The blg file.
 
     Returns
     -------
@@ -275,17 +272,18 @@ def parse_bibtex_log(fh: TextIO) -> ErrorInfo | None:
     last_src = "(could not detect source file)"
     error = False
     recorded = []
-    for line in fh.readlines():
-        if line.startswith("Database file #"):
-            last_src = line[line.find(":") + 1 :].strip()
-            recorded = []
-        else:
-            recorded.append(line[:-1])
-        if line == "I'm skipping whatever remains of this entry\n":
-            error = True
-            break
+    with open(path_blg) as fh:
+        for line in fh.readlines():
+            if line.startswith("Database file #"):
+                last_src = line[line.find(":") + 1 :].strip()
+                recorded = []
+            else:
+                recorded.append(line[:-1])
+            if line == "I'm skipping whatever remains of this entry\n":
+                error = True
+                break
 
-    message = "\n".join(recorded) if error else DEFAULT_MESSAGE
+    message = "\n".join(recorded) if error else DEFAULT_MESSAGE.format(path=path_blg)
     return ErrorInfo("BibTeX", last_src, message=message)
 
 
