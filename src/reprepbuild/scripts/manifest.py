@@ -39,12 +39,12 @@ from setuptools.command.egg_info import FileList
 def main() -> int:
     """Main program."""
     args = parse_args()
-    if not args.fn_manifest_in.endswith(".in"):
+    if not args.manifest_in.endswith(".in"):
         raise ValueError("The manifest input file must end with .in")
 
     # Collect the complete list of files.
     filelist = FileList()
-    with open(args.fn_manifest_in) as f:
+    with open(args.manifest_in) as f:
         for line in f:
             line = line[: line.find("#")].strip()
             if line != "":
@@ -53,7 +53,7 @@ def main() -> int:
     filelist.remove_duplicates()
 
     # Build the full file list with file sizes and SHA256 sums.
-    with open(args.fn_manifest_in[:-3] + ".sha256", "w") as f:
+    with open(args.manifest_in[:-3] + ".sha256", "w") as f:
         for fn in tqdm.tqdm(filelist.files, delay=1):
             size, sha256 = compute_sha256(fn)
             f.write(f"{size:15d} {sha256} {fn}\n")
