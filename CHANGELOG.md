@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Correctly report missing `\bibstyle` command when BibTeX fails.
 - Improve clarity of LaTeX and BibTeX error log processing.
 - Corrected NameSpace attribute in `reprepbuild.scripts.manifest`.
 

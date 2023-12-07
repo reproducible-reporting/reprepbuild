@@ -282,6 +282,11 @@ def parse_bibtex_log(path_blg: str) -> ErrorInfo | None:
             if line == "I'm skipping whatever remains of this entry\n":
                 error = True
                 break
+            elif line.startswith(r"I found no \bibstyle command"):
+                last_src = line.split()[-1]
+                recorded = [line[:-1]]
+                error = True
+                break
 
     message = "\n".join(recorded) if error else DEFAULT_MESSAGE.format(path=path_blg)
     return ErrorInfo("BibTeX", last_src, message=message)

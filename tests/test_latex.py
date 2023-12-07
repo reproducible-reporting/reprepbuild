@@ -306,6 +306,26 @@ def test_parse_bibtex_log2(tmpdir):
     assert error_info.message == DEFAULT_MESSAGE.format(path="bibtex.blg")
 
 
+BIBTEX_BLG3 = r"""\
+This is BibTeX, Version 0.99d (TeX Live 2023)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: reply.aux
+I found no \bibstyle command---while reading file reply.aux
+You've used 15 entries,
+            0 wiz_defined-function locations,
+            114 strings with 812 characters,
+and the built_in function-call counts, 0 in all, are:
+"""
+
+
+def test_parse_bibtex_log3(tmpdir):
+    with local_file(BIBTEX_BLG3, "bibtex.blg", tmpdir):
+        error_info = parse_bibtex_log("bibtex.blg")
+    assert error_info.program == "BibTeX"
+    assert error_info.src == "reply.aux"
+    assert error_info.message == r"I found no \bibstyle command---while reading file reply.aux"
+
+
 LATEX_LOG1 = r"""
 **article
 (./article.tex
