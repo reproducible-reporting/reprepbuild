@@ -21,6 +21,7 @@ from .check_hrefs import check_hrefs
 from .latex import latex, latex_bibtex, latex_diff, latex_flat
 from .mupdf import pdf_add_notes, pdf_merge, pdf_nup
 from .python_script import python_script
+from .shell_script import shell_script
 from .transform import convert_odf_pdf, convert_svg_pdf, copy, markdown_pdf, pdf_raster, render
 from .zip import zip_latex, zip_manifest, zip_plain
 
@@ -44,6 +45,7 @@ def get_commands():
         markdown_pdf,
         pdf_raster,
         render,
+        shell_script,
         zip_latex,
         zip_manifest,
         zip_plain,

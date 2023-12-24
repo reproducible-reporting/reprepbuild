@@ -56,7 +56,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def run_script(path_py, argstr, path_variables) -> int:
-    """Run the python script and collect module dependencies.
+    """Run the Python script in its own directory and collect module dependencies.
 
     Parameters
     ----------
