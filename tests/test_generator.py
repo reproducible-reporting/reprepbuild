@@ -150,7 +150,18 @@ def test_generate_ignore_missing(tmpdir, ignore):
         results = list(gen(previous_outputs, set()))
     [[records, ns]] = results
     if ignore:
-        assert records == ["command: python_script", "inp: script.py"]
+        print(records)
+        assert records == [
+            "command: python_script",
+            "inp: script.py",
+            {
+                "outputs": [".script.log"],
+                "rule": "error",
+                "variables": {"message": "Missing inputs: foo.txt"},
+            },
+            {"inputs": [".script.log"], "rule": "phony", "outputs": ["script"]},
+        ]
+
     else:
         assert records == [
             "command: python_script",
@@ -164,8 +175,9 @@ def test_generate_ignore_missing(tmpdir, ignore):
                 "variables": {"argstr": "script", "out_prefix": ".script"},
             },
             [".script.log"],
+            {"inputs": [".script.log"], "outputs": ["script"], "rule": "phony"},
         ]
-    assert ns == []
+    assert ns == ["script.py"]
 
 
 def test_generate_variables(tmpdir):

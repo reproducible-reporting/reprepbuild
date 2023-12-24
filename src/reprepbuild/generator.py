@@ -107,7 +107,7 @@ class BuildGenerator(BaseGenerator):
     # Arguments
     arg = attrs.field(default=None)
     # Phony dependencies, if any
-    phony: str | None = attrs.field(
+    phony_deps: str | None = attrs.field(
         validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         default=None,
     )
@@ -207,28 +207,36 @@ class BuildGenerator(BaseGenerator):
             if isinstance(record, str):
                 yield record
             elif isinstance(record, dict):
-                if self._skip_build(record):
+                skip_record = self._skip_record(record)
+                if skip_record is not None:
+                    yield skip_record
                     continue
                 _expand_variables(record, self.variables)
                 _add_mkdir(record)
                 _clean_build(record)
-                if self.phony is not None:
-                    record.setdefault("order_only", []).append(self.phony)
+                if self.phony_deps is not None:
+                    record.setdefault("order_only", []).append(self.phony_deps)
                 yield record
-                if self.default:
+                if self.default and record["rule"] != "phony":
                     yield record["outputs"]
             else:
                 # defaults should not be present in command_records.
                 raise NotImplementedError
 
-    def _skip_build(self, build):
-        """Skip builds that have missing inputs that are safe to ignore."""
-        for input_ in build.get("inputs", []) + build.get("implicit", []):
-            ignore_safe = self.re_ignore_safe.fullmatch(input_) is not None
-            missing = not os.path.isfile(input_)
-            if ignore_safe and missing:
-                return True
-        return False
+    def _skip_record(self, build):
+        """Skip build whose inputs are missing that are safe to ignore."""
+        missing_inputs = []
+        for inp in build.get("inputs", []) + build.get("implicit", []):
+            ignore_safe = self.re_ignore_safe.fullmatch(inp) is not None
+            if ignore_safe and not os.path.isfile(inp):
+                missing_inputs.append(inp)
+        if len(missing_inputs) > 0:
+            return {
+                "outputs": build["outputs"],
+                "rule": "error",
+                "variables": {"message": "Missing inputs: " + " ".join(missing_inputs)},
+            }
+        return None
 
 
 def _expand_variables(build: dict, variables: dict[str, str]):

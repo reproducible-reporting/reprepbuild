@@ -67,38 +67,38 @@ class PythonScript(Command):
         if not os.path.isfile(path_py):
             raise ValueError(f"Python script does not exist: {path_py}")
 
-        # Call reprepbuild_info (and reprepbuild_cases)
-        # as if the script is running in its own directory.
+        # Process path_py
         workdir, fn_py = os.path.split(path_py)
         workdir = os.path.normpath(workdir)
         script_prefix = fn_py[:-3]
-        local_variables = variables.copy()
-        local_variables["here"] = workdir
+
+        # Update copy of variables
+        variables = variables.copy()
+        variables["here"] = workdir
+
         implicit = []
         with contextlib.chdir(workdir):
             # Load the script in its own directory
-            pythonscript = import_python_path(fn_py)
+            script = import_python_path(fn_py)
 
-            # Get the relevant functions
-            reprepbuild_info = getattr(pythonscript, "reprepbuild_info", None)
+            # Handle reprepbuild_info
+            reprepbuild_info = getattr(script, "reprepbuild_info", None)
             if reprepbuild_info is None:
                 return ["Skipped: reprepbuild_info(...) missing"], []
-            reprepbuild_cases = getattr(pythonscript, "reprepbuild_cases", None)
+            if "variables" in inspect.signature(reprepbuild_info).parameters:
+                implicit = [".reprepbuild/variables.json"]
+
+            # Handle reprepbuild_cases
+            reprepbuild_cases = getattr(script, "reprepbuild_cases", None)
             if reprepbuild_cases is None:
                 build_cases = [[]]
             else:
                 cases_kwargs = {}
                 if "variables" in inspect.signature(reprepbuild_info).parameters:
                     implicit = [".reprepbuild/variables.json"]
-                    cases_kwargs["variables"] = local_variables
+                    cases_kwargs["variables"] = variables.copy()
                 build_cases = reprepbuild_cases(**cases_kwargs)
-            case_fmt = getattr(pythonscript, "REPREPBUILD_CASE_FMT", None)
-
-            # Determine the keyword arguments for reprepbuild_info
-            info_kwargs = {}
-            if "variables" in inspect.signature(reprepbuild_info).parameters:
-                info_kwargs["variables"] = local_variables
-                implicit = [".reprepbuild/variables.json"]
+            case_fmt = getattr(script, "REPREPBUILD_CASE_FMT", None)
 
             def fix_path(fn_local):
                 return os.path.normpath(os.path.join(workdir, fn_local))
@@ -112,10 +112,17 @@ class PythonScript(Command):
 
             # Loop over all cases to make build records
             builds = []
+            paths_log = []
+            info_kwargs = {}
             for script_args in build_cases:
+                # Re-assign variables to avoid passing on changes.
+                if "variables" in inspect.signature(reprepbuild_info).parameters:
+                    info_kwargs = {"variables": variables.copy()}
                 build_info = reprepbuild_info(*script_args, **info_kwargs)
                 argstr = format_case_args(script_args, script_prefix, case_fmt)
                 out_prefix = hide_path(fix_path(script_prefix if argstr == "" else argstr))
+                path_log = f"{out_prefix}.log"
+                paths_log.append(path_log)
                 build = {
                     "inputs": [path_py],
                     "implicit": [
@@ -124,11 +131,16 @@ class PythonScript(Command):
                     ],
                     "rule": "python_script",
                     "implicit_outputs": get_paths(build_info, "outputs"),
-                    "outputs": [f"{out_prefix}.log"],
+                    "outputs": [path_log],
                     "variables": {"argstr": argstr, "out_prefix": out_prefix},
                 }
                 builds.append(build)
-            return builds, []
+
+            # Add a phony rule to run all cases of the script
+            build = {"inputs": paths_log, "rule": "phony", "outputs": [path_py[:-3]]}
+            builds.append(build)
+
+            return builds, [path_py]
 
 
 python_script = PythonScript()

@@ -19,8 +19,15 @@
 # --
 """RepRepBuild package."""
 
+
+__all__ = ("script_driver", "__version__", "__version_tuple__")
+
+
+# A few convenience imports
+from reprepbuild.scripts.python_script import script_driver
+
 try:
-    from ._version import __version__
+    from ._version import __version__, __version_tuple__
 except ImportError:
     __version__ = "0.0.0a-dev"
     __version_tuple__ = (0, 0, 0, "a-dev")

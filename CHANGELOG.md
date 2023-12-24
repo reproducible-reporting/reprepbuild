@@ -20,7 +20,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - The function `reprepbuild_cases` can have a variables argument.
+- A Python script driver, which can be used as generic main function.
+  Add the following to Python scripts in the workflow:
 
+```python
+from reprepbuild import script_driver
+
+...
+
+if __name__ == "__main__":
+    script_driver(__file__)
+```
 
 ## [1.7.2] - 2023-12-07
 

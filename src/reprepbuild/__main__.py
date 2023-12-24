@@ -41,6 +41,13 @@ from .generator import BaseGenerator, BuildGenerator
 __all__ = ("main", "generate")
 
 
+DEFAULT_RULES = {
+    "error": {
+        "command": "echo '${message}'; exit -1",
+    }
+}
+
+
 def generate(root: str):
     """Parse ``reprebuild.yaml`` files and write a ``build.ninja`` file.
 
@@ -66,6 +73,7 @@ def generate(root: str):
 
         # Write all rules, even if some are not used.
         rules = _collect_dicts(generators, "rules")
+        rules.update(DEFAULT_RULES)
         writer.comment("All rules (except generator)")
         for rule_name, rule in rules.items():
             writer.rule(name=rule_name, **rule)

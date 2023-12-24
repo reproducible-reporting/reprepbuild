@@ -44,7 +44,8 @@ BUILDS_PYTHON_SCRIPT = [
         "outputs": [".foo.log"],
         "rule": "python_script",
         "variables": {"argstr": "foo", "out_prefix": ".foo"},
-    }
+    },
+    {"inputs": [".foo.log"], "outputs": ["foo"], "rule": "phony"},
 ]
 
 
@@ -65,7 +66,8 @@ BUILDS_PYTHON_SCRIPT_SUB = [
         "outputs": ["sub/.foo.log"],
         "rule": "python_script",
         "variables": {"argstr": "foo", "out_prefix": "sub/.foo"},
-    }
+    },
+    {"inputs": ["sub/.foo.log"], "outputs": ["sub/foo"], "rule": "phony"},
 ]
 
 

@@ -28,6 +28,7 @@ import contextlib
 import inspect
 import json
 import os
+import subprocess
 import sys
 
 from ..utils import hide_path, import_python_path, parse_case_args, write_dep
@@ -74,38 +75,39 @@ def run_script(path_py, argstr, path_variables) -> int:
     exitcode
         The script exitcode.
     """
+    # Process path_py
     if not path_py.endswith(".py"):
         print(f"Python script must have a .py extension. Got {path_py}")
         return 2
     workdir, fn_py = os.path.split(path_py)
+    workdir = os.path.normpath(workdir)
     script_prefix = fn_py[:-3]
 
-    # Turn path_variables into an absolute path before changing workdir
-    path_variables = os.path.abspath(path_variables)
+    # Load variables before changing dir
+    with open(path_variables) as fh:
+        variables = json.load(fh)
+    variables["here"] = workdir
 
     with contextlib.chdir(workdir):
         # Load the script in its own directory
-        pythonscript = import_python_path(fn_py)
+        script = import_python_path(fn_py)
 
-        # Get the relevant functions
-        reprepbuild_info = getattr(pythonscript, "reprepbuild_info", None)
+        # Check the presence of essential functions
+        reprepbuild_info = getattr(script, "reprepbuild_info", None)
         if reprepbuild_info is None:
             print(f"The script {path_py} has no reprepbuild_info function.")
             return -1
-        script_main = getattr(pythonscript, "main", None)
+        script_main = getattr(script, "main", None)
         if script_main is None:
             print(f"The script {path_py} has no main function.")
             return -1
-        case_fmt = getattr(pythonscript, "REPREPBUILD_CASE_FMT", None)
 
         # Extract arguments and keyword arguments.
+        case_fmt = getattr(script, "REPREPBUILD_CASE_FMT", None)
         script_args, script_kwargs = parse_case_args(argstr, script_prefix, case_fmt)
 
         # Add special keyword arg variables if needed.
         if "variables" in inspect.signature(reprepbuild_info).parameters:
-            with open(path_variables) as fh:
-                variables = json.load(fh)
-            variables["here"] = workdir
             script_kwargs["variables"] = variables
 
         # Execute the functions as if the script is running inside its own dir.
@@ -134,6 +136,48 @@ def run_script(path_py, argstr, path_variables) -> int:
     write_dep(path_dep, outputs, imported_paths)
 
     return result
+
+
+def script_driver(path_py):
+    """Run a Python script through Ninja."""
+    parser = argparse.ArgumentParser(
+        os.path.basename(path_py),
+    )
+    parser.add_argument(
+        "reprepbuild_yaml",
+        default=None,
+        nargs="?",
+        help="The top-level reprepbuild.yaml file. "
+        "When not given, it is searched for in the parent directories.",
+    )
+    args = parser.parse_args()
+
+    # Process path_py
+    if not path_py.endswith(".py"):
+        print(f"Python script must have a .py extension. Got {path_py}")
+        return 2
+    path_py = os.path.abspath(path_py)
+    workdir, fn_py = os.path.split(path_py)
+
+    # Find the reprepbuild_yaml file, if not given.
+    if args.reprepbuild_yaml is None:
+        root = workdir
+        while True:
+            path_try = os.path.join(root, "reprepbuild.yaml")
+            if os.path.exists(path_try):
+                args.reprepbuild_yaml = path_try
+            if root == "/":
+                break
+            root = os.path.dirname(root)
+    root = os.path.dirname(args.reprepbuild_yaml)
+
+    # Call RepRepBuild with the right phony target
+    subprocess.run(
+        ["rr", os.path.relpath(path_py[:-3], root)],
+        check=False,
+        env=os.environ | {"NINJA_STATUS": "\033[1;36;40m[%f/%t]\033[0;0m "},
+        cwd=root,
+    )
 
 
 if __name__ == "__main__":
