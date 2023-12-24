@@ -23,7 +23,7 @@ import contextlib
 import os
 
 import pytest
-from reprepbuild.builtin.latex import latex, latex_diff, latex_flat, scan_latex_deps
+from reprepbuild.builtin.latex import latex, latex_bibtex, latex_diff, latex_flat, scan_latex_deps
 from reprepbuild.scripts.latex import (
     DEFAULT_MESSAGE,
     MESSAGE_SUFFIX,
@@ -47,7 +47,7 @@ BUILDS_LATEX = [
         "rule": "latex",
         "inputs": ["sub/main.tex"],
         "outputs": ["sub/main.pdf"],
-        "implicit_outputs": ["sub/main.log", "sub/main.aux", "sub/main.out", "sub/main.fls"],
+        "implicit_outputs": ["sub/main.log", "sub/main.aux", "sub/main.fls"],
         "implicit": [],
         "variables": {"latex": "pdflatex"},
     }
@@ -84,7 +84,6 @@ BUILDS_LATEX_BIBTEX1 = [
             "main.bbl",
             "main.log",
             "main.aux",
-            "main.out",
             "main.fls",
         ],
         "implicit": ["smile.pdf", "sub/foo.tex", "table.tex", "references.bib"],
@@ -103,9 +102,37 @@ def test_write_build_latex_bibtex1(tmpdir):
     with open(os.path.join(tmpdir, "main.tex"), "w") as fh:
         fh.write(MAIN1_TEX)
     with contextlib.chdir(tmpdir):
-        builds, gendeps = latex.generate(["main.tex"], [], None, {})
+        builds, gendeps = latex_bibtex.generate(["main.tex"], [], None, {})
     assert gendeps == ["main.tex", "sub/foo.tex", "table.tex"]
     assert BUILDS_LATEX_BIBTEX1 == builds
+
+
+BUILDS_LATEX1 = [
+    {
+        "rule": "latex",
+        "inputs": ["main.tex"],
+        "outputs": ["main.pdf"],
+        "implicit_outputs": [
+            "main.log",
+            "main.aux",
+            "main.fls",
+        ],
+        "implicit": ["smile.pdf", "sub/foo.tex", "table.tex", "main.bbl"],
+        "variables": {
+            "latex": "pdflatex",
+        },
+    }
+]
+
+
+def test_write_build_latex1(tmpdir):
+    tmpdir = str(tmpdir)
+    with open(os.path.join(tmpdir, "main.tex"), "w") as fh:
+        fh.write(MAIN1_TEX)
+    with contextlib.chdir(tmpdir):
+        builds, gendeps = latex.generate(["main.tex"], [], None, {})
+    assert gendeps == ["main.tex", "sub/foo.tex", "table.tex"]
+    assert BUILDS_LATEX1 == builds
 
 
 SUB1_FOO_TEX = r"""
@@ -124,7 +151,6 @@ BUILDS_LATEX_BIBTEX_FOO1 = [
             "main.bbl",
             "main.log",
             "main.aux",
-            "main.out",
             "main.fls",
         ],
         "implicit": ["smile.pdf", "sub/foo.tex", "sub/plot.pdf", "table.tex", "references.bib"],
@@ -147,7 +173,7 @@ def test_write_build_latex_bibtex_foo1(tmpdir):
     with open(os.path.join(subdir, "foo.tex"), "w") as fh:
         fh.write(SUB1_FOO_TEX)
     with contextlib.chdir(tmpdir):
-        builds, gendeps = latex.generate(["main.tex"], [], None, {})
+        builds, gendeps = latex_bibtex.generate(["main.tex"], [], None, {})
     assert gendeps == ["main.tex", "sub/foo.tex", "table.tex"]
     assert BUILDS_LATEX_BIBTEX_FOO1 == builds
 
@@ -179,7 +205,6 @@ BUILDS_LATEX_BIBTEX_TABLE2 = [
             "sub/main.bbl",
             "sub/main.log",
             "sub/main.aux",
-            "sub/main.out",
             "sub/main.fls",
         ],
         "implicit": ["sub/smile.pdf", "sub/table.tex", "sub/references.bib"],
@@ -202,7 +227,7 @@ def test_write_build_latex_bibtex_table2(tmpdir):
     with open(os.path.join(subdir, "table.tex"), "w") as fh:
         fh.write(TABLE2_TEX)
     with contextlib.chdir(tmpdir):
-        builds, gendeps = latex.generate(["sub/main.tex"], [], None, {})
+        builds, gendeps = latex_bibtex.generate(["sub/main.tex"], [], None, {})
     assert gendeps == ["sub/main.tex", "sub/table.tex"]
     assert BUILDS_LATEX_BIBTEX_TABLE2 == builds
 

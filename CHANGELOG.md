@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - LaTeX does not always produce a .out file (only when using hyperref),
   and it was therefore removed from the implicit outputs.
 
+### Changed
+
+- Separate `latex` and `latex_bibtex` to allow for more fine-grained control,
+  e.g. to build LaTeX documents with fixed bbl file.
+
 ### Added
 
 - The function `reprepbuild_cases` can have a variables argument.

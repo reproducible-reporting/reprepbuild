@@ -242,7 +242,7 @@ def test_generate_not_scanned(tmpdir):
             "rule": "latex",
             "inputs": ["main.tex"],
             "outputs": ["main.pdf"],
-            "implicit_outputs": ["main.aux", "main.fls", "main.log", "main.out"],
+            "implicit_outputs": ["main.aux", "main.fls", "main.log"],
             "implicit": ["table.tex"],
             "variables": {"latex": "pdflatex"},
         },

@@ -53,7 +53,7 @@ import attrs
 
 from ..command import Command
 
-__all__ = ("scan_latex_deps", "latex", "latex_flat", "latex_diff")
+__all__ = ("scan_latex_deps", "latex", "latex_bibtex", "latex_flat", "latex_diff")
 
 
 RE_OPTIONS = re.MULTILINE | re.DOTALL
@@ -164,22 +164,9 @@ def scan_latex_deps(path_tex, tex_root=None):
     return sorted(implicit), sorted(gendeps), sorted(bib)
 
 
-RULES = {
-    "latex_bibtex": {
-        "command": "rr-latex ${in} ${latex} --bibtex=${bibtex} "
-        "--bibsane='${bibsane}' --bibsane-config='${bibsane_config}'"
-    },
-    "latex": {"command": "rr-latex ${in} ${latex}"},
-    "latex_diff": {
-        "command": "${latexdiff} --append-context2cmd=${latexdiff_context2cmd} ${in} > ${out}"
-    },
-    "latex_flat": {"command": "rr-latex-flat ${in} ${out}"},
-}
-
-
 @attrs.define
 class Latex(Command):
-    """Compile LaTeX document sufficient number of times, if needed with BibTeX."""
+    """Compile LaTeX document sufficient number of times."""
 
     @property
     def name(self) -> str:
@@ -189,7 +176,7 @@ class Latex(Command):
     @property
     def rules(self) -> dict[str, dict]:
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
-        return RULES
+        return {"latex": {"command": "rr-latex ${in} ${latex}"}}
 
     def generate(
         self, inp: list[str], out: list[str], arg, variables: dict[str, str]
@@ -212,41 +199,82 @@ class Latex(Command):
 
         # Create builds
         if len(bib) > 0:
-            build = {
-                "rule": "latex_bibtex",
-                "inputs": [path_tex],
-                "outputs": [f"{prefix}.pdf"],
-                "implicit_outputs": [
-                    f"{prefix}.blg",
-                    f"{prefix}.bbl",
-                    f"{prefix}.log",
-                    f"{prefix}.aux",
-                    f"{prefix}.fls",
-                ],
-                "implicit": implicit + bib,
-                "variables": {
-                    "latex": variables.get("latex", "pdflatex"),
-                    "bibtex": variables.get("bibtex", "bibtex"),
-                    "bibsane": variables.get("bibsane", "bibsane"),
-                    "bibsane_config": variables.get("bibsane_config", "${root}/bibsane.yaml"),
-                },
-            }
-        else:
-            build = {
-                "rule": "latex",
-                "inputs": [path_tex],
-                "outputs": [f"{prefix}.pdf"],
-                "implicit_outputs": [
-                    f"{prefix}.log",
-                    f"{prefix}.aux",
-                    f"{prefix}.fls",
-                ],
-                "implicit": implicit + bib,
-                "variables": {
-                    "latex": variables.get("latex", "pdflatex"),
-                },
-            }
+            implicit.append(f"{prefix}.bbl")
+        build = {
+            "rule": "latex",
+            "inputs": [path_tex],
+            "outputs": [f"{prefix}.pdf"],
+            "implicit_outputs": [
+                f"{prefix}.log",
+                f"{prefix}.aux",
+                f"{prefix}.fls",
+            ],
+            "implicit": implicit,
+            "variables": {
+                "latex": variables.get("latex", "pdflatex"),
+            },
+        }
+        return [build], gendeps
 
+
+@attrs.define
+class LatexBibtex(Command):
+    """Compile LaTeX document sufficient number of times, with BibTeX."""
+
+    @property
+    def name(self) -> str:
+        """The name of the command in ``reprepbuild.yaml``."""
+        return "latex_bibtex"
+
+    @property
+    def rules(self) -> dict[str, dict]:
+        """A dict of kwargs for Ninja's ``Writer.rule()``."""
+        return {
+            "latex_bibtex": {
+                "command": "rr-latex ${in} ${latex} --bibtex=${bibtex} "
+                "--bibsane='${bibsane}' --bibsane-config='${bibsane_config}'"
+            }
+        }
+
+    def generate(
+        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
+    ) -> tuple[list, list[str]]:
+        """See Command.generate."""
+        # Parse parameters
+        if len(inp) != 1:
+            raise ValueError(f"Expecting one input file, the main tex file, got: {inp}")
+        path_tex = inp[0]
+        if not path_tex.endswith(".tex"):
+            raise ValueError(f"The input of the latex command must end with .tex, got {path_tex}.")
+        prefix = path_tex[:-4]
+        if len(out) != 0:
+            raise ValueError(f"Expected no outputs, got: {out}")
+        if arg is not None:
+            raise ValueError(f"Expected no arguments, got {arg}")
+
+        # Scan Tex file for dependencies.
+        implicit, gendeps, bib = scan_latex_deps(path_tex)
+
+        # Create builds
+        build = {
+            "rule": "latex_bibtex",
+            "inputs": [path_tex],
+            "outputs": [f"{prefix}.pdf"],
+            "implicit_outputs": [
+                f"{prefix}.blg",
+                f"{prefix}.bbl",
+                f"{prefix}.log",
+                f"{prefix}.aux",
+                f"{prefix}.fls",
+            ],
+            "implicit": implicit + bib,
+            "variables": {
+                "latex": variables.get("latex", "pdflatex"),
+                "bibtex": variables.get("bibtex", "bibtex"),
+                "bibsane": variables.get("bibsane", "bibsane"),
+                "bibsane_config": variables.get("bibsane_config", "${root}/bibsane.yaml"),
+            },
+        }
         return [build], gendeps
 
 
@@ -262,7 +290,7 @@ class LatexFlat(Command):
     @property
     def rules(self) -> dict[str, dict]:
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
-        return RULES
+        return {"latex_flat": {"command": "rr-latex-flat ${in} ${out}"}}
 
     def generate(
         self, inp: list[str], out: list[str], arg, variables: dict[str, str]
@@ -315,7 +343,12 @@ class LatexDiff(Command):
     @property
     def rules(self) -> dict[str, dict]:
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
-        return RULES
+        return {
+            "latex_diff": {
+                "command": "${latexdiff} --append-context2cmd=${latexdiff_context2cmd} "
+                "${in} > ${out}"
+            }
+        }
 
     def generate(
         self, inp: list[str], out: list[str], arg, variables: dict[str, str]
@@ -370,5 +403,6 @@ class LatexDiff(Command):
 
 
 latex = Latex()
+latex_bibtex = LatexBibtex()
 latex_flat = LatexFlat()
 latex_diff = LatexDiff()
