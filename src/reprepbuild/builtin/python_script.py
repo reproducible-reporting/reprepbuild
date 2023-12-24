@@ -72,6 +72,9 @@ class PythonScript(Command):
         workdir, fn_py = os.path.split(path_py)
         workdir = os.path.normpath(workdir)
         script_prefix = fn_py[:-3]
+        local_variables = variables.copy()
+        local_variables["here"] = workdir
+        implicit = []
         with contextlib.chdir(workdir):
             # Load the script in its own directory
             pythonscript = import_python_path(fn_py)
@@ -84,15 +87,16 @@ class PythonScript(Command):
             if reprepbuild_cases is None:
                 build_cases = [[]]
             else:
-                build_cases = reprepbuild_cases()
+                cases_kwargs = {}
+                if "variables" in inspect.signature(reprepbuild_info).parameters:
+                    implicit = [".reprepbuild/variables.json"]
+                    cases_kwargs["variables"] = local_variables
+                build_cases = reprepbuild_cases(**cases_kwargs)
             case_fmt = getattr(pythonscript, "REPREPBUILD_CASE_FMT", None)
 
             # Determine the keyword arguments for reprepbuild_info
             info_kwargs = {}
-            implicit = []
             if "variables" in inspect.signature(reprepbuild_info).parameters:
-                local_variables = variables.copy()
-                local_variables["here"] = workdir
                 info_kwargs["variables"] = local_variables
                 implicit = [".reprepbuild/variables.json"]
 

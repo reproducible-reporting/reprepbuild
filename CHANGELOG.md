@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - LaTeX does not always produce a .out file (only when using hyperref),
   and it was therefore removed from the implicit outputs.
 
+### Added
+
+- The function `reprepbuild_cases` can have a variables argument.
+
+
 ## [1.7.2] - 2023-12-07
 
 ### Fixed
