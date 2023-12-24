@@ -221,7 +221,6 @@ class Latex(Command):
                     f"{prefix}.bbl",
                     f"{prefix}.log",
                     f"{prefix}.aux",
-                    f"{prefix}.out",
                     f"{prefix}.fls",
                 ],
                 "implicit": implicit + bib,
@@ -240,7 +239,6 @@ class Latex(Command):
                 "implicit_outputs": [
                     f"{prefix}.log",
                     f"{prefix}.aux",
-                    f"{prefix}.out",
                     f"{prefix}.fls",
                 ],
                 "implicit": implicit + bib,
@@ -329,11 +327,11 @@ class LatexDiff(Command):
         new_tex, old_tex = inp
         if not new_tex.endswith(".tex"):
             raise ValueError(
-                f"The inputs of the latex_diff command must end with .tex, got {new_tex}."
+                f"The new input of the latex_diff command must end with .tex, got {new_tex}."
             )
         if not old_tex.endswith(".tex"):
             raise ValueError(
-                f"The inputs of the latex_diff command must end with .tex, got {old_tex}."
+                f"The old input  of the latex_diff command must end with .tex, got {old_tex}."
             )
         new_prefix = new_tex[:-4]
         old_prefix = old_tex[:-4]
