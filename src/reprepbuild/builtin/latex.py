@@ -53,7 +53,7 @@ import attrs
 
 from ..command import Command
 
-__all__ = ("scan_latex_deps", "latex", "latex_bibtex", "latex_flat", "latex_diff")
+__all__ = ("scan_latex_deps", "latex", "latex_flat", "latex_diff")
 
 
 RE_OPTIONS = re.MULTILINE | re.DOTALL
@@ -176,64 +176,12 @@ class Latex(Command):
     @property
     def rules(self) -> dict[str, dict]:
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
-        return {"latex": {"command": "rr-latex ${in} ${latex}"}}
-
-    def generate(
-        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
-    ) -> tuple[list, list[str]]:
-        """See Command.generate."""
-        # Parse parameters
-        if len(inp) != 1:
-            raise ValueError(f"Expecting one input file, the main tex file, got: {inp}")
-        path_tex = inp[0]
-        if not path_tex.endswith(".tex"):
-            raise ValueError(f"The input of the latex command must end with .tex, got {path_tex}.")
-        prefix = path_tex[:-4]
-        if len(out) != 0:
-            raise ValueError(f"Expected no outputs, got: {out}")
-        if arg is not None:
-            raise ValueError(f"Expected no arguments, got {arg}")
-
-        # Scan Tex file for dependencies.
-        implicit, gendeps, bib = scan_latex_deps(path_tex)
-
-        # Create builds
-        if len(bib) > 0:
-            implicit.append(f"{prefix}.bbl")
-        build = {
-            "rule": "latex",
-            "inputs": [path_tex],
-            "outputs": [f"{prefix}.pdf"],
-            "implicit_outputs": [
-                f"{prefix}.log",
-                f"{prefix}.aux",
-                f"{prefix}.fls",
-            ],
-            "implicit": implicit,
-            "variables": {
-                "latex": variables.get("latex", "pdflatex"),
-            },
-        }
-        return [build], gendeps
-
-
-@attrs.define
-class LatexBibtex(Command):
-    """Compile LaTeX document sufficient number of times, with BibTeX."""
-
-    @property
-    def name(self) -> str:
-        """The name of the command in ``reprepbuild.yaml``."""
-        return "latex_bibtex"
-
-    @property
-    def rules(self) -> dict[str, dict]:
-        """A dict of kwargs for Ninja's ``Writer.rule()``."""
         return {
+            "latex": {"command": "rr-latex ${in} ${latex}"},
             "latex_bibtex": {
                 "command": "rr-latex ${in} ${latex} --bibtex=${bibtex} "
                 "--bibsane='${bibsane}' --bibsane-config='${bibsane_config}'"
-            }
+            },
         }
 
     def generate(
@@ -249,32 +197,57 @@ class LatexBibtex(Command):
         prefix = path_tex[:-4]
         if len(out) != 0:
             raise ValueError(f"Expected no outputs, got: {out}")
-        if arg is not None:
-            raise ValueError(f"Expected no arguments, got {arg}")
+
+        # Parse arguments
+        if arg is None:
+            arg = {}
+        elif not isinstance(arg, dict):
+            raise ValueError(f"When arg is given, it must be a dict, got {arg}")
+        skip_bibtex = arg.pop("skip_bibtex", False)
+        if len(arg) > 0:
+            raise ValueError(f"Unsupported keys in arg dict: {arg}")
 
         # Scan Tex file for dependencies.
         implicit, gendeps, bib = scan_latex_deps(path_tex)
 
         # Create builds
-        build = {
-            "rule": "latex_bibtex",
-            "inputs": [path_tex],
-            "outputs": [f"{prefix}.pdf"],
-            "implicit_outputs": [
-                f"{prefix}.blg",
-                f"{prefix}.bbl",
-                f"{prefix}.log",
-                f"{prefix}.aux",
-                f"{prefix}.fls",
-            ],
-            "implicit": implicit + bib,
-            "variables": {
-                "latex": variables.get("latex", "pdflatex"),
-                "bibtex": variables.get("bibtex", "bibtex"),
-                "bibsane": variables.get("bibsane", "bibsane"),
-                "bibsane_config": variables.get("bibsane_config", "${root}/bibsane.yaml"),
-            },
-        }
+        if len(bib) > 0 and not skip_bibtex:
+            build = {
+                "rule": "latex_bibtex",
+                "inputs": [path_tex],
+                "outputs": [f"{prefix}.pdf"],
+                "implicit_outputs": [
+                    f"{prefix}.blg",
+                    f"{prefix}.bbl",
+                    f"{prefix}.log",
+                    f"{prefix}.aux",
+                    f"{prefix}.fls",
+                ],
+                "implicit": implicit + bib,
+                "variables": {
+                    "latex": variables.get("latex", "pdflatex"),
+                    "bibtex": variables.get("bibtex", "bibtex"),
+                    "bibsane": variables.get("bibsane", "bibsane"),
+                    "bibsane_config": variables.get("bibsane_config", "${root}/bibsane.yaml"),
+                },
+            }
+        else:
+            if len(bib) > 0:
+                implicit.append(f"{prefix}.bbl")
+            build = {
+                "rule": "latex",
+                "inputs": [path_tex],
+                "outputs": [f"{prefix}.pdf"],
+                "implicit_outputs": [
+                    f"{prefix}.log",
+                    f"{prefix}.aux",
+                    f"{prefix}.fls",
+                ],
+                "implicit": implicit,
+                "variables": {
+                    "latex": variables.get("latex", "pdflatex"),
+                },
+            }
         return [build], gendeps
 
 
@@ -403,6 +376,5 @@ class LatexDiff(Command):
 
 
 latex = Latex()
-latex_bibtex = LatexBibtex()
 latex_flat = LatexFlat()
 latex_diff = LatexDiff()

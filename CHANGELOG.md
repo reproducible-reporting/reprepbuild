@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Potential cyclic dependency bug in `zip_plain`.
 
+### Changed
+
+- Undo separation of `latex` and `latex_bibtex` from version 1.8.0,
+  and make distinction with a `skip_bibtex` optional argument.
+  This restores backward compatibility.
+
 
 ## [1.8.0] - 2023-12-24
 

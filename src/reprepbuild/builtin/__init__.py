@@ -18,7 +18,7 @@
 
 
 from .check_hrefs import check_hrefs
-from .latex import latex, latex_bibtex, latex_diff, latex_flat
+from .latex import latex, latex_diff, latex_flat
 from .mupdf import pdf_add_notes, pdf_merge, pdf_nup
 from .python_script import python_script
 from .shell_script import shell_script
@@ -32,7 +32,6 @@ def get_commands():
     return [
         check_hrefs,
         latex,
-        latex_bibtex,
         latex_flat,
         latex_diff,
         pdf_add_notes,
