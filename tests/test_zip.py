@@ -53,7 +53,7 @@ def test_write_build_zip_latex():
     assert BUILDS_ZIP_LATEX == builds
 
 
-BUILDS_ZIP_PLAIN = [
+BUILDS_ZIP_PLAIN1 = [
     {
         "rule": "zip_plain",
         "inputs": ["a/data1.txt", "a/data2.txt", "a/fig.png"],
@@ -64,8 +64,41 @@ BUILDS_ZIP_PLAIN = [
 ]
 
 
-def test_write_build_zip_plain():
+def test_write_build_zip_plain1a():
+    builds, _ = zip_plain.generate(
+        ["a/data1.txt", "a/data2.txt", "a/fig.png", "a/something.sha256"],
+        ["something.zip"],
+        None,
+        {},
+    )
+    assert BUILDS_ZIP_PLAIN1 == builds
+
+
+def test_write_build_zip_plain1b():
     builds, _ = zip_plain.generate(
         ["a/data1.txt", "a/data2.txt", "a/fig.png"], ["something.zip"], None, {}
     )
-    assert BUILDS_ZIP_PLAIN == builds
+    assert BUILDS_ZIP_PLAIN1 == builds
+
+
+BUILDS_ZIP_PLAIN2 = [
+    {
+        "rule": "zip_plain",
+        "inputs": ["foo.txt", "bar.csv"],
+        "implicit_outputs": ["data.sha256"],
+        "outputs": ["data.zip"],
+        "pool": "console",
+    }
+]
+
+
+def test_write_build_zip_plain2a():
+    builds, _ = zip_plain.generate(
+        ["foo.txt", "bar.csv", "data.sha256", "data.zip"], ["data.zip"], None, {}
+    )
+    assert BUILDS_ZIP_PLAIN2 == builds
+
+
+def test_write_build_zip_plain2b():
+    builds, _ = zip_plain.generate(["foo.txt", "bar.csv"], ["data.zip"], None, {})
+    assert BUILDS_ZIP_PLAIN2 == builds

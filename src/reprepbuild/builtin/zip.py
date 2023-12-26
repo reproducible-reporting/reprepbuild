@@ -153,11 +153,14 @@ class ZipPlain(Command):
             raise ValueError(f"Expected no arguments, got {arg}")
 
         # Write builds
+        path_manifest = get_path_manifest_plain(inp, path_zip)
+        exclude = [path_manifest, path_zip]
+        inp = [path for path in inp if path not in exclude]
         build = {
             "outputs": [path_zip],
             "rule": "zip_plain",
             "inputs": inp,
-            "implicit_outputs": [get_path_manifest_plain(inp, path_zip)],
+            "implicit_outputs": [path_manifest],
             "pool": "console",
         }
         return [build], []
