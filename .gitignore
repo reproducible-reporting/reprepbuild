@@ -3,6 +3,7 @@ __pycache__
 dist
 build
 .envrc
+.idea
 venv/
 _version.py
 tmp
