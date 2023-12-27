@@ -196,6 +196,12 @@ class LatexSourceStack:
                 self.stack.append(bracket[1:])
 
 
+RERUN_STRINGS = [
+    "Rerun to ensure",
+    "Rerun to get",
+]
+
+
 def parse_latex_log(path_log: str) -> tuple[bool, (ErrorInfo | None)]:
     """Parse a LaTeX log file.
 
@@ -235,7 +241,7 @@ def parse_latex_log(path_log: str) -> tuple[bool, (ErrorInfo | None)]:
                     recorded.append(line.rstrip())
                 record = True
                 found_line = True
-            elif "Rerun to get cross-references right." in line:
+            elif any(rerun_string in line for rerun_string in RERUN_STRINGS):
                 recompile = True
                 break
             else:
