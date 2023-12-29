@@ -223,7 +223,9 @@ def parse_latex_log(path_log: str) -> tuple[bool, (ErrorInfo | None)]:
     found_line = False
     recompile = False
     recorded = []
-    with open(path_log) as fh:
+
+    # LaTeX log files may have encoding errors, so such errors must be ignored.
+    with open(path_log, errors="ignore") as fh:
         for line in fh.readlines():
             if record:
                 recorded.append(line.rstrip())

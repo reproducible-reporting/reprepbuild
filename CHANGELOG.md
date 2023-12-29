@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Fixed
+
+- Ignore UTF-8 decoding errors when reading LaTeX log files
+  These files have no predictable encoding and they are only used to print out a summarized
+  error message, for which ignoring a garbled character does not hurt.
+
+
 ## [1.9.1] - 2023-12-27
 
 ### Fixed
