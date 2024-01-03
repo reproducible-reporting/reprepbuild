@@ -166,7 +166,10 @@ def main():
     """Main program."""
     sanity_check()
     args = parse_args()
+    # Regenerate build.ninja and let ninja know that has changed,
+    # before rebuilding, so it does not start by rerunning the generator.
     generate(os.getcwd())
+    subprocess.run(["ninja", "-t", "restat", "build.ninja"], check=False)
     subprocess.run(
         ["ninja", *args],
         check=False,
