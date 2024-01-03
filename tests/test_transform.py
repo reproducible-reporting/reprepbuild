@@ -22,6 +22,7 @@
 
 from reprepbuild.builtin.transform import (
     convert_odf_pdf,
+    convert_pdf_png,
     convert_svg_pdf,
     copy,
     markdown_pdf,
@@ -154,6 +155,21 @@ BUILDS_CONVERT_ODF_PDF = [
 def test_write_build_convert_odf_pdf():
     builds, _ = convert_odf_pdf.generate(["sub/foo.odp"], ["/dst/sub/"], None, {})
     assert BUILDS_CONVERT_ODF_PDF == builds
+
+
+BUILDS_CONVERT_PDF_PNG = [
+    {
+        "rule": "convert_pdf_png",
+        "inputs": ["sub/foo.pdf"],
+        "outputs": ["/dst/sub/foo.png"],
+        "variables": {"mutool": "mutool", "dpi": "600"},
+    }
+]
+
+
+def test_write_build_convert_pdf_png():
+    builds, _ = convert_pdf_png.generate(["sub/foo.pdf"], ["/dst/sub/"], None, {})
+    assert BUILDS_CONVERT_PDF_PNG == builds
 
 
 BUILDS_CONVERT_PDF_RASTER = [

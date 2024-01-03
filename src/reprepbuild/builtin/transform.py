@@ -22,7 +22,15 @@ import attrs
 
 from ..command import Command
 
-__all__ = ("copy", "render", "convert_svg_pdf", "convert_odf_pdf", "pdf_raster", "markdown_pdf")
+__all__ = (
+    "copy",
+    "render",
+    "convert_svg_pdf",
+    "convert_odf_pdf",
+    "convert_pdf_png",
+    "pdf_raster",
+    "markdown_pdf",
+)
 
 
 @attrs.define
@@ -152,6 +160,12 @@ convert_odf_pdf = Transform(
     new_ext=".pdf",
     # The conversion seems to crash when running concurrently.
     pool_depth=1,
+)
+convert_pdf_png = Transform(
+    "convert_pdf_png",
+    "${mutool} draw -o ${out} -r ${dpi} ${in} 2> /dev/null",
+    variables={"mutool": "mutool", "dpi": "600"},
+    new_ext=".png",
 )
 pdf_raster = Transform(
     "pdf_raster",
