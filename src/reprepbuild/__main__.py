@@ -61,8 +61,8 @@ def generate(root: str):
     load_config(root, "reprepbuild.yaml", generators)
 
     # Loop over all files and create pools, rules and builds for them.
-    with open("build.ninja", "w") as f:
-        writer = Writer(f, 100)
+    with open("build.ninja", "w") as fh:
+        writer = Writer(fh, 100)
 
         # Write pools
         pools = _collect_dicts(generators, "pools")
