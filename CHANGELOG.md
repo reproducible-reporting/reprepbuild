@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   so it never starts by immediately regenerating it again.
 - Remove transient outputs from previous LaTeX builds before calling `(pdf|xe|lua)latex`.
   This prevents irrelevant LaTeX failures in rare corner cases.
+- Show progress bar when generator takes more than one second.
 
 ## [1.9.1] - 2023-12-27
 
