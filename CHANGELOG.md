@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+
+## [1.9.2] - 2024-01-03
+
 ### Fixed
 
 - Ignore UTF-8 decoding errors when reading LaTeX log files
@@ -18,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   This prevents irrelevant LaTeX failures in rare corner cases.
 - Show progress bar when generator takes more than one second.
 - Improve efficiency of `script_driver`.
+
 
 ## [1.9.1] - 2023-12-27
 
