@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Fixed
+
+- Only consider other tex files as dependencies for latex_flat (not figures).
+
 
 ## [1.9.2] - 2024-01-03
 

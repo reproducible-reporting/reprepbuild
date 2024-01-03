@@ -292,7 +292,8 @@ class LatexFlat(Command):
                 "outputs": [path_flat],
                 "rule": "latex_flat",
                 "inputs": [path_src],
-                "implicit": implicit,
+                # Only other tex files are relevant (not figures).
+                "implicit": [path for path in implicit if path.endswith(".tex")],
             }
         ]
         return builds, gendeps
