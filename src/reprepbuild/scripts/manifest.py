@@ -32,8 +32,8 @@ import argparse
 import hashlib
 import sys
 
-import tqdm
 from setuptools.command.egg_info import FileList
+from tqdm import tqdm
 
 
 def main() -> int:
@@ -54,7 +54,7 @@ def main() -> int:
 
     # Build the full file list with file sizes and SHA256 sums.
     with open(args.manifest_in[:-3] + ".sha256", "w") as f:
-        for fn in tqdm.tqdm(filelist.files, delay=1):
+        for fn in tqdm(filelist.files, delay=1):
             size, sha256 = compute_sha256(fn)
             f.write(f"{size:15d} {sha256} {fn}\n")
     return 0

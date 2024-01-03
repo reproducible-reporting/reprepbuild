@@ -28,7 +28,7 @@ import sys
 import tempfile
 import zipfile
 
-import tqdm
+from tqdm import tqdm
 
 from .manifest import compute_sha256
 
@@ -136,7 +136,7 @@ def create_zip(
     nskip = 0 if root == "" else len(root) + 1
     with tempfile.TemporaryDirectory("rr-zip") as tmpdir:
         with zipfile.ZipFile(path_zip, "w") as fz:
-            for src, info in tqdm.tqdm(sorted(paths_in.items()), "Compressing", delay=1):
+            for src, info in tqdm(sorted(paths_in.items()), "Compressing", delay=1):
                 # Copy the file to a temp dir.
                 # This saves bandwith in case of remote datasets and allows
                 # fixing the timestamp before compression.

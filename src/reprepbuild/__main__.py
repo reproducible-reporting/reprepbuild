@@ -34,6 +34,7 @@ import subprocess
 import sys
 
 from ninja import Writer
+from tqdm import tqdm
 
 from .config import load_config
 from .generator import BaseGenerator, BuildGenerator
@@ -88,7 +89,7 @@ def generate(root: str):
         outputs = set()
         defaults = set()
         gendeps = set()
-        for generator in generators:
+        for generator in tqdm(generators, "Generating build.ninja", delay=1):
             for records, new_gendeps in generator(outputs, defaults):
                 gendeps.update(new_gendeps)
                 for record in records:
@@ -128,7 +129,9 @@ def generate(root: str):
             writer.comment("Some files influence the generation of the build files.")
             writer.comment("When they change, the build.ninja file must be regenerated.")
             writer.rule("generator", command="rr-generator .", generator=True)
-            writer.build(rule="generator", implicit=sorted(gendeps), outputs="build.ninja")
+            writer.build(
+                rule="generator", implicit=sorted(gendeps), outputs="build.ninja", pool="console"
+            )
 
 
 def _collect_dicts(generators: list[BaseGenerator], attr_name: str) -> dict[str:object]:
