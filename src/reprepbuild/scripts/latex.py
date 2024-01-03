@@ -78,6 +78,17 @@ def main() -> int:
         raise ValueError("The LaTeX source must have extension .tex")
     stem = fn_tex[:-4]
 
+    # Remove existing outputs from a previous run, which could potentially
+    # conflict with the new tex source files. In 99% of the cases, this is
+    # not a problem, but sometimes LaTeX chokes on remnants in old outputs.
+    exts_to_remove = ["log", "aux", "blg", "fls", "out", "toc", "nlo", "synctex"]
+    if args.bibtex is not None:
+        exts_to_remove.append("bbl")
+    for ext in exts_to_remove:
+        path_to_remove = os.path.join(workdir, f"{stem}.{ext}")
+        if os.path.isfile(path_to_remove):
+            os.remove(path_to_remove)
+
     if args.bibtex is not None:
         # LaTeX
         cp = subprocess.run(

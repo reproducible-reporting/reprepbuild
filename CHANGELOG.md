@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   error message, for which ignoring a garbled character does not hurt.
 - After rewriting build.ninja, ninja is informed of the updated build.ninja,
   so it never starts by immediately regenerating it again.
-
+- Remove transient outputs from previous LaTeX builds before calling `(pdf|xe|lua)latex`.
+  This prevents irrelevant LaTeX failures in rare corner cases.
 
 ## [1.9.1] - 2023-12-27
 
