@@ -155,6 +155,11 @@ class BuildGenerator(BaseGenerator):
                 # Could not find any matches for the additional inputs.
                 continue
 
+            filter_comment = _test_filter_inp(inp)
+            if filter_comment is not None:
+                yield filter_comment, []
+                continue
+
             # Generate the raw build statements
             try:
                 body_records, gendeps = self.command.generate(inp, out, self.arg, self.variables)
@@ -237,6 +242,15 @@ class BuildGenerator(BaseGenerator):
                 "variables": {"message": "Missing inputs: " + " ".join(missing_inputs)},
             }
         return None
+
+
+def _test_filter_inp(inp) -> None | str:
+    if "REPREPBUILD_FILTER_INP" not in os.environ:
+        return None
+    filter_inp = os.environ["REPREPBUILD_FILTER_INP"]
+    if filter_inp not in inp:
+        return f"Skipping records: REPREPBUILD_FILTER_INP={filter_inp} not in {inp}"
+    return None
 
 
 def _expand_variables(build: dict, variables: dict[str, str]):

@@ -90,6 +90,8 @@ def generate(root: str):
         defaults = set()
         gendeps = set()
         for generator in tqdm(generators, "Generating build.ninja", delay=1):
+            if _test_filter_command(writer, generator.command.name):
+                continue
             for records, new_gendeps in generator(outputs, defaults):
                 gendeps.update(new_gendeps)
                 for record in records:
@@ -132,6 +134,20 @@ def generate(root: str):
             writer.build(
                 rule="generator", implicit=sorted(gendeps), outputs="build.ninja", pool="console"
             )
+
+
+def _test_filter_command(writer, command_name):
+    """Return true if command_name equals REPREPBUILD_FILTER_COMMAND environment variable."""
+    if "REPREPBUILD_FILTER_COMMAND" not in os.environ:
+        return False
+    command_filter = os.environ["REPREPBUILD_FILTER_COMMAND"]
+    if command_filter != command_name:
+        writer.comment(
+            f"Skipping records: Command {command_name} differs from "
+            f"REPREPBUILD_FILTER_COMMAND={command_filter}"
+        )
+        return True
+    return False
 
 
 def _collect_dicts(generators: list[BaseGenerator], attr_name: str) -> dict[str:object]:

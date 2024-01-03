@@ -172,10 +172,16 @@ def script_driver(path_py):
     root = os.path.dirname(args.reprepbuild_yaml)
 
     # Call RepRepBuild with the right phony target
+    full_path_py = os.path.relpath(path_py, root)
     subprocess.run(
-        ["rr", os.path.relpath(path_py[:-3], root)],
+        ["rr", full_path_py[:-3], "-v"],
         check=False,
-        env=os.environ | {"NINJA_STATUS": "\033[1;36;40m[%f/%t]\033[0;0m "},
+        env=os.environ
+        | {
+            "NINJA_STATUS": "\033[1;36;40m[%f/%t]\033[0;0m ",
+            "REPREPBUILD_FILTER_COMMAND": "python_script",
+            "REPREPBUILD_FILTER_INP": full_path_py,
+        },
         cwd=root,
     )
 
