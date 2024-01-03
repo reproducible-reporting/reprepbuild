@@ -89,7 +89,8 @@ def generate(root: str):
         outputs = set()
         defaults = set()
         gendeps = set()
-        for generator in tqdm(generators, "Generating build.ninja", delay=1):
+        tqdm_iterator = tqdm(generators, "Generator")
+        for generator in tqdm_iterator:
             if _test_filter_command(writer, generator.command.name):
                 continue
             for records, new_gendeps in generator(outputs, defaults):
@@ -97,6 +98,8 @@ def generate(root: str):
                 for record in records:
                     if isinstance(record, str):
                         writer.comment(record)
+                        if record.startswith("inp:"):
+                            tqdm_iterator.set_description(f"Generator {record[5:]}")
                     elif isinstance(record, list):
                         for default in record:
                             if default not in defaults:
