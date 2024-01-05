@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Only consider other tex files as dependencies for latex_flat (not figures).
+- Fixed failure to identify error message in blg file.
 
 ### Changed
 

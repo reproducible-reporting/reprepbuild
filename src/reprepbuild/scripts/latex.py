@@ -292,14 +292,13 @@ def parse_bibtex_log(path_blg: str) -> ErrorInfo | None:
     last_src = "(could not detect source file)"
     error = False
     recorded = []
-    with open(path_blg) as fh:
+    with open(path_blg, errors="ignore") as fh:
         for line in fh.readlines():
-            if line.startswith("Database file #"):
-                last_src = line[line.find(":") + 1 :].strip()
+            if "---" in line and "file " in line:
+                last_src = line.rsplit(maxsplit=1)[-1]
                 recorded = []
-            else:
-                recorded.append(line[:-1])
-            if line == "I'm skipping whatever remains of this entry\n":
+            recorded.append(line[:-1])
+            if line.startswith("I'm skipping whatever remains"):
                 error = True
                 break
             elif line.startswith(r"I found no \bibstyle command"):

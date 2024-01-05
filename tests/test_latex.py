@@ -351,6 +351,35 @@ def test_parse_bibtex_log3(tmpdir):
     assert error_info.message == r"I found no \bibstyle command---while reading file reply.aux"
 
 
+BIBTEX_BLG4 = r"""\
+This is BibTeX, Version 0.99d (TeX Live 2023)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: article.aux
+The style file: achemso.bst
+White space in argument---line 78 of file article.aux
+ : \citation{lagauche_thermodynamic_2017
+ :                                       pigeon_revisiting_2022}
+I'm skipping whatever remains of this command
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+"""
+
+
+BLG_ERROR4 = """\
+White space in argument---line 78 of file article.aux
+ : \\citation{lagauche_thermodynamic_2017
+ :                                       pigeon_revisiting_2022}
+I'm skipping whatever remains of this command"""
+
+
+def test_parse_bibtex_log4(tmpdir):
+    with local_file(BIBTEX_BLG4, "bibtex.blg", tmpdir):
+        error_info = parse_bibtex_log("bibtex.blg")
+    print(error_info)
+    assert error_info.program == "BibTeX"
+    assert error_info.src == "article.aux"
+    assert error_info.message == BLG_ERROR4
+
+
 LATEX_LOG1 = r"""
 **article
 (./article.tex
