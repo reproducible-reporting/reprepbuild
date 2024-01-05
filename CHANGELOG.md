@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Only consider other tex files as dependencies for latex_flat (not figures).
 
+### Changed
+
+- Add option for maximum number of LaTeX recompilations to get references right.
+
 ### Added
 
 - Conversion from PDF to PNG with `convert_pdf_png`.

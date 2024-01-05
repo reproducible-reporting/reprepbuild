@@ -140,7 +140,7 @@ def main() -> int:
                 sys.stdout.write(cp.stdout)
                 return 3
 
-    while True:
+    for _ in range(args.maxrep):
         # LaTeX
         cp = subprocess.run(
             [f"{args.latex}", "-recorder", "-interaction=batchmode", stem],
@@ -158,6 +158,7 @@ def main() -> int:
             return 4
         if not recompile:
             return 0
+    return 0
 
 
 @attrs.define
@@ -333,6 +334,13 @@ def parse_args() -> argparse.Namespace:
         "--bibsane-config",
         default="bibsane.yaml",
         help="BibSane configuration file. default=%(default)s",
+    )
+    parser.add_argument(
+        "-m",
+        "--maxrep",
+        default=2,
+        type=int,
+        help="The maximum number of LaTeX recompilations (not including the one for BibTeX).",
     )
     return parser.parse_args()
 
