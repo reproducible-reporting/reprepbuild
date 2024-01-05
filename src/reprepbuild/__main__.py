@@ -91,7 +91,7 @@ def generate(root: str):
         gendeps = set()
         tqdm_iterator = tqdm(generators, "Generator")
         for generator in tqdm_iterator:
-            if _test_filter_command(writer, generator.command.name):
+            if _test_filter_command(writer, generator):
                 continue
             for records, new_gendeps in generator(outputs, defaults):
                 gendeps.update(new_gendeps)
@@ -99,7 +99,7 @@ def generate(root: str):
                     if isinstance(record, str):
                         writer.comment(record)
                         if record.startswith("inp:"):
-                            tqdm_iterator.set_description(f"Generator {record[5:]}")
+                            tqdm_iterator.set_description(f"Generator {_truncate(record[5:])}")
                     elif isinstance(record, list):
                         for default in record:
                             if default not in defaults:
@@ -139,10 +139,13 @@ def generate(root: str):
             )
 
 
-def _test_filter_command(writer, command_name):
+def _test_filter_command(writer: Writer, generator: BaseGenerator):
     """Return true if command_name equals REPREPBUILD_FILTER_COMMAND environment variable."""
     if "REPREPBUILD_FILTER_COMMAND" not in os.environ:
         return False
+    if not isinstance(generator, BuildGenerator):
+        return False
+    command_name = generator.command.name
     command_filter = os.environ["REPREPBUILD_FILTER_COMMAND"]
     if command_filter != command_name:
         writer.comment(
@@ -151,6 +154,10 @@ def _test_filter_command(writer, command_name):
         )
         return True
     return False
+
+
+def _truncate(s):
+    return ("..." if len(s) > 20 else "") + s[-20:]
 
 
 def _collect_dicts(generators: list[BaseGenerator], attr_name: str) -> dict[str:object]:
