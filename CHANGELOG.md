@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [1.10.0] - 2024-01-05
+
 ### Fixed
 
 - Only consider other tex files as dependencies for latex_flat (not figures).
 - Fixed failure to identify error message in blg file.
+- Improved detection of required LaTeX recompilation (sha256 of aux file).
 
 ### Changed
 

@@ -414,8 +414,7 @@ l.396         \begin{center}\foo
 
 def test_parse_latex_log1(tmpdir):
     with local_file(LATEX_LOG1, "article.log", tmpdir):
-        rebuild, error_info = parse_latex_log("article.log")
-    assert not rebuild
+        error_info = parse_latex_log("article.log")
     assert error_info.program == "LaTeX"
     assert error_info.src == "./article.tex"
     assert (
@@ -431,8 +430,7 @@ not so much
 
 def test_parse_latex_log2(tmpdir):
     with local_file(LATEX_LOG2, "article.log", tmpdir):
-        rebuild, error_info = parse_latex_log("article.log")
-    assert not rebuild
+        error_info = parse_latex_log("article.log")
     assert error_info.program == "LaTeX"
     assert error_info.src == "(could not detect source file)"
     assert error_info.message == DEFAULT_MESSAGE.format(path="article.log")
@@ -474,8 +472,7 @@ l.2 \item E
 
 def test_parse_latex_log3(tmpdir):
     with local_file(LATEX_LOG3, "article.log", tmpdir):
-        rebuild, error_info = parse_latex_log("article.log")
-    assert not rebuild
+        error_info = parse_latex_log("article.log")
     assert error_info.program == "LaTeX"
     assert error_info.src == "./kwart_cirkelboog_e/divergent.inc.tex"
     assert (
@@ -547,8 +544,7 @@ l.116 \end{gather*}
 
 def test_parse_latex_log4(tmpdir):
     with local_file(LATEX_LOG4, "article.log", tmpdir):
-        rebuild, error_info = parse_latex_log("article.log")
-    assert not rebuild
+        error_info = parse_latex_log("article.log")
     assert error_info.program == "LaTeX"
     assert error_info.src == "./review.tex"
     assert (
@@ -606,8 +602,7 @@ l.40 \end{enumerate}
 
 def test_parse_latex_log5(tmpdir):
     with local_file(LATEX_LOG5, "article.log", tmpdir):
-        rebuild, error_info = parse_latex_log("article.log")
-    assert not rebuild
+        error_info = parse_latex_log("article.log")
     assert error_info.program == "LaTeX"
     assert error_info.src == "./solutions.tex"
     assert (
@@ -705,8 +700,7 @@ l.355
 
 def test_parse_latex_log6(tmpdir):
     with local_file(LATEX_LOG6, "article.log", tmpdir):
-        rebuild, error_info = parse_latex_log("article.log")
-    assert not rebuild
+        error_info = parse_latex_log("article.log")
     assert error_info.program == "LaTeX"
     assert error_info.src == "./review.tex"
     assert (

@@ -27,6 +27,8 @@ import sys
 
 import attrs
 
+from .manifest import compute_sha256
+
 
 @attrs.define
 class ErrorInfo:
@@ -77,6 +79,7 @@ def main() -> int:
     if not fn_tex.endswith(".tex"):
         raise ValueError("The LaTeX source must have extension .tex")
     stem = fn_tex[:-4]
+    path_aux = os.path.join(workdir, f"{stem}.aux")
 
     # Remove existing outputs from a previous run, which could potentially
     # conflict with the new tex source files. In 99% of the cases, this is
@@ -89,6 +92,7 @@ def main() -> int:
         if os.path.isfile(path_to_remove):
             os.remove(path_to_remove)
 
+    aux_sha256 = "none"
     if args.bibtex is not None:
         # LaTeX
         cp = subprocess.run(
@@ -105,6 +109,9 @@ def main() -> int:
             _, error_info = parse_latex_log(path_log)
             error_info.print(path_log)
             return 1
+
+        aux_sha256 = compute_sha256(path_aux)[1]
+        print(f"sha256 {path_aux}: {aux_sha256}")
 
         # BibTeX
         cp = subprocess.run(
@@ -152,12 +159,15 @@ def main() -> int:
             env=os.environ | {"SOURCE_DATE_EPOCH": "315532800"},
         )
         path_log = os.path.join(workdir, f"{stem}.log")
-        recompile, error_info = parse_latex_log(path_log)
+        error_info = parse_latex_log(path_log)
         if cp.returncode != 0:
             error_info.print(path_log)
             return 4
-        if not recompile:
+        new_aux_sha256 = compute_sha256(os.path.join(workdir, f"{stem}.aux"))[1]
+        print(f"sha256 {path_aux}: {new_aux_sha256}")
+        if new_aux_sha256 == aux_sha256:
             return 0
+        aux_sha256 = new_aux_sha256
     return 0
 
 
@@ -208,12 +218,6 @@ class LatexSourceStack:
                 self.stack.append(bracket[1:])
 
 
-RERUN_STRINGS = [
-    "Rerun to ensure",
-    "Rerun to get",
-]
-
-
 def parse_latex_log(path_log: str) -> tuple[bool, (ErrorInfo | None)]:
     """Parse a LaTeX log file.
 
@@ -224,8 +228,6 @@ def parse_latex_log(path_log: str) -> tuple[bool, (ErrorInfo | None)]:
 
     Returns
     -------
-    recompile
-        ``True`` if the source needs to be recompiled.
     error_info
         Structured info for printing error, or None
     """
@@ -233,7 +235,6 @@ def parse_latex_log(path_log: str) -> tuple[bool, (ErrorInfo | None)]:
     src = "(could not detect source file)"
     record = False
     found_line = False
-    recompile = False
     recorded = []
 
     # LaTeX log files may have encoding errors, so such errors must be ignored.
@@ -255,9 +256,6 @@ def parse_latex_log(path_log: str) -> tuple[bool, (ErrorInfo | None)]:
                     recorded.append(line.rstrip())
                 record = True
                 found_line = True
-            elif any(rerun_string in line for rerun_string in RERUN_STRINGS):
-                recompile = True
-                break
             else:
                 lss.feed(line)
 
@@ -267,7 +265,7 @@ def parse_latex_log(path_log: str) -> tuple[bool, (ErrorInfo | None)]:
         message = DEFAULT_MESSAGE.format(path=path_log)
     if lss.unmatched:
         message += "> [warning: unmatched closing parenthesis]\n"
-    return recompile, ErrorInfo("LaTeX", src, message=message)
+    return ErrorInfo("LaTeX", src, message=message)
 
 
 def update_last_src(line, last_src):
@@ -337,7 +335,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-m",
         "--maxrep",
-        default=2,
+        default=5,
         type=int,
         help="The maximum number of LaTeX recompilations (not including the one for BibTeX).",
     )
