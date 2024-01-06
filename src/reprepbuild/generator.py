@@ -219,6 +219,8 @@ class BuildGenerator(BaseGenerator):
                 if skip_record is not None:
                     yield skip_record
                     continue
+                if "outputs" not in record:
+                    raise ValueError("Every build must have an output.")
                 _expand_variables(record, self.variables)
                 _add_mkdir(record)
                 _clean_build(record)
