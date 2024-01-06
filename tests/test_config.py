@@ -137,3 +137,40 @@ def test_iterate_loop_config():
         {"food": "spam", "time": "tomorrow", "place": "home"},
         {"food": "spam", "time": "never", "place": "there"},
     ]
+
+
+TEST_LOOP_CONFIG = """\
+imports:
+- reprepbuild.builtin
+tasks:
+- command: copy
+  loop:
+    - key: [foo, bar]
+      val: [[one, two], [aa, bbbb]]
+  inp: some-${foo}.txt
+  out: other-${bar}.txt
+"""
+
+
+def test_loop_config(tmpdir: str):
+    tmpdir = str(tmpdir)
+    with open(os.path.join(tmpdir, "reprepbuild.yaml"), "w") as fh:
+        fh.write(TEST_LOOP_CONFIG)
+    tasks = []
+    with contextlib.chdir(tmpdir):
+        load_config(tmpdir, "reprepbuild.yaml", tasks)
+    assert len(tasks) == 2
+    assert tasks[0] == BuildGenerator(
+        command=copy,
+        default=True,
+        variables={"here": ".", "root": tmpdir},
+        inp=["some-one.txt"],
+        out=["other-two.txt"],
+    )
+    assert tasks[1] == BuildGenerator(
+        command=copy,
+        default=True,
+        variables={"here": ".", "root": tmpdir},
+        inp=["some-aa.txt"],
+        out=["other-bbbb.txt"],
+    )
