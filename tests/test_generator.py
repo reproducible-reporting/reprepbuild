@@ -103,7 +103,16 @@ def test_generate_named_wildcard_inp_inp_out(tmpdir):
     previous_outputs = {"foo1.txt", "bar2.txt", "foo3.txt", "bar3.txt"}
     with contextlib.chdir(tmpdir):
         results = list(gen(previous_outputs, set()))
-    [[records, ns]] = results
+    print(results)
+    [records, ns] = results[0]
+    assert records == [
+        "command: copy",
+        "No matches found for inputs: ['foo${*id}.txt', 'bar${*id}.txt']",
+        "keys: ('id',)",
+        "values: ('1',)",
+    ]
+    assert ns == []
+    [records, ns] = results[1]
     assert records == [
         "command: copy",
         "inp: foo3.txt bar3.txt",

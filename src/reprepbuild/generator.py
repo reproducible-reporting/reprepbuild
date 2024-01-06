@@ -151,13 +151,19 @@ class BuildGenerator(BaseGenerator):
         for values, inp in sorted(inp0_mapping.items()):
             # Complete the list of inputs and outputs
             inp, out = self._extend_inp_out(inp, keys, values, outputs)
+            records = self._comment_records(inp, out)
+
             if inp is None:
-                # Could not find any matches for the additional inputs.
+                records.append(f"No matches found for inputs: {self.inp}")
+                records.append(f"keys: {keys}")
+                records.append(f"values: {values}")
+                yield records, []
                 continue
 
             filter_comment = _test_filter_inp(inp)
             if filter_comment is not None:
-                yield filter_comment, []
+                records.append(filter_comment)
+                yield records, []
                 continue
 
             # Generate the raw build statements
@@ -165,13 +171,11 @@ class BuildGenerator(BaseGenerator):
                 body_records, gendeps = self.command.generate(inp, out, self.arg, self.variables)
             except Exception as exc:
                 exc.add_note(f"- Generator: {self}")
-                exc.add_note(f"- inp: {inp}")
-                exc.add_note(f"- out: {out}")
-                exc.add_note(f"- arg: {self.arg}")
+                for comment in records:
+                    exc.add_note(f"- {comment}")
                 raise
 
             # Prepare informative and cleaned-up records
-            records = self._comment_records(inp, out)
             records.extend(self._post_process_records(body_records))
 
             # Done
@@ -196,11 +200,10 @@ class BuildGenerator(BaseGenerator):
 
     def _comment_records(self, inp: list[str], out: list[str]) -> list[str]:
         """A few comments to be put before the build statements."""
-        records = [
-            f"command: {self.command.name}",
-            "inp: " + " ".join(inp),
-        ]
-        if len(out) > 0:
+        records = [f"command: {self.command.name}"]
+        if inp is not None:
+            records.append("inp: " + " ".join(inp))
+        if out is not None and len(out) > 0:
             records.append("out: " + " ".join(out))
         if self.arg is not None:
             records.append(f" arg: {self.arg}")
