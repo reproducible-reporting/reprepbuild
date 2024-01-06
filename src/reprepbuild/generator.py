@@ -277,6 +277,8 @@ def _expand_variables(build: dict, variables: dict[str, str]):
 
 def _add_mkdir(build: dict):
     """Modify Ninja build record to include creation of output directories."""
+    if build["rule"] == "phony":
+        return
     dirs_src = set()
     for key in "inputs", "implicit":
         for path_src in build.get(key, []):
