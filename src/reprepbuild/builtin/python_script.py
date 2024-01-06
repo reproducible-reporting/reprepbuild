@@ -94,7 +94,7 @@ class PythonScript(Command):
                 build_cases = [[]]
             else:
                 cases_kwargs = {}
-                if "variables" in inspect.signature(reprepbuild_info).parameters:
+                if "variables" in inspect.signature(reprepbuild_cases).parameters:
                     implicit = [".reprepbuild/variables.json"]
                     cases_kwargs["variables"] = variables.copy()
                 build_cases = reprepbuild_cases(**cases_kwargs)
