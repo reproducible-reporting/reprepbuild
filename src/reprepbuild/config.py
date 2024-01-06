@@ -207,6 +207,11 @@ def load_config(
         if env_name.startswith(env_prefix):
             name = env_name[len(env_prefix) :]
             if name not in variables:
+                value_template = CaseSensitiveTemplate(value)
+                if not value_template.is_valid():
+                    raise ValueError(
+                        f"Invalid template string in environment variable {env_name}: {value}"
+                    )
                 variables[name] = CaseSensitiveTemplate(value).substitute(variables)
 
     # Take variables from the config
@@ -312,9 +317,15 @@ def rewrite_path(path: str, variables: dict[str, str], ignore_wild: bool = False
         The rewritten path
     """
     if ignore_wild:
-        result = NoFancyTemplate(path).substitute_nofancy(variables)
+        path_template = NoFancyTemplate(path)
     else:
-        result = CaseSensitiveTemplate(path).substitute(variables)
+        path_template = NoFancyTemplate(path)
+    if not path_template.is_valid():
+        raise ValueError(f"Invalid path template string: {path}")
+    if ignore_wild:
+        result = path_template.substitute_nofancy(variables)
+    else:
+        result = path_template.substitute(variables)
     if result.startswith(os.sep):
         result = os.path.normpath(os.path.relpath(result, variables["root"]))
     else:

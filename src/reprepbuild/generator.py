@@ -187,7 +187,10 @@ class BuildGenerator(BaseGenerator):
         """Search for additional inputs (after the first)."""
         variables = {"*" + key: value for key, value in zip(keys, values, strict=True)}
         for inp_path in self.inp[1:]:
-            inp_path = NoFancyTemplate(inp_path).substitute(variables)
+            inp_template = NoFancyTemplate(inp_path)
+            if not inp_template.is_valid():
+                raise ValueError(f"Invalid inp template string in {self}: {inp_path}")
+            inp_path = inp_template.substitute(variables)
             filenames = set(glob(inp_path, recursive=True))
             filenames.update(outputs)
             _, inp1_mapping = fancy_filter(filenames, inp_path)
@@ -195,7 +198,12 @@ class BuildGenerator(BaseGenerator):
             if len(inp1_mapping) == 0:
                 return None, None
             inp.extend(inp1_mapping[()])
-        out = [NoFancyTemplate(out_path).substitute(variables) for out_path in self.out]
+        out = []
+        for out_path in self.out:
+            out_template = NoFancyTemplate(out_path)
+            if not out_template.is_valid():
+                raise ValueError(f"Invalid out template string in {self}: {out_path}")
+            out.append(out_template.substitute(variables))
         return inp, out
 
     def _comment_records(self, inp: list[str], out: list[str]) -> list[str]:
@@ -262,7 +270,10 @@ def _expand_variables(build: dict, variables: dict[str, str]):
     """Expand variables and normalize paths in build record."""
 
     def _expand(path):
-        path = CaseSensitiveTemplate(path).substitute(variables)
+        path_template = CaseSensitiveTemplate(path)
+        if not path_template.is_valid():
+            raise ValueError(f"Invalid subsequent inp template string: {path}")
+        path = path_template.substitute(variables)
         # TODO: Improve detection of path, or implement it differently.
         #       The current test may have false positives.
         if path.startswith(os.sep):
