@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [1.10.1] - 2024-01-07
+
 ### Fixed
 
 - Fixed broken progress bar when using the "barrier" task.
