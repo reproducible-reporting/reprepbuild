@@ -152,6 +152,7 @@ def _test_filter_command(writer: Writer, generator: BaseGenerator):
             f"Skipping records: Command {command_name} differs from "
             f"REPREPBUILD_FILTER_COMMAND={command_filter}"
         )
+        writer.newline()
         return True
     return False
 
