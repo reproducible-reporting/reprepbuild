@@ -203,7 +203,7 @@ def main():
     subprocess.run(
         ["ninja", *args],
         check=False,
-        env=os.environ | {"NINJA_STATUS": "\033[1;36;40m[%f/%t]\033[0;0m "},
+        env=os.environ | {"NINJA_STATUS": "\033[1;36m[%f/%t]\033[0;0m "},
     )
 
 
