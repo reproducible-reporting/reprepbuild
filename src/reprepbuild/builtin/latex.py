@@ -145,11 +145,17 @@ def scan_latex_deps(path_tex, tex_root=None):
         if tex_root is None:
             tex_root = os.path.normpath(os.path.dirname(path_tex))
         with open(path_tex) as fh:
-            # Load the TeX source and strip the comments
-            tex_no_comments = "".join(line[: line.find("%")].rstrip() + "\n" for line in fh)
+            stripped = []
+            for line in fh:
+                if "%REPREPBUILD ignore" in line:
+                    pass
+                elif line.startswith("%REPREPBUILD input "):
+                    implicit.add(os.path.normpath(os.path.join(tex_root, line[18:].strip())))
+                else:
+                    stripped.append(line[: line.find("%")].rstrip())
 
             # Process the file references
-            for new_root, fn_inc, ext in iter_latex_references(tex_no_comments):
+            for new_root, fn_inc, ext in iter_latex_references("\n".join(stripped)):
                 new_root = os.path.normpath(os.path.join(tex_root, cleanup_path(new_root)))
                 path_inc = os.path.normpath(os.path.join(new_root, cleanup_path(fn_inc, ext)))
                 if ext == ".bib":

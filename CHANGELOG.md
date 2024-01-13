@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Detect images included in SVG files as implicit dependencies.
 
+###
+
+- Added support for fine-grained control of LaTeX dependencies, to handle non-standard cases:
+  - A line starting with `%REPREPBUILD input` followed by a filename, will add that filename to the
+    implicit inputs for the latex compilation.
+  - A line containing `%REPREPBUILD ignore` will not be analyzed when scanning for implicit inputs.
+
 
 ## [1.10.1] - 2024-01-07
 

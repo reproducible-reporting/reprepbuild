@@ -786,6 +786,7 @@ SCAN_LATEX_DEPS_EXAMPLE = r"""
 \input{foo.tex}
 %\includegraphics{not.pdf}
 \includegraphics{figure}
+\includegraphics{\thepage.png} %REPREPBUILD ignore
 \includegraphics
 {plot.pdf}
 \input{
@@ -802,6 +803,7 @@ SCAN_LATEX_DEPS_EXAMPLE = r"""
     works % comment 4
     % comment 5 }
 }
+%REPREPBUILD input implicit.txt
 %\input{bar.tex}
 \bibliography {references}
 %\bibliography{old}
@@ -825,6 +827,7 @@ def test_scan_latex_deps(tmpdir):
         "this also works.tex",
         "figure.pdf",
         "plot.pdf",
+        "implicit.txt",
         "sub/inc.tex",
     ]
     implicit_ref = {os.path.join(tmpdir, name) for name in implicit_ref}
