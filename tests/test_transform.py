@@ -19,6 +19,8 @@
 # --
 """Unit tests for reprepbuild.builtin.transform"""
 
+import contextlib
+import os
 
 from reprepbuild.builtin.transform import (
     convert_odf_pdf,
@@ -66,14 +68,14 @@ def test_write_build_copy_as():
 BUILDS_RENDER = [
     {
         "rule": "render",
-        "implicit": ["${here}/.reprepbuild/variables.json"],
+        "implicit": ["foo/.reprepbuild/variables.json"],
         "inputs": ["sub/foo.md"],
         "outputs": ["/dst/sub/foo.md"],
         "variables": {"here": "foo"},
     },
     {
         "rule": "render",
-        "implicit": ["${here}/.reprepbuild/variables.json"],
+        "implicit": ["foo/.reprepbuild/variables.json"],
         "inputs": ["sub/bar.tex"],
         "outputs": ["/dst/sub/bar.tex"],
         "variables": {"here": "foo"},
@@ -97,9 +99,17 @@ BUILDS_CONVERT_SVG_PDF1 = [
 ]
 
 
-def test_write_build_convert_svg_pdf1():
-    builds, _ = convert_svg_pdf.generate(["sub/foo.svg"], ["/dst/sub/"], None, {})
+MINIMAL_SVG = '<svg xmlns="http://www.w3.org/2000/svg"></svg>'
+
+
+def test_write_build_convert_svg_pdf1(tmpdir):
+    with contextlib.chdir(tmpdir):
+        os.mkdir("sub")
+        with open("sub/foo.svg", "w") as fh:
+            fh.write(MINIMAL_SVG)
+        builds, gendeps = convert_svg_pdf.generate(["sub/foo.svg"], ["/dst/sub/"], None, {})
     assert BUILDS_CONVERT_SVG_PDF1 == builds
+    assert gendeps == ["sub/foo.svg"]
 
 
 BUILDS_CONVERT_SVG_PDF2 = [
@@ -113,9 +123,14 @@ BUILDS_CONVERT_SVG_PDF2 = [
 ]
 
 
-def test_write_build_convert_svg_pdf2():
-    builds, _ = convert_svg_pdf.generate(["sub/foo.svg"], [], None, {})
+def test_write_build_convert_svg_pdf2(tmpdir):
+    with contextlib.chdir(tmpdir):
+        os.mkdir("sub")
+        with open("sub/foo.svg", "w") as fh:
+            fh.write(MINIMAL_SVG)
+        builds, gendeps = convert_svg_pdf.generate(["sub/foo.svg"], [], None, {})
     assert BUILDS_CONVERT_SVG_PDF2 == builds
+    assert gendeps == ["sub/foo.svg"]
 
 
 BUILDS_CONVERT_SVG_PDF3 = [
@@ -136,9 +151,80 @@ BUILDS_CONVERT_SVG_PDF3 = [
 ]
 
 
-def test_write_build_convert_svg_pdf3():
-    builds, _ = convert_svg_pdf.generate(["sub/foo.svg", "sub/bar.svg"], [], None, {})
+def test_write_build_convert_svg_pdf3(tmpdir):
+    with contextlib.chdir(tmpdir):
+        os.mkdir("sub")
+        with open("sub/foo.svg", "w") as fh:
+            fh.write(MINIMAL_SVG)
+        with open("sub/bar.svg", "w") as fh:
+            fh.write(MINIMAL_SVG)
+        builds, gendeps = convert_svg_pdf.generate(["sub/foo.svg", "sub/bar.svg"], [], None, {})
     assert BUILDS_CONVERT_SVG_PDF3 == builds
+    assert gendeps == ["sub/foo.svg", "sub/bar.svg"]
+
+
+CONTAINER_SVG = """\
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewbox="0 0 100 100">
+<image x="0" y="10" href="image.png" width="50" height="30" />
+<image x="50" y="10" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcS\
+JAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==" width="50" height="30" />
+</svg>
+"""
+
+BUILDS_CONVERT_SVG_PDF_CONTAINER = [
+    {
+        "rule": "convert_svg_pdf",
+        "pool": "convert_svg_pdf",
+        "inputs": ["sub/container.svg"],
+        "implicit": ["sub/image.png"],
+        "outputs": ["sub/container.pdf"],
+        "variables": {"inkscape": "inkscape"},
+    }
+]
+
+
+def test_write_build_convert_svg_pdf_container(tmpdir):
+    with contextlib.chdir(tmpdir):
+        os.mkdir("sub")
+        with open("sub/container.svg", "w") as fh:
+            fh.write(CONTAINER_SVG)
+        builds, gendeps = convert_svg_pdf.generate(["sub/container.svg"], [], None, {})
+    assert BUILDS_CONVERT_SVG_PDF_CONTAINER == builds
+    assert gendeps == ["sub/container.svg"]
+
+
+OUTER_CONTAINER_SVG = """\
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:svg="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="100" height="100" viewbox="0 0 100 100">
+<image x="0" y="10" xlink:href="file://container.svg" widht="30" height="40" />
+</svg>
+"""
+
+
+BUILDS_CONVERT_SVG_PDF_OUTER_CONTAINER = [
+    {
+        "rule": "convert_svg_pdf",
+        "pool": "convert_svg_pdf",
+        "inputs": ["outer.svg"],
+        "implicit": ["container.svg", "image.png"],
+        "outputs": ["outer.pdf"],
+        "variables": {"inkscape": "inkscape"},
+    }
+]
+
+
+def test_write_build_convert_svg_pdf_outer_container(tmpdir):
+    with contextlib.chdir(tmpdir):
+        with open("outer.svg", "w") as fh:
+            fh.write(OUTER_CONTAINER_SVG)
+        with open("container.svg", "w") as fh:
+            fh.write(CONTAINER_SVG)
+        builds, gendeps = convert_svg_pdf.generate(["outer.svg"], [], None, {})
+    assert BUILDS_CONVERT_SVG_PDF_OUTER_CONTAINER == builds
+    assert gendeps == ["outer.svg", "container.svg"]
 
 
 BUILDS_CONVERT_ODF_PDF = [

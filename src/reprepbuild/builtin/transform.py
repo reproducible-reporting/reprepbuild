@@ -17,6 +17,8 @@
 """Transformation of individual files."""
 
 import os
+import xml.etree.ElementTree as ET
+from collections.abc import Callable
 
 import attrs
 
@@ -40,10 +42,10 @@ class Transform(Command):
     # The command-line in the Ninja build rule
     command: str = attrs.field(validator=attrs.validators.instance_of(str))
     # A list of implicit inputs
-    implicit: list[str] = attrs.field(
+    generate_implicit: (Callable | None) = attrs.field(
         kw_only=True,
-        validator=attrs.validators.instance_of(list),
-        default=attrs.Factory(list),
+        validator=attrs.validators.optional(attrs.validators.is_callable()),
+        default=None,
     )
     # Variables used in the command and there default values.
     # This dictionary contains default values,
@@ -66,12 +68,6 @@ class Transform(Command):
         validator=attrs.validators.optional(attrs.validators.instance_of(int)),
         default=None,
     )
-
-    @implicit.validator
-    def validate_implicit(self, _attribute, implicit):
-        for i, imp in enumerate(implicit):
-            if not isinstance(imp, str):
-                raise TypeError(f"Item {i} of implicit inputs is not a string: {imp}")
 
     @property
     def name(self) -> str:
@@ -119,8 +115,12 @@ class Transform(Command):
                 "outputs": [dst],
                 "inputs": [src],
             }
-            if len(self.implicit) > 0:
-                build["implicit"] = self.implicit
+            if self.generate_implicit is None:
+                gendeps = []
+            else:
+                implicit, gendeps = self.generate_implicit(inp, out, arg, variables)
+                if len(implicit) > 0:
+                    build["implicit"] = implicit
             if len(self.variables) > 0:
                 build["variables"] = {
                     key: variables.get(key, value) for key, value in self.variables.items()
@@ -128,20 +128,61 @@ class Transform(Command):
             if self.pool_depth is not None:
                 build["pool"] = self._name
             builds.append(build)
-        return builds, []
+        return builds, gendeps
+
+
+def _generate_implicit_render(inp, out, arg, variables):
+    return [os.path.join(variables["here"], ".reprepbuild/variables.json")], []
+
+
+def _generate_implicit_svg(inp, out, arg, variables):
+    """Search implicit dependencies in SVG files, specifically (recursively) included images."""
+    implicit = []
+    gendeps = list(inp)
+    idep = 0
+    prefix_map = {
+        "xlink": "http://www.w3.org/1999/xlink",
+        "svg": "http://www.w3.org/2000/svg",
+    }
+    while idep < len(gendeps):
+        path_svg = gendeps[idep]
+        tree = ET.parse(path_svg)
+        root = tree.getroot()
+        # List all hrefs
+        hrefs = [elem.get("href") for elem in root.findall(".//svg:image[@href]", prefix_map)] + [
+            # Being deprecated, but still in use.
+            elem.get("{" + prefix_map["xlink"] + "}href")
+            for elem in root.findall(".//svg:image[@xlink:href]", prefix_map)
+        ]
+        # Process hrefs
+        for href in hrefs:
+            if href.startswith("file://"):
+                href = href[7:]
+            if href.startswith("#") or href.startswith("data:"):
+                continue
+            if "://" not in href:
+                if not href.startswith("/"):
+                    href = os.path.join(os.path.dirname(path_svg), href)
+                implicit.append(href)
+                if href.endswith(".svg"):
+                    gendeps.append(href)
+        idep += 1
+
+    return implicit, gendeps
 
 
 copy = Transform("copy", "cp ${in} ${out}")
 render = Transform(
     "render",
     "rr-render ${in} ${out} --variables=${here}/.reprepbuild/variables.json",
-    implicit=["${here}/.reprepbuild/variables.json"],
+    generate_implicit=_generate_implicit_render,
     variables={"here": "."},
 )
 convert_svg_pdf = Transform(
     "convert_svg_pdf",
     "${inkscape} ${in} -T --export-filename=${out} --export-type=pdf > /dev/null"
     "&& rr-pdf-normalize ${out}",
+    generate_implicit=_generate_implicit_svg,
     variables={"inkscape": "inkscape"},
     new_ext=".pdf",
     # The conversion seems to crash when running concurrently.

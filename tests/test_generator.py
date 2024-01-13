@@ -189,8 +189,19 @@ def test_generate_ignore_missing(tmpdir, ignore):
     assert ns == ["script.py"]
 
 
+LOGO_SVG = """\
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewbox="0 0 100 100">
+<circle cx="0" cy="50" r="30" fill="00AA00"  stroke="#AA00AA" stroke-width="10" />
+</svg>
+"""
+
+
 def test_generate_variables(tmpdir):
     tmpdir = str(tmpdir)
+    tpldir = os.path.join(tmpdir, "template")
+    os.mkdir(tpldir)
+    with open(os.path.join(tpldir, "logo.svg"), "w") as fh:
+        fh.write(LOGO_SVG)
     gen = BuildGenerator(
         convert_svg_pdf,
         True,
@@ -215,7 +226,7 @@ def test_generate_variables(tmpdir):
         },
         ["public/logo.pdf"],
     ]
-    assert ns == []
+    assert ns == ["template/logo.svg"]
 
 
 def test_generate_no_defaults(tmpdir):

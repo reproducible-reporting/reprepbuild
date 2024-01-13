@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Fixed
+
+- Detect images included in SVG files as implicit dependencies.
+
+
 ## [1.10.1] - 2024-01-07
 
 ### Fixed
