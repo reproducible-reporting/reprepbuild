@@ -17,8 +17,9 @@
 """Transformation of individual files."""
 
 import os
-import xml.etree.ElementTree as ET
+import re
 from collections.abc import Callable
+from mmap import mmap
 
 import attrs
 
@@ -135,31 +136,28 @@ def _generate_implicit_render(inp, out, arg, variables):
     return [os.path.join(variables["here"], ".reprepbuild/variables.json")], []
 
 
+RE_OPTIONS = re.MULTILINE | re.DOTALL
+RE_SVG_HREF = re.compile(rb"<image [^<]*?href=\"(?!#)(?!data:)(.*?)\"[^<]*?\>", RE_OPTIONS)
+
+
 def _generate_implicit_svg(inp, out, arg, variables):
     """Search implicit dependencies in SVG files, specifically (recursively) included images."""
     implicit = []
     gendeps = list(inp)
     idep = 0
-    prefix_map = {
-        "xlink": "http://www.w3.org/1999/xlink",
-        "svg": "http://www.w3.org/2000/svg",
-    }
     while idep < len(gendeps):
         path_svg = gendeps[idep]
-        tree = ET.parse(path_svg)
-        root = tree.getroot()
-        # List all hrefs
-        hrefs = [elem.get("href") for elem in root.findall(".//svg:image[@href]", prefix_map)] + [
-            # Being deprecated, but still in use.
-            elem.get("{" + prefix_map["xlink"] + "}href")
-            for elem in root.findall(".//svg:image[@xlink:href]", prefix_map)
-        ]
+        # It is generally a poor practice to parse XML with a regular expression,
+        # unless performance becomes an issue...
+        with open(path_svg, "r+") as fh:
+            data = mmap(fh.fileno(), 0)
+            hrefs = re.findall(RE_SVG_HREF, data)
+
         # Process hrefs
         for href in hrefs:
+            href = href.decode("utf-8")
             if href.startswith("file://"):
                 href = href[7:]
-            if href.startswith("#") or href.startswith("data:"):
-                continue
             if "://" not in href:
                 if not href.startswith("/"):
                     href = os.path.join(os.path.dirname(path_svg), href)
