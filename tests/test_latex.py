@@ -838,3 +838,53 @@ def test_scan_latex_deps(tmpdir):
     bib_ref = ["references.bib", "extra.bib"]
     bib_ref = {os.path.join(tmpdir, name) for name in bib_ref}
     assert set(bib) == bib_ref
+
+
+LATEX_LOG10 = r"""
+This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023)
+(preloaded format=xelatex 2023.12.26)  14 JAN 2024 10:12
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**questions
+(./questions.tex
+LaTeX2e <2022-11-01> patch level 1
+L3 programming layer <2023-02-22>
+(/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2022/07/02 v1.4n Standard LaTeX document class
+(/usr/share/texlive/texmf-dist/tex/latex/base/size12.clo
+File: size12.clo 2022/07/02 v1.4n Standard LaTeX file (size option)
+))
+
+LaTeX Warning: File `20.png' not found on input line 549.
+
+! Unable to load picture or PDF file '20.png'.
+<to be read again>
+                   }
+l.549     \answergrid
+
+?
+! Emergency stop.
+<to be read again>
+"""
+
+LATEX_LOG10_MESSAGE = r"""
+! Unable to load picture or PDF file '20.png'.
+<to be read again>
+                   }
+l.549     \answergrid
+"""
+
+
+def test_parse_latex_log10(tmpdir):
+    with local_file(LATEX_LOG10, "questions.log", tmpdir):
+        error_info = parse_latex_log("questions.log")
+    assert error_info.program == "LaTeX"
+    assert error_info.src == "./questions.tex"
+    print(error_info.message.strip())
+    print("####")
+    print((LATEX_LOG10_MESSAGE + MESSAGE_SUFFIX.format(path="questions.log")).strip())
+    assert (
+        error_info.message.strip()
+        == (LATEX_LOG10_MESSAGE + MESSAGE_SUFFIX.format(path="questions.log")).strip()
+    )

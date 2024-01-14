@@ -96,7 +96,7 @@ def main() -> int:
     if args.bibtex is not None:
         # LaTeX
         cp = subprocess.run(
-            [f"{args.latex}", "-recorder", "-interaction=batchmode", "-draftmode", stem],
+            [f"{args.latex}", "-recorder", "-interaction=errorstopmode", "-draftmode", stem],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -150,7 +150,7 @@ def main() -> int:
     for _ in range(args.maxrep):
         # LaTeX
         cp = subprocess.run(
-            [f"{args.latex}", "-recorder", "-interaction=batchmode", stem],
+            [f"{args.latex}", "-recorder", "-interaction=errorstopmode", stem],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
