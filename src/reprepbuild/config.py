@@ -162,7 +162,7 @@ def load_config(
     generators: list[BaseGenerator],
     inherit_variables: (dict[str, str] | None) = None,
     commands: (dict[str, Command] | None) = None,
-    phony_deps: (list[str] | None) = None,
+    phony_deps: (set[str] | None) = None,
 ):
     """Load a RepRepBuild configuration file (recursively).
 
@@ -241,7 +241,7 @@ def load_config(
 
     # Build list of tasks, expanding variables, not yet fancy glob patterns
     if phony_deps is None:
-        phony_deps = []
+        phony_deps = set()
     for task_config in config.tasks:
         if isinstance(task_config, SubDirConfig):
             load_config(
@@ -278,8 +278,11 @@ def load_config(
                 )
                 generators.append(generator)
         elif isinstance(task_config, BarrierConfig):
-            generators.append(BarrierGenerator(task_config.barrier))
-            phony_deps.append(task_config.barrier)
+            phony = task_config.barrier
+            if phony in phony_deps:
+                raise ValueError(f"Barrier name used twice: {phony}")
+            generators.append(BarrierGenerator(phony))
+            phony_deps.add(phony)
         else:
             raise TypeError(f"Cannot use task_config of type {type(task_config)}: {task_config}")
 
