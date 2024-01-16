@@ -109,10 +109,10 @@ class BuildGenerator(BaseGenerator):
     # Phony dependencies, if any
     phony_deps: list[str] | None = attrs.field(
         validator=attrs.validators.optional(attrs.validators.instance_of(list)),
-        default=None,
+        default=attrs.Factory(list),
     )
     # When true, only previous outputs are considered as inputs.
-    built_inputs_only: bool = attrs.field(converter=bool, default=True)
+    built_inputs_only: bool = attrs.field(converter=bool, default=False)
 
     # Derive attributes
     re_ignore_safe: re.Pattern = attrs.field(init=False, default=None)
