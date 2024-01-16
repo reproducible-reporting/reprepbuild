@@ -98,17 +98,14 @@ class BuildConfig(TaskConfig):
     inp: str = attrs.field(validator=attrs.validators.instance_of(str))
     out: str = attrs.field(validator=attrs.validators.instance_of(str), default="")
     arg = attrs.field(default=None)
-    override: dict[str, str] = attrs.field(
-        validator=attrs.validators.instance_of(dict), default=attrs.Factory(dict)
-    )
     loop: list[LoopConfig] = attrs.field(
         validator=attrs.validators.instance_of(list),
         default=attrs.Factory(list),
     )
-    phony: str | None = attrs.field(
-        validator=attrs.validators.optional(attrs.validators.instance_of(str)),
-        default=None,
+    override: dict[str, str] = attrs.field(
+        validator=attrs.validators.instance_of(dict), default=attrs.Factory(dict)
     )
+    built_inputs_only: bool = attrs.field(converter=bool, default=False)
 
 
 @attrs.define
@@ -165,6 +162,7 @@ def load_config(
     generators: list[BaseGenerator],
     inherit_variables: (dict[str, str] | None) = None,
     commands: (dict[str, Command] | None) = None,
+    phony_deps: (list[str] | None) = None,
 ):
     """Load a RepRepBuild configuration file (recursively).
 
@@ -180,6 +178,8 @@ def load_config(
         Variables inherited from higher recursions.
     commands
         Commands inherited from higher recursions.
+    phony_deps
+        Phony dependencies imposed by previous barrier commands.
     """
     # Convert root to an absolute path.
     # This is needed to differentiate relative and absolute file references.
@@ -240,6 +240,8 @@ def load_config(
             commands[command.name] = command
 
     # Build list of tasks, expanding variables, not yet fancy glob patterns
+    if phony_deps is None:
+        phony_deps = []
     for task_config in config.tasks:
         if isinstance(task_config, SubDirConfig):
             load_config(
@@ -248,6 +250,7 @@ def load_config(
                 generators,
                 variables,
                 commands,
+                phony_deps,
             )
         elif isinstance(task_config, BuildConfig):
             command_name = task_config.command
@@ -270,11 +273,13 @@ def load_config(
                     rewrite_paths(task_config.inp, command_variables | loop_variables, True),
                     rewrite_paths(task_config.out, command_variables | loop_variables, True),
                     task_config.arg,
-                    task_config.phony,
+                    list(phony_deps),
+                    task_config.built_inputs_only,
                 )
                 generators.append(generator)
         elif isinstance(task_config, BarrierConfig):
             generators.append(BarrierGenerator(task_config.barrier))
+            phony_deps.append(task_config.barrier)
         else:
             raise TypeError(f"Cannot use task_config of type {type(task_config)}: {task_config}")
 

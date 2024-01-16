@@ -12,12 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Detect images included in SVG files as implicit dependencies.
 - Improve LaTeX Error summary by running it in errorstopmode.
 
-###
+### Changed
+
+- Phony option was removed from build commands.
+
+### Added
 
 - Added support for fine-grained control of LaTeX dependencies, to handle non-standard cases:
   - A line starting with `%REPREPBUILD input` followed by a filename, will add that filename to the
     implicit inputs for the latex compilation.
   - A line containing `%REPREPBUILD ignore` will not be analyzed when scanning for implicit inputs.
+- Add `built_inputs_only` option to build commands.
+  When `True`, only previous outputs are considered as potential inputs.
+  When `False` (default), also files on disk are considered.
 
 
 ## [1.10.1] - 2024-01-07

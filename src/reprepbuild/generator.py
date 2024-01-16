@@ -107,10 +107,12 @@ class BuildGenerator(BaseGenerator):
     # Arguments
     arg = attrs.field(default=None)
     # Phony dependencies, if any
-    phony_deps: str | None = attrs.field(
-        validator=attrs.validators.optional(attrs.validators.instance_of(str)),
+    phony_deps: list[str] | None = attrs.field(
+        validator=attrs.validators.optional(attrs.validators.instance_of(list)),
         default=None,
     )
+    # When true, only previous outputs are considered as inputs.
+    built_inputs_only: bool = attrs.field(converter=bool, default=True)
 
     # Derive attributes
     re_ignore_safe: re.Pattern = attrs.field(init=False, default=None)
@@ -143,7 +145,10 @@ class BuildGenerator(BaseGenerator):
     ) -> Iterator[tuple[(str | list | dict), list[str]]]:
         """See BaseGenerator.__call__"""
         # Get a file list of potentially relevant filenames for the first input
-        filenames = set(glob(convert_fancy_to_normal(self.inp[0]), recursive=True))
+        if self.built_inputs_only:
+            filenames = set()
+        else:
+            filenames = set(glob(convert_fancy_to_normal(self.inp[0]), recursive=True))
         filenames.update(outputs)
         # Group matches for the first input
         keys, inp0_mapping = fancy_filter(filenames, self.inp[0])
@@ -232,8 +237,8 @@ class BuildGenerator(BaseGenerator):
                 _expand_variables(record, self.variables)
                 _add_mkdir(record)
                 _clean_build(record)
-                if self.phony_deps is not None:
-                    record.setdefault("order_only", []).append(self.phony_deps)
+                if len(self.phony_deps) > 0:
+                    record.setdefault("order_only", []).extend(self.phony_deps)
                 yield record
                 if self.default and record["rule"] != "phony":
                     yield record["outputs"]
