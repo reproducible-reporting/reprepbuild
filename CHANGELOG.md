@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Phony option was removed from build commands.
+- Imports are no longer inherited through the `subdir` command.
+  (This reduces correlation between different `reprepbuild.yaml` files, making them more robust.)
 
 ### Added
 

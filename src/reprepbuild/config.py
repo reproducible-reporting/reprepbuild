@@ -28,7 +28,6 @@ import attrs
 import cattrs
 import yaml
 
-from .command import Command
 from .fancyglob import NoFancyTemplate
 from .generator import BarrierGenerator, BaseGenerator, BuildGenerator
 from .utils import CaseSensitiveTemplate
@@ -161,7 +160,6 @@ def load_config(
     path_config: str,
     generators: list[BaseGenerator],
     inherit_variables: (dict[str, str] | None) = None,
-    commands: (dict[str, Command] | None) = None,
     phony_deps: (set[str] | None) = None,
 ):
     """Load a RepRepBuild configuration file (recursively).
@@ -176,8 +174,6 @@ def load_config(
         The list of generators being generated. (output parameter)
     inherit_variables
         Variables inherited from higher recursions.
-    commands
-        Commands inherited from higher recursions.
     phony_deps
         Phony dependencies imposed by previous barrier commands.
     """
@@ -230,7 +226,7 @@ def load_config(
     write_if_changed(fn_variables, json.dumps(variables))
 
     # Import commands
-    commands = {} if commands is None else commands.copy()
+    commands = {}
     for module_name in config.imports:
         for command in importlib.import_module(module_name).get_commands():
             if command.name == "subdir":
@@ -249,7 +245,6 @@ def load_config(
                 os.path.join(here, task_config.subdir, os.path.basename(path_config)),
                 generators,
                 variables,
-                commands,
                 phony_deps,
             )
         elif isinstance(task_config, BuildConfig):

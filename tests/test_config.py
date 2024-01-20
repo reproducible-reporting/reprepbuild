@@ -42,6 +42,8 @@ tasks:
 """
 
 TEST_SUB1_CONFIG = """\
+imports:
+- reprepbuild.builtin
 variables:
   var1: usr
 tasks:
@@ -51,6 +53,8 @@ tasks:
 """
 
 TEST_SUB2_CONFIG = """\
+imports:
+- reprepbuild.builtin
 variables:
   var2: bin
 tasks:
