@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -26,36 +26,33 @@ https://matplotlib.org/stable/users/prev_whats_new/whats_new_2.1.0.html#reproduc
 import argparse
 import contextlib
 import inspect
-import json
 import os
 import subprocess
 import sys
 
-from ..utils import hide_path, import_python_path, parse_case_args, write_dep
+from ..utils import hide_path, import_python_path, load_constants, parse_case_args, write_dep
 
 
 def main() -> int:
     """Main program."""
     args = parse_args()
-    return run_script(args.path_py, args.argstr, args.variables)
+    return run_script(args.path_py, args.argstr, args.paths_constants)
 
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser("rr-python-script", description="Execute a Python script")
+    parser = argparse.ArgumentParser(prog="rr-python-script", description="Execute a Python script")
     parser.add_argument("path_py", help="The python script whose main function will be executed.")
     parser.add_argument(
         "argstr", nargs="?", default="", help="Command-line argument for the script, if any"
     )
     parser.add_argument(
-        "--variables",
-        help="JSON file with dictionary of variables",
-        default=".reprepbuild/variables.json",
+        "-c", "--paths-constants", nargs="+", help="JSON files with constants", default=()
     )
     return parser.parse_args()
 
 
-def run_script(path_py, argstr, path_variables) -> int:
+def run_script(path_py: str, argstr: str, paths_constants: list[str]) -> int:
     """Run the Python script in its own directory and collect module dependencies.
 
     Parameters
@@ -66,9 +63,8 @@ def run_script(path_py, argstr, path_variables) -> int:
     argstr
         The arguments to the ``main`` function, encoded with
         ``reprepbuild.utils.format_case_args``.
-    path_variables
-        The JSON file with RepRepBuild variables
-        (if any, may be ignored by script).
+    paths_constants
+        A list of JSON files with constants.
 
     Returns
     -------
@@ -82,11 +78,7 @@ def run_script(path_py, argstr, path_variables) -> int:
     workdir, fn_py = os.path.split(path_py)
     workdir = os.path.normpath(workdir)
     script_prefix = fn_py[:-3]
-
-    # Load variables before changing dir
-    with open(path_variables) as fh:
-        variables = json.load(fh)
-    variables["here"] = workdir
+    constants = load_constants(os.getcwd(), workdir, paths_constants)
 
     with contextlib.chdir(workdir):
         # Load the script in its own directory
@@ -106,9 +98,9 @@ def run_script(path_py, argstr, path_variables) -> int:
         case_fmt = getattr(script, "REPREPBUILD_CASE_FMT", None)
         script_args, script_kwargs = parse_case_args(argstr, script_prefix, case_fmt)
 
-        # Add special keyword arg variables if needed.
-        if "variables" in inspect.signature(reprepbuild_info).parameters:
-            script_kwargs["variables"] = variables
+        # Add special keyword argument constants if needed.
+        if "constants" in inspect.signature(reprepbuild_info).parameters:
+            script_kwargs["constants"] = constants
 
         # Execute the functions as if the script is running inside its own dir.
         build_info = reprepbuild_info(*script_args, **script_kwargs)
@@ -161,15 +153,19 @@ def script_driver(path_py):
 
     # Find the reprepbuild_yaml file, if not given.
     if args.reprepbuild_yaml is None:
-        root = workdir
-        while True:
-            path_try = os.path.join(root, "reprepbuild.yaml")
-            if os.path.exists(path_try):
-                args.reprepbuild_yaml = path_try
-            if root == "/":
-                break
-            root = os.path.dirname(root)
-    root = os.path.dirname(args.reprepbuild_yaml)
+        root = os.environ.get("REPREPBUILD_ROOT")
+        if root is None:
+            root = workdir
+            while True:
+                path_try = os.path.join(root, "reprepbuild.yaml")
+                if os.path.exists(path_try):
+                    args.reprepbuild_yaml = path_try
+                if root == "/":
+                    break
+                root = os.path.dirname(root)
+            root = os.path.dirname(args.reprepbuild_yaml)
+        else:
+            args.reprepbuild_yaml = os.path.join(root, "reprepbuild.yaml")
 
     # Call RepRepBuild with the right phony target
     full_path_py = os.path.relpath(path_py, root)

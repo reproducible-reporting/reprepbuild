@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -21,7 +21,6 @@
 
 
 import argparse
-import os
 import sys
 
 from ..__main__ import generate
@@ -29,17 +28,14 @@ from ..__main__ import generate
 
 def main() -> int:
     """Main program."""
-    args = parse_args()
-    generate(args.root)
+    parse_args()
+    generate()
     return 0
 
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser("rr-generator", description="Write a build.ninja file")
-    parser.add_argument(
-        "root", default=os.getcwd(), help="Directory containing the top-level reprepbuild.yaml file"
-    )
+    parser = argparse.ArgumentParser(prog="rr-generator", description="Write a build.ninja file")
     return parser.parse_args()
 
 

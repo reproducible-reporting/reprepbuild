@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -36,7 +36,7 @@ def main() -> int:
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser("rr-shell-script", description="Execute a shell script")
+    parser = argparse.ArgumentParser(prog="rr-shell-script", description="Execute a shell script")
     parser.add_argument("path_sh", help="The shell script to be executed.")
     return parser.parse_args()
 

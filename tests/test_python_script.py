@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -54,7 +54,7 @@ def test_write_build_python_script(tmpdir):
     with open(os.path.join(tmpdir, "foo.py"), "w") as fh:
         fh.write(SCRIPT)
     with contextlib.chdir(tmpdir):
-        builds, ns = python_script.generate(["foo.py"], [], None, {})
+        builds, ns = python_script.generate(["foo.py"], [], None)
     assert BUILDS_PYTHON_SCRIPT == builds
     assert ns == ["foo.py"]
 
@@ -79,6 +79,34 @@ def test_write_build_python_script_sub(tmpdir):
     with open(os.path.join(subdir, "foo.py"), "w") as fh:
         fh.write(SCRIPT)
     with contextlib.chdir(tmpdir):
-        builds, ns = python_script.generate(["sub/foo.py"], [], None, {})
+        builds, ns = python_script.generate(["sub/foo.py"], [], None)
     assert BUILDS_PYTHON_SCRIPT_SUB == builds
     assert ns == ["sub/foo.py"]
+
+
+BUILDS_PYTHON_SCRIPT_CONSTANTS = [
+    {
+        "implicit": ["constants.json"],
+        "implicit_outputs": ["result.txt"],
+        "inputs": ["foo.py"],
+        "outputs": [".foo.log"],
+        "rule": "python_script",
+        "variables": {"argstr": "foo", "out_prefix": ".foo", "script_opts": "-c constants.json"},
+    },
+    {"inputs": [".foo.log"], "outputs": ["foo"], "rule": "phony"},
+]
+
+
+CONSTANTS_JSON = '{"name": "value"}'
+
+
+def test_write_build_python_script_constants(tmpdir):
+    tmpdir = str(tmpdir)
+    with open(os.path.join(tmpdir, "foo.py"), "w") as fh:
+        fh.write(SCRIPT)
+    with open(os.path.join(tmpdir, "constants.json"), "w") as fh:
+        fh.write(CONSTANTS_JSON)
+    with contextlib.chdir(tmpdir):
+        builds, ns = python_script.generate(["foo.py", "constants.json"], [], None)
+    assert BUILDS_PYTHON_SCRIPT_CONSTANTS == builds
+    assert ns == ["foo.py", "constants.json"]

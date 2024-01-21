@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -26,13 +26,17 @@ from reprepbuild.builtin.transform import copy
 from reprepbuild.config import LoopConfig, iterate_loop_config, load_config
 from reprepbuild.generator import BuildGenerator
 
+CONSTANTS_JSON = """\
+{
+  "foo": "bar",
+  "spam": "egg-${foo}",
+  "public": "${root}/${spam}/bacon",
+  "inkscape": "/home/spammer/bin/inkscape"
+}"""
+
 TEST_CONFIG = """\
 imports:
 - reprepbuild.builtin
-variables:
-  foo: bar
-  spam: egg-${foo}
-  public: ${root}/${spam}/bacon
 tasks:
 - subdir: sub1
 - command: copy
@@ -44,26 +48,26 @@ tasks:
 TEST_SUB1_CONFIG = """\
 imports:
 - reprepbuild.builtin
-variables:
-  var1: usr
 tasks:
 - command: copy
   inp: one-foo${*id}.txt
   out: ${public}/${here}/${var1}${*id}.txt
+  override:
+    spam: yum
+    var1: usr
 """
 
 TEST_SUB2_CONFIG = """\
 imports:
 - reprepbuild.builtin
-variables:
-  var2: bin
 tasks:
 - command: _copy
   inp: some-${foo}*.txt
-  out: ${public}/${here}/${var2}
+  out: ${public}/${here}/bin
 """
 
 CREATE_FILES = {
+    "constants.json": CONSTANTS_JSON,
     "reprepbuild.yaml": TEST_CONFIG,
     "sub1/reprepbuild.yaml": TEST_SUB1_CONFIG,
     "sub2/reprepbuild.yaml": TEST_SUB2_CONFIG,
@@ -83,12 +87,10 @@ def test_config_example(tmpdir: str):
         with open(path_dst, "w") as fh:
             fh.write(contents)
     tasks = []
-    os.environ["REPREPBUILD_VARIABLE_inkscape"] = "/home/spammer/bin/inkscape"
     with contextlib.chdir(tmpdir):
-        load_config(tmpdir, "reprepbuild.yaml", tasks)
-    del os.environ["REPREPBUILD_VARIABLE_inkscape"]
+        load_config(tmpdir, os.path.join(tmpdir, "reprepbuild.yaml"), ["constants.json"], tasks)
 
-    variables = {
+    constants = {
         "inkscape": "/home/spammer/bin/inkscape",
         "foo": "bar",
         "spam": "egg-bar",
@@ -101,15 +103,15 @@ def test_config_example(tmpdir: str):
     assert tasks[0] == BuildGenerator(
         copy,
         True,
-        variables | {"var1": "usr", "here": "sub1"},
+        constants | {"here": "sub1", "spam": "yum", "var1": "usr"},
         ["sub1/one-foo${*id}.txt"],
         ["egg-bar/bacon/sub1/usr${*id}.txt"],
     )
-    assert tasks[1] == BuildGenerator(copy, True, variables, ["egg"], ["egg-bar/bacon/"])
+    assert tasks[1] == BuildGenerator(copy, True, constants, ["egg"], ["egg-bar/bacon/"])
     assert tasks[2] == BuildGenerator(
         copy,
         False,
-        variables | {"var2": "bin", "here": "sub2"},
+        constants | {"here": "sub2"},
         ["sub2/some-bar*.txt"],
         ["egg-bar/bacon/sub2/bin"],
     )
@@ -162,19 +164,19 @@ def test_loop_config(tmpdir: str):
         fh.write(TEST_LOOP_CONFIG)
     tasks = []
     with contextlib.chdir(tmpdir):
-        load_config(tmpdir, "reprepbuild.yaml", tasks)
+        load_config(tmpdir, os.path.join(tmpdir, "reprepbuild.yaml"), [], tasks)
     assert len(tasks) == 2
     assert tasks[0] == BuildGenerator(
-        command=copy,
-        default=True,
-        variables={"here": ".", "root": tmpdir},
-        inp=["some-one.txt"],
-        out=["other-two.txt"],
+        copy,
+        True,
+        {"here": ".", "root": tmpdir, "foo": "one", "bar": "two"},
+        ["some-one.txt"],
+        ["other-two.txt"],
     )
     assert tasks[1] == BuildGenerator(
-        command=copy,
-        default=True,
-        variables={"here": ".", "root": tmpdir},
-        inp=["some-aa.txt"],
-        out=["other-bbbb.txt"],
+        copy,
+        True,
+        {"here": ".", "root": tmpdir, "foo": "aa", "bar": "bbbb"},
+        ["some-aa.txt"],
+        ["other-bbbb.txt"],
     )

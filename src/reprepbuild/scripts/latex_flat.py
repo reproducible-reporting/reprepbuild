@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -55,7 +55,7 @@ def main() -> int:
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        "rr-latex-flat",
+        prog="rr-latex-flat",
         description="Flatten input and import commands in a LaTeX file.",
     )
     parser.add_argument("path_tex", help="The top-level tex file.")

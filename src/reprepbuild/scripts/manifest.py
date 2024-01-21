@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -63,7 +63,7 @@ def main() -> int:
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        "rr-manifest", description="Create a MANIFEST.sha256 file for rr-zip."
+        prog="rr-manifest", description="Create a MANIFEST.sha256 file for rr-zip."
     )
     parser.add_argument("manifest_in", help="A MANIFEST.in file compatible with setuptools.")
     args = parser.parse_args()

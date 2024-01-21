@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -47,7 +47,7 @@ def main() -> int:
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        "rr-check-hrefs", description="Check hyper references Markdown or PDF file."
+        prog="rr-check-hrefs", description="Check hyper references Markdown or PDF file."
     )
     parser.add_argument("fn_src", help="Markdown or PDF file.")
     parser.add_argument("fn_log", help="Log file with overview of check references.")

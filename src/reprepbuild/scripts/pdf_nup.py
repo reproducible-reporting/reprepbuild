@@ -40,7 +40,7 @@ def main() -> int:
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        "rr-nup-pdf", description="Put multiple pages in a single page, using a fixed layout."
+        prog="rr-nup-pdf", description="Put multiple pages in a single page, using a fixed layout."
     )
     parser.add_argument("path_src", help="The source pdf to which notes should be added.")
     parser.add_argument("nrow", help="The number of rows.", type=int)

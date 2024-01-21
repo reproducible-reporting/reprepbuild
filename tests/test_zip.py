@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -33,7 +33,7 @@ BUILDS_ZIP_MANIFEST = [
 
 
 def test_write_build_zip_manifest():
-    builds, _ = zip_manifest.generate(["sub/WAWA.sha256"], ["sub.zip"], None, {})
+    builds, _ = zip_manifest.generate(["sub/WAWA.sha256"], ["sub.zip"], None)
     assert BUILDS_ZIP_MANIFEST == builds
 
 
@@ -49,7 +49,7 @@ BUILDS_ZIP_LATEX = [
 
 
 def test_write_build_zip_latex():
-    builds, _ = zip_latex.generate(["latex-sub/sub.fls"], ["sub.zip"], None, {})
+    builds, _ = zip_latex.generate(["latex-sub/sub.fls"], ["sub.zip"], None)
     assert BUILDS_ZIP_LATEX == builds
 
 
@@ -66,17 +66,14 @@ BUILDS_ZIP_PLAIN1 = [
 
 def test_write_build_zip_plain1a():
     builds, _ = zip_plain.generate(
-        ["a/data1.txt", "a/data2.txt", "a/fig.png", "a/something.sha256"],
-        ["something.zip"],
-        None,
-        {},
+        ["a/data1.txt", "a/data2.txt", "a/fig.png", "a/something.sha256"], ["something.zip"], None
     )
     assert BUILDS_ZIP_PLAIN1 == builds
 
 
 def test_write_build_zip_plain1b():
     builds, _ = zip_plain.generate(
-        ["a/data1.txt", "a/data2.txt", "a/fig.png"], ["something.zip"], None, {}
+        ["a/data1.txt", "a/data2.txt", "a/fig.png"], ["something.zip"], None
     )
     assert BUILDS_ZIP_PLAIN1 == builds
 
@@ -94,11 +91,11 @@ BUILDS_ZIP_PLAIN2 = [
 
 def test_write_build_zip_plain2a():
     builds, _ = zip_plain.generate(
-        ["foo.txt", "bar.csv", "data.sha256", "data.zip"], ["data.zip"], None, {}
+        ["foo.txt", "bar.csv", "data.sha256", "data.zip"], ["data.zip"], None
     )
     assert BUILDS_ZIP_PLAIN2 == builds
 
 
 def test_write_build_zip_plain2b():
-    builds, _ = zip_plain.generate(["foo.txt", "bar.csv"], ["data.zip"], None, {})
+    builds, _ = zip_plain.generate(["foo.txt", "bar.csv"], ["data.zip"], None)
     assert BUILDS_ZIP_PLAIN2 == builds

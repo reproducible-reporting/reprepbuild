@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -42,9 +42,7 @@ class ZipManifest(Command):
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
         return {"zip_manifest": {"command": "rr-zip-manifest ${in} ${out}"}}
 
-    def generate(
-        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
-    ) -> tuple[list, list[str]]:
+    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Check parameters
         if len(inp) != 1:
@@ -88,9 +86,7 @@ class ZipLatex(Command):
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
         return {"zip_latex": {"command": "rr-zip-latex ${in} ${out}"}}
 
-    def generate(
-        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
-    ) -> tuple[list, list[str]]:
+    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
         """See ``Command.generate``."""
         # Check parameters
         if len(inp) != 1:
@@ -135,9 +131,7 @@ class ZipPlain(Command):
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
         return {"zip_plain": {"command": "rr-zip-plain ${in} ${out}"}}
 
-    def generate(
-        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
-    ) -> tuple[list, list[str]]:
+    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Check parameters
         if len(inp) == 0:

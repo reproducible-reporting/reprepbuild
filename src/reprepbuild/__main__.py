@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -42,24 +42,31 @@ from .generator import BaseGenerator, BuildGenerator
 __all__ = ("main", "generate")
 
 
-DEFAULT_RULES = {
-    "error": {
-        "command": "echo '${message}'; exit -1",
-    }
-}
+DEFAULT_RULES = {"error": {"command": "echo '${message}'; exit -1"}}
 
 
-def generate(root: str):
-    """Parse ``reprebuild.yaml`` files and write a ``build.ninja`` file.
+def generate():
+    """Parse ``reprebuild.yaml`` files and write a ``build.ninja`` file."""
+    # Set env var defaults when not specified and switch to root
+    root = os.environ.get("REPREPBUILD_ROOT", os.getcwd())
+    path_config = os.path.join(root, "reprepbuild.yaml")
+    if not os.path.exists(path_config):
+        print(f"No reprepbuild.yaml in {root}")
+        sys.exit(-1)
+    if "REPREPBUILD_CONSTANTS" in os.environ:
+        paths_constants = os.environ["REPREPBUILD_CONSTANTS"].split(":")
+    else:
+        paths_constants = []
+        path_default_constants = os.path.join(root, "constants.json")
+        if os.path.isfile(path_default_constants):
+            paths_constants.append(path_default_constants)
+    if root != os.getcwd():
+        print(f"Changing to {root}")
+        os.chdir(root)
 
-    Parameters
-    ----------
-    root
-        Directory where to start, i.e. where the top-level ``reprebuild.yaml`` is located.
-    """
     # Parse the reprepbuild.yaml files (recursively)
     generators = []
-    load_config(root, "reprepbuild.yaml", generators)
+    load_config(root, path_config, paths_constants, generators)
 
     # Loop over all files and create pools, rules and builds for them.
     with open("build.ninja", "w") as fh:
@@ -75,20 +82,16 @@ def generate(root: str):
         # Write all rules, even if some are not used.
         rules = _collect_dicts(generators, "rules")
         rules.update(DEFAULT_RULES)
-        writer.comment("All rules (except generator)")
+        writer.comment("All rules (except for the generator)")
         for rule_name, rule in rules.items():
+            rule["command"] = "${_pre_command}" + rule["command"]
             writer.rule(name=rule_name, **rule)
-        writer.newline()
-        writer.comment("All rules with mkdir (except generator)")
-        for rule_name, rule in rules.items():
-            rule["command"] = "mkdir -p ${dstdirs} && " + rule["command"]
-            writer.rule(name=rule_name + "_mkdir", **rule)
         writer.newline()
 
         # Write all build lines with comments and defaults
         outputs = set()
         defaults = set()
-        gendeps = set()
+        gendeps = set(paths_constants)
         tqdm_iterator = tqdm(generators, "Generator")
         for generator in tqdm_iterator:
             if _test_filter_command(writer, generator):
@@ -125,7 +128,7 @@ def generate(root: str):
                                 )
                             writer.comment("Skipping due to overlap with previous builds.")
                     else:
-                        raise TypeError("Cannot process ")
+                        raise TypeError(f"Cannot process build record {record}")
                 writer.newline()
 
         # Insert generator if some files could not be scanned
@@ -133,7 +136,7 @@ def generate(root: str):
             writer.newline()
             writer.comment("Some files influence the generation of the build files.")
             writer.comment("When they change, the build.ninja file must be regenerated.")
-            writer.rule("generator", command="rr-generator .", generator=True)
+            writer.rule("generator", command="rr-generator", generator=True)
             writer.build(
                 rule="generator", implicit=sorted(gendeps), outputs="build.ninja", pool="console"
             )
@@ -185,25 +188,17 @@ def parse_args():
     return args
 
 
-def sanity_check():
-    """Is there any reprepbuild.yaml file?"""
-    if not os.path.exists("reprepbuild.yaml"):
-        print("Wrong directory? File reprepbuild.yaml not found.")
-        sys.exit(1)
-
-
 def main():
     """Main program."""
-    sanity_check()
     args = parse_args()
     # Regenerate build.ninja and let ninja know that has changed,
     # before rebuilding, so it does not start by rerunning the generator.
-    generate(os.getcwd())
+    generate()
     subprocess.run(["ninja", "-t", "restat", "build.ninja"], check=False)
     subprocess.run(
         ["ninja", *args],
         check=False,
-        env=os.environ | {"NINJA_STATUS": "\033[1;36m[%f/%t]\033[0;0m "},
+        env=os.environ | {"NINJA_STATUS": "\033[1;36;40m[%f/%t]\033[0;0m "},
     )
 
 

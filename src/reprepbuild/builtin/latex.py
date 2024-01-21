@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -190,9 +190,7 @@ class Latex(Command):
             },
         }
 
-    def generate(
-        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
-    ) -> tuple[list, list[str]]:
+    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Parse parameters
         if len(inp) != 1:
@@ -231,10 +229,10 @@ class Latex(Command):
                 ],
                 "implicit": implicit + bib,
                 "variables": {
-                    "latex": variables.get("latex", "pdflatex"),
-                    "bibtex": variables.get("bibtex", "bibtex"),
-                    "bibsane": variables.get("bibsane", "bibsane"),
-                    "bibsane_config": variables.get("bibsane_config", "${root}/bibsane.yaml"),
+                    "latex": "pdflatex",
+                    "bibtex": "bibtex",
+                    "bibsane": "bibsane",
+                    "bibsane_config": "${root}/bibsane.yaml",
                 },
             }
         else:
@@ -250,9 +248,7 @@ class Latex(Command):
                     f"{prefix}.fls",
                 ],
                 "implicit": implicit,
-                "variables": {
-                    "latex": variables.get("latex", "pdflatex"),
-                },
+                "variables": {"latex": "pdflatex"},
             }
         return [build], gendeps
 
@@ -271,9 +267,7 @@ class LatexFlat(Command):
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
         return {"latex_flat": {"command": "rr-latex-flat ${in} ${out}"}}
 
-    def generate(
-        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
-    ) -> tuple[list, list[str]]:
+    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Parse parameters
         if len(inp) != 1:
@@ -330,9 +324,7 @@ class LatexDiff(Command):
             }
         }
 
-    def generate(
-        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
-    ) -> tuple[list, list[str]]:
+    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Argument parsing.
         if len(inp) != 2:
@@ -361,22 +353,22 @@ class LatexDiff(Command):
             raise ValueError(f"Expected no arguments, got {arg}")
 
         # Create builds
-        latex_diff_variables = {
-            "latexdiff_context2cmd": variables.get("latexdiff_context2cmd", DEFAULT_CONTEXT2CMD),
-            "latexdiff": variables.get("latexdiff", "latexdiff"),
+        variables = {
+            "latexdiff_context2cmd": DEFAULT_CONTEXT2CMD,
+            "latexdiff": "latexdiff",
         }
         builds = [
             {
                 "outputs": [f"{diff_prefix}.bbl"],
                 "rule": "latex_diff",
                 "inputs": [f"{old_prefix}.bbl", f"{new_prefix}.bbl"],
-                "variables": latex_diff_variables,
+                "variables": variables,
             },
             {
                 "outputs": [f"{diff_prefix}.tex"],
                 "rule": "latex_diff",
                 "inputs": [f"{old_prefix}.tex", f"{new_prefix}.tex"],
-                "variables": latex_diff_variables,
+                "variables": variables,
             },
         ]
         return builds, []

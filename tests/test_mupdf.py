@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -34,7 +34,7 @@ BUILDS_PDF_MERGE = [
 
 def test_write_build_pdf_merge():
     builds, _ = pdf_merge.generate(
-        ["part1.pdf", "part2.pdf", "part3.pdf", "part4.pdf"], ["foo/merged.pdf"], None, {}
+        ["part1.pdf", "part2.pdf", "part3.pdf", "part4.pdf"], ["foo/merged.pdf"], None
     )
     assert BUILDS_PDF_MERGE == builds
 
@@ -49,7 +49,7 @@ BUILDS_PDF_ADD_NOTES = [
 
 
 def test_write_build_pdf_add_notes():
-    builds, _ = pdf_add_notes.generate(["src.pdf", "notes.pdf"], ["dst.pdf"], None, {})
+    builds, _ = pdf_add_notes.generate(["src.pdf", "notes.pdf"], ["dst.pdf"], None)
     assert BUILDS_PDF_ADD_NOTES == builds
 
 
@@ -70,5 +70,5 @@ BUILDS_PDF_NUP = [
 
 
 def test_write_build_pdf_nup():
-    builds, _ = pdf_nup.generate(["src.pdf"], ["dst.pdf"], [3, 2, 10.0, 210.0, 297.0], {})
+    builds, _ = pdf_nup.generate(["src.pdf"], ["dst.pdf"], [3, 2, 10.0, 210.0, 297.0])
     assert BUILDS_PDF_NUP == builds

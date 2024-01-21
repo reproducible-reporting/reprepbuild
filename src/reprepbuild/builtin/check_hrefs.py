@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -50,9 +50,7 @@ class CheckHRefs(Command):
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
         return {"check_hrefs": {"command": "rr-check-hrefs ${in} ${out} ${cli_args}"}}
 
-    def generate(
-        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
-    ) -> tuple[list, list[str]]:
+    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Check parameters
         if not all(path_doc.endswith(".md") or path_doc.endswith(".pdf") for path_doc in inp):

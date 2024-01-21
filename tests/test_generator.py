@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -80,17 +80,17 @@ def test_generate_anonymous_wildcard_inp_out(tmpdir):
         "inp: foo1.txt foo3.txt",
         "out: bar/",
         {
-            "rule": "copy_mkdir",
+            "rule": "copy",
             "outputs": ["bar/foo1.txt"],
             "inputs": ["foo1.txt"],
-            "variables": {"dstdirs": "bar"},
+            "variables": {"_pre_command": "mkdir -p bar; "},
         },
         ["bar/foo1.txt"],
         {
-            "rule": "copy_mkdir",
+            "rule": "copy",
             "outputs": ["bar/foo3.txt"],
             "inputs": ["foo3.txt"],
-            "variables": {"dstdirs": "bar"},
+            "variables": {"_pre_command": "mkdir -p bar; "},
         },
         ["bar/foo3.txt"],
     ]
@@ -118,17 +118,17 @@ def test_generate_named_wildcard_inp_inp_out(tmpdir):
         "inp: foo3.txt bar3.txt",
         "out: spam3/",
         {
-            "rule": "copy_mkdir",
+            "rule": "copy",
             "outputs": ["spam3/foo3.txt"],
             "inputs": ["foo3.txt"],
-            "variables": {"dstdirs": "spam3"},
+            "variables": {"_pre_command": "mkdir -p spam3; "},
         },
         ["spam3/foo3.txt"],
         {
-            "rule": "copy_mkdir",
+            "rule": "copy",
             "outputs": ["spam3/bar3.txt"],
             "inputs": ["bar3.txt"],
-            "variables": {"dstdirs": "spam3"},
+            "variables": {"_pre_command": "mkdir -p spam3; "},
         },
         ["spam3/bar3.txt"],
     ]
@@ -152,8 +152,8 @@ def test_generate_ignore_missing(tmpdir, ignore):
     tmpdir = str(tmpdir)
     with open(os.path.join(tmpdir, "script.py"), "w") as fh:
         fh.write(PYTHON_SCRIPT)
-    variables = {"ignore_missing": "foo*"} if ignore else {}
-    gen = BuildGenerator(python_script, True, variables, ["script.py"], [])
+    constants = {"ignore_missing": "foo*"} if ignore else {}
+    gen = BuildGenerator(python_script, True, constants, ["script.py"], [])
     previous_outputs = {}
     with contextlib.chdir(tmpdir):
         results = list(gen(previous_outputs, set()))
@@ -196,7 +196,7 @@ LOGO_SVG = """\
 """
 
 
-def test_generate_variables(tmpdir):
+def test_generate_constants(tmpdir):
     tmpdir = str(tmpdir)
     tpldir = os.path.join(tmpdir, "template")
     os.mkdir(tpldir)
@@ -218,11 +218,11 @@ def test_generate_variables(tmpdir):
         "inp: template/logo.svg",
         "out: public/logo.pdf",
         {
-            "rule": "convert_svg_pdf_mkdir",
+            "rule": "convert_svg_pdf",
             "outputs": ["public/logo.pdf"],
             "pool": "convert_svg_pdf",
             "inputs": ["template/logo.svg"],
-            "variables": {"dstdirs": "public", "inkscape": "my-special-inkscape"},
+            "variables": {"_pre_command": "mkdir -p public; ", "inkscape": "my-special-inkscape"},
         },
         ["public/logo.pdf"],
     ]
@@ -241,10 +241,10 @@ def test_generate_no_defaults(tmpdir):
         "inp: README.md",
         "out: public/README.md",
         {
-            "rule": "copy_mkdir",
+            "rule": "copy",
             "outputs": ["public/README.md"],
             "inputs": ["README.md"],
-            "variables": {"dstdirs": "public"},
+            "variables": {"_pre_command": "mkdir -p public; "},
         },
     ]
     assert ns == []

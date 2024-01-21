@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -154,7 +154,7 @@ def convert_markdown(text_md, *, fn_html=None, fn_pdf=None):
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        "rr-markdown-pdf", description="Convert Markdown to HTML and/or PDF"
+        prog="rr-markdown-pdf", description="Convert Markdown to HTML and/or PDF"
     )
     parser.add_argument("markdown", help="A Markdown file with extension `.md`")
     parser.add_argument("--pdf", help="A PDF output filename")

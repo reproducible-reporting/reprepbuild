@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -26,7 +26,7 @@ import os
 import attrs
 
 from ..command import Command
-from ..utils import format_case_args, hide_path, import_python_path
+from ..utils import format_case_args, hide_path, import_python_path, load_constants
 
 __all__ = ("python_script",)
 
@@ -45,38 +45,42 @@ class PythonScript(Command):
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
         return {
             "python_script": {
-                "command": "rr-python-script ${in} -- ${argstr} > ${out}",
+                "command": "rr-python-script ${in} '${argstr}' ${script_opts} > ${out}",
                 "depfile": "${out_prefix}.d",
             }
         }
 
-    def generate(
-        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
-    ) -> tuple[list, list[str]]:
+    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Parse parameters
-        if len(inp) != 1:
-            raise ValueError(f"Expecting one input file, the Python script, got: {inp}")
+        if len(inp) < 1:
+            raise ValueError(
+                "Expecting one at least input file, the Python script, "
+                f"and optionally some JSON files with variable. Got: {inp}"
+            )
+        path_py = inp[0]
+        if not path_py.endswith(".py"):
+            raise ValueError(f"Python script must have a .py extension. Got {path_py}")
+        paths_constants = inp[1:]
+        for path_constants in paths_constants:
+            if not path_constants.endswith(".json"):
+                raise ValueError(f"The constants files must end with .json, got {path_constants}")
         if len(out) != 0:
             raise ValueError(f"Expected no outputs, got: {out}")
         if arg is not None:
             raise ValueError(f"Expected no arguments, got {arg}")
-        path_py = inp[0]
-        if not path_py.endswith(".py"):
-            raise ValueError(f"Python script must have a .py extension. Got {path_py}")
-        if not os.path.isfile(path_py):
-            raise ValueError(f"Python script does not exist: {path_py}")
 
         # Process path_py
         workdir, fn_py = os.path.split(path_py)
         workdir = os.path.normpath(workdir)
         script_prefix = fn_py[:-3]
 
-        # Update copy of variables
-        variables = variables.copy()
-        variables["here"] = workdir
+        # Update here in a copy of constants, because scripts are always executed in their local
+        # directory by convention.
+        root = os.environ.get("REPREPBUILD_ROOT", os.getcwd())
+        constants = load_constants(root, workdir, paths_constants)
+        constants["here"] = workdir
 
-        implicit = []
         with contextlib.chdir(workdir):
             # Load the script in its own directory
             script = import_python_path(fn_py)
@@ -85,8 +89,6 @@ class PythonScript(Command):
             reprepbuild_info = getattr(script, "reprepbuild_info", None)
             if reprepbuild_info is None:
                 return ["Skipped: reprepbuild_info(...) missing"], []
-            if "variables" in inspect.signature(reprepbuild_info).parameters:
-                implicit = [".reprepbuild/variables.json"]
 
             # Handle reprepbuild_cases
             reprepbuild_cases = getattr(script, "reprepbuild_cases", None)
@@ -94,9 +96,8 @@ class PythonScript(Command):
                 build_cases = [[]]
             else:
                 cases_kwargs = {}
-                if "variables" in inspect.signature(reprepbuild_cases).parameters:
-                    implicit = [".reprepbuild/variables.json"]
-                    cases_kwargs["variables"] = variables.copy()
+                if "constants" in inspect.signature(reprepbuild_cases).parameters:
+                    cases_kwargs["constants"] = constants.copy()
                 build_cases = reprepbuild_cases(**cases_kwargs)
             case_fmt = getattr(script, "REPREPBUILD_CASE_FMT", None)
 
@@ -115,32 +116,33 @@ class PythonScript(Command):
             paths_log = []
             info_kwargs = {}
             for script_args in build_cases:
-                # Re-assign variables to avoid passing on changes.
-                if "variables" in inspect.signature(reprepbuild_info).parameters:
-                    info_kwargs = {"variables": variables.copy()}
+                # Re-assign constants to avoid passing on changes.
+                if "constants" in inspect.signature(reprepbuild_info).parameters:
+                    info_kwargs = {"constants": constants.copy()}
                 build_info = reprepbuild_info(*script_args, **info_kwargs)
                 argstr = format_case_args(script_args, script_prefix, case_fmt)
+                if argstr.startswith("-"):
+                    raise ValueError(f"The script argstr cannot sart with a dash, got {argstr}")
                 out_prefix = hide_path(fix_path(script_prefix if argstr == "" else argstr))
                 path_log = f"{out_prefix}.log"
                 paths_log.append(path_log)
                 build = {
                     "inputs": [path_py],
-                    "implicit": [
-                        *get_paths(build_info, "inputs"),
-                        *implicit,
-                    ],
+                    "implicit": get_paths(build_info, "inputs") + paths_constants,
                     "rule": "python_script",
                     "implicit_outputs": get_paths(build_info, "outputs"),
                     "outputs": [path_log],
                     "variables": {"argstr": argstr, "out_prefix": out_prefix},
                 }
+                if len(paths_constants) > 0:
+                    build["variables"]["script_opts"] = "-c " + " ".join(paths_constants)
                 builds.append(build)
 
             # Add a phony rule to run all cases of the script
             build = {"inputs": paths_log, "rule": "phony", "outputs": [path_py[:-3]]}
             builds.append(build)
 
-            return builds, [path_py]
+            return builds, [path_py, *paths_constants]
 
 
 python_script = PythonScript()

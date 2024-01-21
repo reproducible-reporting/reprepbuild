@@ -39,7 +39,7 @@ def main() -> int:
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser("rr-normalize-pdf", description="Normalize a PDF file.")
+    parser = argparse.ArgumentParser(prog="rr-normalize-pdf", description="Normalize a PDF file.")
     parser.add_argument("path_pdf", help="The pdf to be normalized (in place).")
     return parser.parse_args()
 

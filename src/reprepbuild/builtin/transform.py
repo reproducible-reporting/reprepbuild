@@ -27,7 +27,6 @@ from ..command import Command
 
 __all__ = (
     "copy",
-    "render",
     "convert_svg_pdf",
     "convert_odf_pdf",
     "convert_pdf_png",
@@ -50,8 +49,7 @@ class Transform(Command):
     )
     # Variables used in the command and there default values.
     # This dictionary contains default values,
-    # which may be replaced by the values defined in reprepbuild.yaml
-    # or by REPREPBUIKD_VARIABLE_* environment variables.
+    # which may be replaced by user-specified values.
     variables: dict[str, str] = attrs.field(
         validator=attrs.validators.instance_of(dict), default=attrs.Factory(dict)
     )
@@ -84,9 +82,7 @@ class Transform(Command):
         """A dict of kwargs for Ninja's ``Writer.rule()``."""
         return {self._name: {"command": self.command}}
 
-    def generate(
-        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
-    ) -> tuple[list, list[str]]:
+    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Check parameters
         if len(out) > 1:
@@ -100,6 +96,7 @@ class Transform(Command):
 
         # Write builds
         builds = []
+        gendeps = []
         for src in inp:
             # Determine file destination
             if len(out) == 0:
@@ -116,34 +113,27 @@ class Transform(Command):
                 "outputs": [dst],
                 "inputs": [src],
             }
-            if self.generate_implicit is None:
-                gendeps = []
-            else:
-                implicit, gendeps = self.generate_implicit(inp, out, arg, variables)
+            if self.generate_implicit is not None:
+                implicit, inp_gendeps = self.generate_implicit(src, arg)
                 if len(implicit) > 0:
                     build["implicit"] = implicit
+                gendeps.extend(inp_gendeps)
             if len(self.variables) > 0:
-                build["variables"] = {
-                    key: variables.get(key, value) for key, value in self.variables.items()
-                }
+                build["variables"] = self.variables.copy()
             if self.pool_depth is not None:
                 build["pool"] = self._name
             builds.append(build)
         return builds, gendeps
 
 
-def _generate_implicit_render(inp, out, arg, variables):
-    return [os.path.join(variables["here"], ".reprepbuild/variables.json")], []
-
-
 RE_OPTIONS = re.MULTILINE | re.DOTALL
-RE_SVG_HREF = re.compile(rb"<image [^<]*?href=\"(?!#)(?!data:)(.*?)\"[^<]*?\>", RE_OPTIONS)
+RE_SVG_HREF = re.compile(rb"<image [^<]*?href=\"(?!#)(?!data:)(.*?)\"[^<]*?>", RE_OPTIONS)
 
 
-def _generate_implicit_svg(inp, out, arg, variables):
+def _generate_implicit_svg(src: str, _arg) -> tuple[list[str], list[str]]:
     """Search implicit dependencies in SVG files, specifically (recursively) included images."""
     implicit = []
-    gendeps = list(inp)
+    gendeps = [src]
     idep = 0
     while idep < len(gendeps):
         path_svg = gendeps[idep]
@@ -170,12 +160,6 @@ def _generate_implicit_svg(inp, out, arg, variables):
 
 
 copy = Transform("copy", "cp ${in} ${out}")
-render = Transform(
-    "render",
-    "rr-render ${in} ${out} --variables=${here}/.reprepbuild/variables.json",
-    generate_implicit=_generate_implicit_render,
-    variables={"here": "."},
-)
 convert_svg_pdf = Transform(
     "convert_svg_pdf",
     "${inkscape} ${in} -T --export-filename=${out} --export-type=pdf > /dev/null"

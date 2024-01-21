@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -20,7 +20,6 @@
 """Load and Validate ``reprepbuild.yaml`` configuration files."""
 
 import importlib
-import json
 import os
 import re
 
@@ -30,7 +29,7 @@ import yaml
 
 from .fancyglob import NoFancyTemplate
 from .generator import BarrierGenerator, BaseGenerator, BuildGenerator
-from .utils import CaseSensitiveTemplate
+from .utils import load_constants
 
 __all__ = ("load_config", "rewrite_path")
 
@@ -120,7 +119,6 @@ class BarrierConfig(TaskConfig):
 @attrs.define
 class Config:
     imports: list[str] = attrs.field(default=attrs.Factory(list))
-    variables: dict[str, str] = attrs.field(default=attrs.Factory(dict))
     tasks: list[BuildConfig | SubDirConfig | BarrierConfig] = attrs.field(
         default=attrs.Factory(list)
     )
@@ -132,18 +130,6 @@ class Config:
                 raise TypeError(f"Imports must be strings, got: {module_name}")
             if RE_IMPORT.fullmatch(module_name) is None:
                 raise ValueError(f"Invalid module name: {module_name}")
-
-    @variables.validator
-    def validate_variables(self, attribute, variables):
-        for name, value in variables.items():
-            if not isinstance(name, str):
-                raise TypeError(f"Variable names must be strings, got: {name}")
-            if not isinstance(value, str):
-                raise TypeError(f"Variable contents must be strings, got: {value}")
-            if RE_NAME.fullmatch(name) is None:
-                raise ValueError(f"Invalid variable name: {name}")
-            if not CaseSensitiveTemplate(value).is_valid():
-                raise ValueError(f"Incorrectly formatted value of variable {name}: {value}")
 
     @tasks.validator
     def validate_tasks(self, attribute, tasks):
@@ -158,8 +144,8 @@ class Config:
 def load_config(
     root: str,
     path_config: str,
+    paths_constants: list[str],
     generators: list[BaseGenerator],
-    inherit_variables: (dict[str, str] | None) = None,
     phony_deps: (set[str] | None) = None,
 ):
     """Load a RepRepBuild configuration file (recursively).
@@ -167,63 +153,27 @@ def load_config(
     Parameters
     ----------
     root
-        The directory of the top-level ``reprepbuild.yaml`` file.
+        The directory containing the top-level ``reprepbuild.yaml``.
     path_config
         The path of the ``reprepbuild.yaml`` file in the current recursion.
     generators
         The list of generators being generated. (output parameter)
-    inherit_variables
-        Variables inherited from higher recursions.
+    paths_constants
+        List of files with constants.
     phony_deps
         Phony dependencies imposed by previous barrier commands.
     """
-    # Convert root to an absolute path.
-    # This is needed to differentiate relative and absolute file references.
-    root = os.path.abspath(root)
+    workdir, fn_config = os.path.split(path_config)
+    constants = load_constants(root, workdir, paths_constants)
 
     # Load config file into Config instance with basic validation.
     converter = cattrs.Converter(forbid_extra_keys=True)
-    with open(os.path.join(root, path_config)) as fh:
+    with open(path_config) as fh:
         try:
             config = converter.structure(yaml.safe_load(fh), Config)
         except Exception as exc:
             exc.add_note(f"Error occurred while loading {path_config}")
             raise
-
-    # Start by setting here, root and shadow built-in variables
-    here = os.path.normpath(os.path.dirname(path_config))
-    variables = {
-        "here": here,
-        "root": str(root),
-    }
-
-    # Take variables from the environment
-    env_prefix = "REPREPBUILD_VARIABLE_"
-    for env_name, value in os.environ.items():
-        if env_name.startswith(env_prefix):
-            name = env_name[len(env_prefix) :]
-            if name not in variables:
-                value_template = CaseSensitiveTemplate(value)
-                if not value_template.is_valid():
-                    raise ValueError(
-                        f"Invalid template string in environment variable {env_name}: {value}"
-                    )
-                variables[name] = CaseSensitiveTemplate(value).substitute(variables)
-
-    # Take variables from the config
-    for name, value in config.variables.items():
-        if name not in variables:
-            variables[name] = CaseSensitiveTemplate(value).substitute(variables)
-
-    # Finally, fill up with inherited variables, for which no substitution is needed.
-    if inherit_variables is not None:
-        for name, value in inherit_variables.items():
-            if name not in variables:
-                variables[name] = value
-
-    # Dump variables in .reprepbuild/variables.json
-    fn_variables = os.path.join(here, ".reprepbuild", "variables.json")
-    write_if_changed(fn_variables, json.dumps(variables))
 
     # Import commands
     commands = {}
@@ -235,16 +185,16 @@ def load_config(
                 )
             commands[command.name] = command
 
-    # Build list of tasks, expanding variables, not yet fancy glob patterns
+    # Build list of tasks, expanding paths, not yet fancy glob patterns
     if phony_deps is None:
         phony_deps = set()
     for task_config in config.tasks:
         if isinstance(task_config, SubDirConfig):
             load_config(
                 root,
-                os.path.join(here, task_config.subdir, os.path.basename(path_config)),
+                os.path.join(workdir, task_config.subdir, fn_config),
+                paths_constants,
                 generators,
-                variables,
                 phony_deps,
             )
         elif isinstance(task_config, BuildConfig):
@@ -258,15 +208,15 @@ def load_config(
             if command is None:
                 raise ValueError(f"In {path_config}, unknown command: {command_name}")
             for loop_variables in iterate_loop_config(task_config.loop):
-                command_variables = variables
-                if task_config.override != {}:
-                    command_variables = command_variables | task_config.override
+                command_constants = constants.copy()
+                command_constants |= task_config.override
+                command_constants |= loop_variables
                 generator = BuildGenerator(
                     command,
                     default,
-                    command_variables,
-                    rewrite_paths(task_config.inp, command_variables | loop_variables, True),
-                    rewrite_paths(task_config.out, command_variables | loop_variables, True),
+                    command_constants,
+                    rewrite_paths(task_config.inp, command_constants, True),
+                    rewrite_paths(task_config.out, command_constants, True),
                     task_config.arg,
                     list(phony_deps),
                     task_config.built_inputs_only,
@@ -280,18 +230,6 @@ def load_config(
             phony_deps.add(phony)
         else:
             raise TypeError(f"Cannot use task_config of type {type(task_config)}: {task_config}")
-
-
-def write_if_changed(filename: str, contents: str) -> bool:
-    """Write a file if the contents are new."""
-    if os.path.exists(filename):
-        with open(filename) as fh:
-            if fh.read() == contents:
-                return False
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    with open(filename, "w") as fh:
-        fh.write(contents)
-    return True
 
 
 def rewrite_paths(

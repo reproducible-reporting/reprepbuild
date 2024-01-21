@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -42,9 +42,7 @@ class Command:
         """A dict of (name, kwargs) for Ninja's ``Writer.rule()``."""
         raise NotImplementedError
 
-    def generate(
-        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
-    ) -> tuple[list, list[str]]:
+    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
         """Generate records for ``build.ninja`` for the given inputs, outputs and arguments.
 
         Parameters
@@ -55,9 +53,6 @@ class Command:
             The output paths for the command.
         arg
             Additional argument, may be anything.
-        variables
-            The dictionary of variables set in ``reprepbuild.yaml``,
-            possibly with local overrides.
 
         Returns
         -------
@@ -66,6 +61,6 @@ class Command:
             inputs, outputs and arguments.
             A record can be a ``str`` (comment) or ``dict`` (build).
         gendeps
-            A list of files that are (or should be) read to determine all builds.
+            A list of files that were read to compute the build records.
         """
         raise NotImplementedError

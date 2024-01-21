@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -37,7 +37,7 @@ def main() -> int:
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        "rr-zip-latex", description="Zip a LaTeX source with all required files."
+        prog="rr-zip-latex", description="Zip a LaTeX source with all required files."
     )
     parser.add_argument("path_fls", help="The LaTeX fls file.")
     parser.add_argument("path_zip", help="The output zip file with the sources.")

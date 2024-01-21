@@ -39,9 +39,7 @@ class PDFMerge(Command):
             "pdf_merge": {"command": "${mutool} merge -o ${out} ${in} && rr-pdf-normalize ${out}"},
         }
 
-    def generate(
-        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
-    ) -> tuple[list, list[str]]:
+    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Check parameters
         if len(inp) == 0:
@@ -61,7 +59,7 @@ class PDFMerge(Command):
             "rule": "pdf_merge",
             "outputs": [path_out],
             "inputs": inp,
-            "variables": {"mutool": variables.get("mutool", "mutool")},
+            "variables": {"mutool": "mutool"},
         }
         return [build], []
 
@@ -84,9 +82,7 @@ class PDFAddNotes(Command):
             },
         }
 
-    def generate(
-        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
-    ) -> tuple[list, list[str]]:
+    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Check parameters
         if len(inp) != 2:
@@ -129,9 +125,7 @@ class PDFNup(Command):
             },
         }
 
-    def generate(
-        self, inp: list[str], out: list[str], arg, variables: dict[str, str]
-    ) -> tuple[list, list[str]]:
+    def generate(self, inp: list[str], out: list[str], arg) -> tuple[list, list[str]]:
         """See Command.generate."""
         # Check parameters
         if len(inp) != 1:

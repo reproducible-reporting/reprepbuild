@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -21,18 +21,20 @@
 
 
 import argparse
-import json
 import os
 import sys
 
 import jinja2
 
+from ..utils import load_constants
+
 
 def main() -> int:
     """Main program."""
     args = parse_args()
-    with open(args.variables) as fh:
-        variables = json.load(fh)
+    root = os.getcwd()
+    cwd = os.path.dirname(args.path_in)
+    constants = load_constants(root, cwd, args.constants)
     if args.mode == "plain":
         latex = False
     elif args.mode == "latex":
@@ -42,7 +44,7 @@ def main() -> int:
     else:
         raise ValueError(f"mode not supported: {args.mode}")
     dir_out = os.path.normpath(os.path.dirname(args.path_out))
-    result = render(args.path_in, variables, latex, dir_out=dir_out)
+    result = render(args.path_in, constants, latex, dir_out=dir_out)
     with open(args.path_out, "w") as fh:
         fh.write(result)
     return 0
@@ -50,14 +52,10 @@ def main() -> int:
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser("rr-render", description="Render a file with Jinja2.")
+    parser = argparse.ArgumentParser(prog="rr-render", description="Render a file with Jinja2.")
     parser.add_argument("path_in", help="The input file")
+    parser.add_argument("constants", nargs="+", help="JSON files with constants")
     parser.add_argument("path_out", help="The output file")
-    parser.add_argument(
-        "--variables",
-        help="JSON file with dictionary of variables",
-        default=".reprepbuild/variables.json",
-    )
     parser.add_argument(
         "--mode",
         choices=["auto", "plain", "latex"],

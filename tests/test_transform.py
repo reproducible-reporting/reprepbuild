@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -29,7 +29,6 @@ from reprepbuild.builtin.transform import (
     copy,
     markdown_pdf,
     pdf_raster,
-    render,
 )
 
 BUILDS_COPY = [
@@ -47,7 +46,7 @@ BUILDS_COPY = [
 
 
 def test_write_build_copy():
-    builds, _ = copy.generate(["sub/foo.txt", "sub/bar.md"], ["/dst/sub/"], None, {})
+    builds, _ = copy.generate(["sub/foo.txt", "sub/bar.md"], ["/dst/sub/"], None)
     assert BUILDS_COPY == builds
 
 
@@ -61,31 +60,8 @@ BUILDS_COPY_AS = [
 
 
 def test_write_build_copy_as():
-    builds, _ = copy.generate(["sub/foo.txt"], ["/dst/sub/bar.txt"], None, {})
+    builds, _ = copy.generate(["sub/foo.txt"], ["/dst/sub/bar.txt"], None)
     assert BUILDS_COPY_AS == builds
-
-
-BUILDS_RENDER = [
-    {
-        "rule": "render",
-        "implicit": ["foo/.reprepbuild/variables.json"],
-        "inputs": ["sub/foo.md"],
-        "outputs": ["/dst/sub/foo.md"],
-        "variables": {"here": "foo"},
-    },
-    {
-        "rule": "render",
-        "implicit": ["foo/.reprepbuild/variables.json"],
-        "inputs": ["sub/bar.tex"],
-        "outputs": ["/dst/sub/bar.tex"],
-        "variables": {"here": "foo"},
-    },
-]
-
-
-def test_write_build_render():
-    builds, _ = render.generate(["sub/foo.md", "sub/bar.tex"], ["/dst/sub/"], None, {"here": "foo"})
-    assert BUILDS_RENDER == builds
 
 
 BUILDS_CONVERT_SVG_PDF1 = [
@@ -107,7 +83,7 @@ def test_write_build_convert_svg_pdf1(tmpdir):
         os.mkdir("sub")
         with open("sub/foo.svg", "w") as fh:
             fh.write(MINIMAL_SVG)
-        builds, gendeps = convert_svg_pdf.generate(["sub/foo.svg"], ["/dst/sub/"], None, {})
+        builds, gendeps = convert_svg_pdf.generate(["sub/foo.svg"], ["/dst/sub/"], None)
     assert BUILDS_CONVERT_SVG_PDF1 == builds
     assert gendeps == ["sub/foo.svg"]
 
@@ -128,7 +104,7 @@ def test_write_build_convert_svg_pdf2(tmpdir):
         os.mkdir("sub")
         with open("sub/foo.svg", "w") as fh:
             fh.write(MINIMAL_SVG)
-        builds, gendeps = convert_svg_pdf.generate(["sub/foo.svg"], [], None, {})
+        builds, gendeps = convert_svg_pdf.generate(["sub/foo.svg"], [], None)
     assert BUILDS_CONVERT_SVG_PDF2 == builds
     assert gendeps == ["sub/foo.svg"]
 
@@ -158,7 +134,7 @@ def test_write_build_convert_svg_pdf3(tmpdir):
             fh.write(MINIMAL_SVG)
         with open("sub/bar.svg", "w") as fh:
             fh.write(MINIMAL_SVG)
-        builds, gendeps = convert_svg_pdf.generate(["sub/foo.svg", "sub/bar.svg"], [], None, {})
+        builds, gendeps = convert_svg_pdf.generate(["sub/foo.svg", "sub/bar.svg"], [], None)
     assert BUILDS_CONVERT_SVG_PDF3 == builds
     assert gendeps == ["sub/foo.svg", "sub/bar.svg"]
 
@@ -188,7 +164,7 @@ def test_write_build_convert_svg_pdf_container(tmpdir):
         os.mkdir("sub")
         with open("sub/container.svg", "w") as fh:
             fh.write(CONTAINER_SVG)
-        builds, gendeps = convert_svg_pdf.generate(["sub/container.svg"], [], None, {})
+        builds, gendeps = convert_svg_pdf.generate(["sub/container.svg"], [], None)
     assert BUILDS_CONVERT_SVG_PDF_CONTAINER == builds
     assert gendeps == ["sub/container.svg"]
 
@@ -222,7 +198,7 @@ def test_write_build_convert_svg_pdf_outer_container(tmpdir):
             fh.write(OUTER_CONTAINER_SVG)
         with open("container.svg", "w") as fh:
             fh.write(CONTAINER_SVG)
-        builds, gendeps = convert_svg_pdf.generate(["outer.svg"], [], None, {})
+        builds, gendeps = convert_svg_pdf.generate(["outer.svg"], [], None)
     assert BUILDS_CONVERT_SVG_PDF_OUTER_CONTAINER == builds
     assert gendeps == ["outer.svg", "container.svg"]
 
@@ -239,7 +215,7 @@ BUILDS_CONVERT_ODF_PDF = [
 
 
 def test_write_build_convert_odf_pdf():
-    builds, _ = convert_odf_pdf.generate(["sub/foo.odp"], ["/dst/sub/"], None, {})
+    builds, _ = convert_odf_pdf.generate(["sub/foo.odp"], ["/dst/sub/"], None)
     assert BUILDS_CONVERT_ODF_PDF == builds
 
 
@@ -254,7 +230,7 @@ BUILDS_CONVERT_PDF_PNG = [
 
 
 def test_write_build_convert_pdf_png():
-    builds, _ = convert_pdf_png.generate(["sub/foo.pdf"], ["/dst/sub/"], None, {})
+    builds, _ = convert_pdf_png.generate(["sub/foo.pdf"], ["/dst/sub/"], None)
     assert BUILDS_CONVERT_PDF_PNG == builds
 
 
@@ -269,7 +245,7 @@ BUILDS_CONVERT_PDF_RASTER = [
 
 
 def test_write_build_pdf_raster():
-    builds, _ = pdf_raster.generate(["original.pdf"], ["/public/rastered.pdf"], None, {})
+    builds, _ = pdf_raster.generate(["original.pdf"], ["/public/rastered.pdf"], None)
     assert BUILDS_CONVERT_PDF_RASTER == builds
 
 
@@ -283,5 +259,5 @@ BUILDS_CONVERT_MARKDOWN_PDF = [
 
 
 def test_write_build_markdown_pdf():
-    builds, _ = markdown_pdf.generate(["original.md"], ["/public/"], None, {})
+    builds, _ = markdown_pdf.generate(["original.md"], ["/public/"], None)
     assert BUILDS_CONVERT_MARKDOWN_PDF == builds

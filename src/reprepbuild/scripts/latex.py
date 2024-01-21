@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -312,7 +312,7 @@ def parse_bibtex_log(path_blg: str) -> ErrorInfo | None:
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        "rr-latex",
+        prog="rr-latex",
         description="Compile a LaTeX document and print essence from log file.",
     )
     parser.add_argument("path_tex", help="The main LaTeX source file.")

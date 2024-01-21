@@ -17,6 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Phony option was removed from build commands.
 - Imports are no longer inherited through the `subdir` command.
   (This reduces correlation between different `reprepbuild.yaml` files, making them more robust.)
+- The `viarables` section is removed from `reprepbuild.yaml`.
+  Instead, constants can be defined in JSON files and through environment variables:
+  - `REPREPBUILD_ROOT` can be set to the top-level directory containing a `reprepbuild.yaml` in
+    hierarchical projects. The default value is the current working directory.
+  - `REPREPBUILD_CONSTANTS` can be a list of colon-separated JSON files defining constants.
+    The default value is `${REPREPBUILD_ROOT}/constants.json`.
+  - When build commands or scripts need these variables, the JSON files must be listed as input files.
+    Only the commands `rr`, `rrr` and `rr-generator` will pick up the environment variables mentioned above.
+    They only use these variables for writing the `build.ninja` file and will not pass them on to other scripts.
+
 
 ### Added
 

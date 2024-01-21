@@ -21,6 +21,7 @@ from .check_hrefs import check_hrefs
 from .latex import latex, latex_diff, latex_flat
 from .mupdf import pdf_add_notes, pdf_merge, pdf_nup
 from .python_script import python_script
+from .render import render
 from .shell_script import shell_script
 from .transform import (
     convert_odf_pdf,
@@ -29,7 +30,6 @@ from .transform import (
     copy,
     markdown_pdf,
     pdf_raster,
-    render,
 )
 from .zip import zip_latex, zip_manifest, zip_plain
 

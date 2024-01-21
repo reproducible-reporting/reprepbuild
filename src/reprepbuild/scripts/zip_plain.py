@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -35,7 +35,7 @@ def main() -> int:
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser("rr-zip-plain", description="Zip a set of files.")
+    parser = argparse.ArgumentParser(prog="rr-zip-plain", description="Zip a set of files.")
     parser.add_argument("paths_in", help="Paths to include in the ZIP file.", nargs="+")
     parser.add_argument("path_zip", help="The output zip file with the sources.")
     return parser.parse_args()

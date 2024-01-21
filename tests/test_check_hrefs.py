@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -39,7 +39,7 @@ BUILDS_CHECK_HREFS = [
 
 
 def test_write_build_check_hrefs():
-    builds, _ = check_hrefs.generate(["sub/boo.md", "foo/plop.pdf"], [], None, {})
+    builds, _ = check_hrefs.generate(["sub/boo.md", "foo/plop.pdf"], [], None)
     assert BUILDS_CHECK_HREFS == builds
 
 
@@ -55,7 +55,7 @@ BUILDS_CHECK_HREFS_TRANSLATE = [
 
 def test_write_build_check_hrefs_translate():
     arg = {"translate": [["foo", "bar"], ["egg", "spam"]]}
-    builds, _ = check_hrefs.generate(["sub/boo.md"], [], arg, {})
+    builds, _ = check_hrefs.generate(["sub/boo.md"], [], arg)
     assert BUILDS_CHECK_HREFS_TRANSLATE == builds
 
 
@@ -71,5 +71,5 @@ BUILDS_CHECK_HREFS_IGNORE = [
 
 def test_write_build_check_hrefs_ignore():
     arg = {"ignore": ["foo", "bar", "egg"]}
-    builds, _ = check_hrefs.generate(["sub/boo.md"], [], arg, {})
+    builds, _ = check_hrefs.generate(["sub/boo.md"], [], arg)
     assert BUILDS_CHECK_HREFS_IGNORE == builds

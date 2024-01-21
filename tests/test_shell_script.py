@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -50,6 +50,6 @@ def test_write_build_shell_script(tmpdir):
     with open(os.path.join(tmpdir, "script.sh"), "w") as fh:
         fh.write(SCRIPT)
     with contextlib.chdir(tmpdir):
-        builds, ns = shell_script.generate(["script.sh"], [], None, {})
+        builds, ns = shell_script.generate(["script.sh"], [], None)
     assert BUILDS_PYTHON_SCRIPT == builds
     assert ns == ["script.sh"]

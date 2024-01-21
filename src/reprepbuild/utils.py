@@ -1,5 +1,5 @@
 # RepRepBuild is the build tool for Reproducible Reporting.
-# Copyright (C) 2023 Toon Verstraelen
+# Copyright (C) 2024 Toon Verstraelen
 #
 # This file is part of RepRepBuild.
 #
@@ -37,6 +37,7 @@ A `dyndep` is more powerful and general, but also a bit more complicated to set 
 
 
 import importlib.util
+import json
 import os
 import re
 import string
@@ -54,6 +55,7 @@ __all__ = (
     "format_case_args",
     "parse_case_args",
     "CaseSensitiveTemplate",
+    "load_constants",
 )
 
 
@@ -282,3 +284,50 @@ class CaseSensitiveTemplate(string.Template):
     """A case sensitive Template class."""
 
     flags = re.NOFLAG
+
+
+def load_constants(root: str, cwd: str, paths_constants) -> dict[str:str]:
+    """Load user-defined constant strings.
+
+    Two special constants cannot be overridden: ``root`` and ``here``.
+    ``here`` is computed as the relative path from ``root`` to the current working directory.
+    Each constant definition can make use of previously defined constants,
+
+    Parameters
+    ----------
+    root
+        The directory containing the top-level reprepbuild.yaml file.
+    cwd
+        The current working directory to use when computing the ``here`` constant.
+    paths_constants
+        paths of JSON files containing constants.
+
+    Returns
+    -------
+    constants
+        A dictionary with constants.
+    """
+    # Special constants
+    constants = {"root": root, "here": os.path.relpath(cwd, root)}
+    forbidden = ["root", "here"]
+
+    # Load from JSON files.
+    for path_json in paths_constants:
+        path_json = path_json.strip()
+        if path_json == "":
+            continue
+        with open(path_json) as fh:
+            this_result = json.load(fh)
+        if not isinstance(this_result, dict):
+            raise TypeError(f"The file {path_json} does not contain a dictionary.")
+        for name, value in this_result.items():
+            if name in forbidden:
+                raise ValueError(f"Cannot override {name} (defined in {path_json})")
+            if not isinstance(value, str):
+                raise TypeError(f"Constants must be strings. Got  in {path_json}.")
+            value_template = CaseSensitiveTemplate(value)
+            if not value_template.is_valid():
+                raise ValueError(f"Invalid template string {name}={value} in {path_json}")
+            constants[name] = value_template.substitute(constants)
+
+    return constants
