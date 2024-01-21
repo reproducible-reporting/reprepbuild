@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Phony option was removed from build commands.
 - Imports are no longer inherited through the `subdir` command.
   (This reduces correlation between different `reprepbuild.yaml` files, making them more robust.)
+- Make `rr-latex` less verbose unless the aux file does not converge.
 - The `viarables` section is removed from `reprepbuild.yaml`.
   Instead, constants can be defined in JSON files and through environment variables:
   - `REPREPBUILD_ROOT` can be set to the top-level directory containing a `reprepbuild.yaml` in

@@ -92,7 +92,7 @@ def main() -> int:
         if os.path.isfile(path_to_remove):
             os.remove(path_to_remove)
 
-    aux_sha256 = "none"
+    aux_sha256_hist = []
     if args.bibtex is not None:
         # LaTeX
         cp = subprocess.run(
@@ -110,8 +110,7 @@ def main() -> int:
             error_info.print(path_log)
             return 1
 
-        aux_sha256 = compute_sha256(path_aux)[1]
-        print(f"sha256 {path_aux}: {aux_sha256}")
+        aux_sha256_hist.append(compute_sha256(path_aux)[1])
 
         # BibTeX
         cp = subprocess.run(
@@ -163,12 +162,14 @@ def main() -> int:
         if cp.returncode != 0:
             error_info.print(path_log)
             return 4
-        new_aux_sha256 = compute_sha256(os.path.join(workdir, f"{stem}.aux"))[1]
-        print(f"sha256 {path_aux}: {new_aux_sha256}")
-        if new_aux_sha256 == aux_sha256:
+        aux_sha256_hist.append(compute_sha256(path_aux)[1])
+        if len(aux_sha256_hist) > 1 and aux_sha256_hist[-1] == aux_sha256_hist[-2]:
             return 0
-        aux_sha256 = new_aux_sha256
-    return 0
+
+    print(f"\033[1;31;40mAux file did not converge in {args.maxrep} iterations!\033[0;0m")
+    print(path_aux)
+    print("\n".join(aux_sha256_hist))
+    return -3
 
 
 @attrs.define

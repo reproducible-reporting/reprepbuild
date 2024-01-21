@@ -7,3 +7,5 @@ build
 venv/
 _version.py
 tmp
+.ruff_cache
+.pytest_cache
