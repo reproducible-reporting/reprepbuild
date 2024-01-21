@@ -89,8 +89,8 @@ class BarrierGenerator(BaseGenerator):
         }
         # The phony of the barrier represents all previous defaults,
         # so we can clear the list and use the phony instead.
-        # defaults.clear()
-        # defaults.add(self.name)
+        defaults.clear()
+        defaults.add(self.name)
         yield [build], []
 
 
