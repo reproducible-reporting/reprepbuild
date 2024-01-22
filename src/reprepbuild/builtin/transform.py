@@ -108,6 +108,8 @@ class Transform(Command):
                 dst = os.path.join(out[0], name)
             else:
                 dst = out[0]
+            if os.path.abspath(src) == os.path.abspath(dst):
+                raise ValueError(f"Input file equals output file: {src}")
             build = {
                 "rule": self._name,
                 "outputs": [dst],
