@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [1.11.1] - 2024-01-22
+
 ## Fixed
 
 - Raise a `ValueError` when some named wildcards exist for the first input but not for the latter ones.
