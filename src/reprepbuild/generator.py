@@ -166,8 +166,10 @@ class BuildGenerator(BaseGenerator):
                 records.append(f"No matches found for inputs: {self.inp}")
                 records.append(f"keys: {keys}")
                 records.append(f"values: {values}")
-                yield records, []
-                continue
+                message = "\n".join(
+                    ["Could not find suitable inputs.", f"- Generator: {self}", *records]
+                )
+                raise ValueError(message)
 
             filter_comment = _test_filter_inp(inp)
             if filter_comment is not None:
