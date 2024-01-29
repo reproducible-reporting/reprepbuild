@@ -27,8 +27,8 @@ import attrs
 import cattrs
 import yaml
 
-from .fancyglob import NoFancyTemplate
 from .generator import BarrierGenerator, BaseGenerator, BuildGenerator
+from .nameglob import NoNamedTemplate
 from .utils import load_constants
 
 __all__ = ("load_config", "rewrite_path")
@@ -185,7 +185,7 @@ def load_config(
                 )
             commands[command.name] = command
 
-    # Build list of tasks, expanding paths, not yet fancy glob patterns
+    # Build list of tasks, expanding paths, not yet named glob patterns
     if phony_deps is None:
         phony_deps = set()
     for task_config in config.tasks:
@@ -258,13 +258,13 @@ def rewrite_path(path: str, variables: dict[str, str], ignore_wild: bool = False
         The rewritten path
     """
     if ignore_wild:
-        path_template = NoFancyTemplate(path)
+        path_template = NoNamedTemplate(path)
     else:
-        path_template = NoFancyTemplate(path)
+        path_template = NoNamedTemplate(path)
     if not path_template.is_valid():
         raise ValueError(f"Invalid path template string: {path}")
     if ignore_wild:
-        result = path_template.substitute_nofancy(variables)
+        result = path_template.substitute_nonamed(variables)
     else:
         result = path_template.substitute(variables)
     if result.startswith(os.sep):

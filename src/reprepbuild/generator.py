@@ -21,18 +21,12 @@
 
 import os
 import re
-from collections.abc import Collection, Iterator
-from glob import glob
+from collections.abc import Iterator
 
 import attrs
 
 from .command import Command
-from .fancyglob import (
-    NoFancyTemplate,
-    convert_fancy_to_normal,
-    convert_fancy_to_regex,
-    fancy_filter,
-)
+from .nameglob import NoNamedTemplate, convert_named_to_regex, glob_named
 from .utils import CaseSensitiveTemplate
 
 __all__ = ("BaseGenerator", "BarrierGenerator", "BuildGenerator")
@@ -139,7 +133,7 @@ class BuildGenerator(BaseGenerator):
     def __attrs_post_init__(self):
         self.re_ignore_safe = re.compile(
             "|".join(
-                convert_fancy_to_regex(_pattern)
+                convert_named_to_regex(_pattern)
                 for _pattern in self.constants.get("ignore_missing", "").split()
             )
         )
@@ -148,28 +142,12 @@ class BuildGenerator(BaseGenerator):
         self, outputs: set[str], defaults: set[str]
     ) -> Iterator[tuple[(str | list | dict), list[str]]]:
         """See BaseGenerator.__call__"""
-        # Get a file list of potentially relevant filenames for the first input
-        if self.built_inputs_only:
-            filenames = set()
-        else:
-            filenames = set(glob(convert_fancy_to_normal(self.inp[0]), recursive=True))
-        filenames.update(outputs)
-        # Group matches for the first input
-        keys, inp0_mapping = fancy_filter(filenames, self.inp[0])
-
-        for values, inp in sorted(inp0_mapping.items()):
+        matched = False
+        for names, inp_groups in glob_named(self.inp, outputs, not self.built_inputs_only):
             # Complete the list of inputs and outputs
-            inp, out = self._extend_inp_out(inp, keys, values, outputs)
+            matched = True
+            inp, out = self._extend_inp_out(names, inp_groups)
             records = self._comment_records(inp, out)
-
-            if inp is None:
-                records.append(f"No matches found for inputs: {self.inp}")
-                records.append(f"keys: {keys}")
-                records.append(f"values: {values}")
-                message = "\n".join(
-                    ["Could not find suitable inputs.", f"- Generator: {self}", *records]
-                )
-                raise ValueError(message)
 
             filter_comment = _test_filter_inp(inp)
             if filter_comment is not None:
@@ -192,29 +170,24 @@ class BuildGenerator(BaseGenerator):
             # Done
             yield records, gendeps
 
+        if not matched:
+            message = (
+                "Could not find suitable inputs.",
+                f"- Generator: {self}\n" f"No matches found for inputs: {self.inp}",
+            )
+            raise ValueError(message)
+
     def _extend_inp_out(
-        self, inp: list[str], keys: Collection[str], values: Collection[str], outputs: set[str]
+        self, names: dict[str, str], inp_groups: list[list[str]]
     ) -> tuple[list[str] | None, list[str] | None]:
         """Search for additional inputs (after the first)."""
-        path_variables = {"*" + key: value for key, value in zip(keys, values, strict=True)}
-        for inp_path in self.inp[1:]:
-            inp_template = NoFancyTemplate(inp_path)
-            if not inp_template.is_valid():
-                raise ValueError(f"Invalid inp template string in {self}: {inp_path}")
-            inp_path = inp_template.substitute(path_variables)
-            filenames = set(glob(inp_path, recursive=True))
-            filenames.update(outputs)
-            _, inp1_mapping = fancy_filter(filenames, inp_path)
-            # If no files found, skip this generator.
-            if len(inp1_mapping) == 0:
-                return None, None
-            inp.extend(inp1_mapping[()])
+        inp = sum(inp_groups, [])
         out = []
         for out_path in self.out:
-            out_template = NoFancyTemplate(out_path)
+            out_template = NoNamedTemplate(out_path)
             if not out_template.is_valid():
                 raise ValueError(f"Invalid out template string in {self}: {out_path}")
-            out.append(out_template.substitute(path_variables))
+            out.append(out_template.substitute(names))
         return inp, out
 
     def _comment_records(self, inp: list[str], out: list[str]) -> list[str]:

@@ -7,9 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Changed
+
+- The `inp` field now accepts more general named wildcards:
+  Not all named wildcards need to exist in the first input argument.
+  Some or all may appear later.
+  For example, the following is now supported:
+
+  ```yaml
+  - command: copy
+    inp: foo-${*suffix}/file.txt foo-${*suffix}/case-${*num}.txt
+    out: out-${*suffix}-${*num}/
+  ```
+
+  This will create `copy` build steps in `build.ninja` for every combination of `suffix` and `num`,
+  for which files exist.
+  Previously, the second input file had to be placed first, which is not always convenient.
+  (For the copy example, the order is not relevant.)
+
 ## [1.11.1] - 2024-01-22
 
-## Fixed
+### Fixed
 
 - Raise a `ValueError` when some named wildcards exist for the first input but not for the latter ones.
   This is usually due to a typo, so an error message is in order.

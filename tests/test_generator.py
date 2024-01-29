@@ -68,6 +68,40 @@ def test_generate_named_wildcard_inp_out(tmpdir):
     assert ns1 == []
 
 
+def test_generate_named_wildcard2_inp_out(tmpdir):
+    tmpdir = str(tmpdir)
+    gen = BuildGenerator(
+        copy, True, {}, ["foo${*id1}.txt", "bar${*id2}.txt"], ["f${*id1}/b${*id2}/"]
+    )
+    previous_outputs = {"foo1.txt", "foo2.txt", "bar3.txt", "bar4.txt"}
+    with contextlib.chdir(tmpdir):
+        results = list(gen(previous_outputs, set()))
+    for i in 1, 2:
+        for j in 3, 4:
+            records, ns = results.pop(0)
+            assert records == [
+                "command: copy",
+                f"inp: foo{i}.txt bar{j}.txt",
+                f"out: f{i}/b{j}/",
+                {
+                    "rule": "copy",
+                    "inputs": [f"foo{i}.txt"],
+                    "outputs": [f"f{i}/b{j}/foo{i}.txt"],
+                    "variables": {"_pre_command": f"mkdir -p f{i}/b{j}; "},
+                },
+                [f"f{i}/b{j}/foo{i}.txt"],
+                {
+                    "rule": "copy",
+                    "inputs": [f"bar{j}.txt"],
+                    "outputs": [f"f{i}/b{j}/bar{j}.txt"],
+                    "variables": {"_pre_command": f"mkdir -p f{i}/b{j}; "},
+                },
+                [f"f{i}/b{j}/bar{j}.txt"],
+            ]
+            assert ns == []
+    assert len(results) == 0
+
+
 def test_generate_anonymous_wildcard_inp_out(tmpdir):
     tmpdir = str(tmpdir)
     gen = BuildGenerator(copy, True, {}, ["foo*.txt"], ["bar/"])
@@ -99,8 +133,8 @@ def test_generate_anonymous_wildcard_inp_out(tmpdir):
 
 def test_generate_named_wildcard_inp_inp_out_mismatch(tmpdir):
     tmpdir = str(tmpdir)
-    gen = BuildGenerator(copy, True, {}, ["foo${*id}.txt", "bar${*id}.txt"], ["spam${*id}/"])
-    previous_outputs = {"foo1.txt", "bar2.txt", "foo3.txt", "bar3.txt"}
+    gen = BuildGenerator(copy, True, {}, ["foo${*id}.txt", "bar.txt"], ["spam${*id}/"])
+    previous_outputs = {"foo1.txt", "foo3.txt"}
     with contextlib.chdir(tmpdir):
         with pytest.raises(ValueError):
             list(gen(previous_outputs, set()))
