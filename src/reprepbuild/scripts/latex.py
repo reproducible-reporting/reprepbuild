@@ -33,11 +33,11 @@ from .manifest import compute_sha256
 @attrs.define
 class ErrorInfo:
     program: str = attrs.field(validator=attrs.validators.instance_of(str))
-    src: (str | None) = attrs.field(
+    src: str | None = attrs.field(
         default=None,
         validator=attrs.validators.optional(attrs.validators.instance_of(str)),
     )
-    message: (str | None) = attrs.field(
+    message: str | None = attrs.field(
         default=None,
         validator=attrs.validators.optional(attrs.validators.instance_of(str)),
     )
@@ -175,7 +175,7 @@ def main() -> int:
 @attrs.define
 class LatexSourceStack:
     stack: list[str] = attrs.field(init=False, default=attrs.Factory(list))
-    unfinished: (str | None) = attrs.field(init=False, default=None)
+    unfinished: str | None = attrs.field(init=False, default=None)
     unmatched: bool = attrs.field(init=False, default=False)
 
     @property

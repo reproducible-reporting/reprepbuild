@@ -63,9 +63,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def flatten_latex(
-    path_tex: str, fh_out: TextIO, out_root: str, tex_root: (str | None) = None
-) -> int:
+def flatten_latex(path_tex: str, fh_out: TextIO, out_root: str, tex_root: str | None = None) -> int:
     """Write a flattened LaTeX file
 
     Parameters

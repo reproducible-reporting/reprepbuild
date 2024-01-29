@@ -42,7 +42,7 @@ class Transform(Command):
     # The command-line in the Ninja build rule
     command: str = attrs.field(validator=attrs.validators.instance_of(str))
     # A list of implicit inputs
-    generate_implicit: (Callable | None) = attrs.field(
+    generate_implicit: Callable | None = attrs.field(
         kw_only=True,
         validator=attrs.validators.optional(attrs.validators.is_callable()),
         default=None,
@@ -54,7 +54,7 @@ class Transform(Command):
         validator=attrs.validators.instance_of(dict), default=attrs.Factory(dict)
     )
     # The new file extension of the conversion output.
-    new_ext: (str | None) = attrs.field(
+    new_ext: str | None = attrs.field(
         kw_only=True,
         validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         default=None,
@@ -62,7 +62,7 @@ class Transform(Command):
     # If at most a given number of transformations can run in parallel,
     # specify this number as the pool depth.
     # When not specified, parallelism is not constrained.
-    pool_depth: (int | None) = attrs.field(
+    pool_depth: int | None = attrs.field(
         kw_only=True,
         validator=attrs.validators.optional(attrs.validators.instance_of(int)),
         default=None,

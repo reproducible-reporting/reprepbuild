@@ -172,7 +172,7 @@ def import_python_path(path):
 
 
 def format_case_args(
-    script_args: (list | dict | tuple[list, dict]), prefix: str, case_fmt: (str | None) = None
+    script_args: list | dict | tuple[list, dict], prefix: str, case_fmt: str | None = None
 ):
     """Format arguments for a Python script.
 
@@ -231,7 +231,7 @@ def format_case_args(
     return result
 
 
-def parse_case_args(argstr: str, prefix: str, case_fmt: (str | None) = None) -> tuple[list, dict]:
+def parse_case_args(argstr: str, prefix: str, case_fmt: str | None = None) -> tuple[list, dict]:
     """The inverse of format_case_args.
 
     Parameters
