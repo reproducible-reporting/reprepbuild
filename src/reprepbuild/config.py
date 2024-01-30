@@ -56,11 +56,11 @@ def _convert_val(val):
 
 @attrs.define
 class LoopConfig:
-    key: (str | list[str]) = attrs.field(
+    key: str | list[str] = attrs.field(
         converter=_convert_key,
         validator=attrs.validators.instance_of(list),
     )
-    val: (str | list[str] | list[list[str]]) = attrs.field(
+    val: str | list[str] | list[list[str]] = attrs.field(
         converter=_convert_val,
         validator=attrs.validators.instance_of(list),
     )
@@ -159,7 +159,7 @@ def load_config(
     path_config: str,
     paths_constants: list[str],
     generators: list[BaseGenerator],
-    phony_deps: (set[str] | None) = None,
+    phony_deps: set[str] | None = None,
 ):
     """Load a RepRepBuild configuration file (recursively).
 
