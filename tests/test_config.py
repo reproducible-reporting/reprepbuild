@@ -61,9 +61,10 @@ TEST_SUB2_CONFIG = """\
 imports:
 - reprepbuild.builtin
 tasks:
-- command: _copy
+- command: copy
   inp: some-${foo}*.txt
   out: ${public}/${here}/bin
+  default: false
 """
 
 CREATE_FILES = {
@@ -102,18 +103,17 @@ def test_config_example(tmpdir: str):
     assert len(tasks) == 3
     assert tasks[0] == BuildGenerator(
         copy,
-        True,
-        constants | {"here": "sub1", "spam": "yum", "var1": "usr"},
         ["sub1/one-foo${*id}.txt"],
         ["egg-bar/bacon/sub1/usr${*id}.txt"],
+        constants | {"here": "sub1", "spam": "yum", "var1": "usr"},
     )
-    assert tasks[1] == BuildGenerator(copy, True, constants, ["egg"], ["egg-bar/bacon/"])
+    assert tasks[1] == BuildGenerator(copy, ["egg"], ["egg-bar/bacon/"], constants)
     assert tasks[2] == BuildGenerator(
         copy,
-        False,
-        constants | {"here": "sub2"},
         ["sub2/some-bar*.txt"],
         ["egg-bar/bacon/sub2/bin"],
+        constants | {"here": "sub2"},
+        default=False,
     )
 
 
@@ -168,15 +168,13 @@ def test_loop_config(tmpdir: str):
     assert len(tasks) == 2
     assert tasks[0] == BuildGenerator(
         copy,
-        True,
-        {"here": ".", "root": tmpdir, "foo": "one", "bar": "two"},
         ["some-one.txt"],
         ["other-two.txt"],
+        {"here": ".", "root": tmpdir, "foo": "one", "bar": "two"},
     )
     assert tasks[1] == BuildGenerator(
         copy,
-        True,
-        {"here": ".", "root": tmpdir, "foo": "aa", "bar": "bbbb"},
         ["some-aa.txt"],
         ["other-bbbb.txt"],
+        {"here": ".", "root": tmpdir, "foo": "aa", "bar": "bbbb"},
     )

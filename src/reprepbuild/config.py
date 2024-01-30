@@ -22,6 +22,7 @@
 import importlib
 import os
 import re
+from warnings import warn
 
 import attrs
 import cattrs
@@ -104,6 +105,18 @@ class BuildConfig(TaskConfig):
         validator=attrs.validators.instance_of(dict), default=attrs.Factory(dict)
     )
     built_inputs_only: bool = attrs.field(converter=bool, default=False)
+    default: bool = attrs.field(converter=bool, default=True)
+    optional: bool = attrs.field(converter=bool, default=False)
+
+    def __attrs_post_init__(self):
+        if self.command.startswith("_"):
+            warn(
+                "Prefixing commands with underscores is deprecated. Use 'default: false` instead. "
+                "Support for the underscore prefix will be dropped after Februari 2024.",
+                stacklevel=0,
+            )
+            self.command = self.command[1:]
+            self.default = False
 
 
 @attrs.define
@@ -198,28 +211,23 @@ def load_config(
                 phony_deps,
             )
         elif isinstance(task_config, BuildConfig):
-            command_name = task_config.command
-            if command_name.startswith("_"):
-                default = False
-                command_name = command_name[1:]
-            else:
-                default = True
-            command = commands.get(command_name)
+            command = commands.get(task_config.command)
             if command is None:
-                raise ValueError(f"In {path_config}, unknown command: {command_name}")
+                raise ValueError(f"In {path_config}, unknown command: {task_config.command}")
             for loop_variables in iterate_loop_config(task_config.loop):
                 command_constants = constants.copy()
                 command_constants |= task_config.override
                 command_constants |= loop_variables
                 generator = BuildGenerator(
-                    command,
-                    default,
-                    command_constants,
-                    rewrite_paths(task_config.inp, command_constants, True),
-                    rewrite_paths(task_config.out, command_constants, True),
-                    task_config.arg,
-                    list(phony_deps),
-                    task_config.built_inputs_only,
+                    command=command,
+                    inp=rewrite_paths(task_config.inp, command_constants, True),
+                    out=rewrite_paths(task_config.out, command_constants, True),
+                    arg=task_config.arg,
+                    constants=command_constants,
+                    default=task_config.default,
+                    optional=task_config.optional,
+                    built_inputs_only=task_config.built_inputs_only,
+                    phony_deps=list(phony_deps),
                 )
                 generators.append(generator)
         elif isinstance(task_config, BarrierConfig):

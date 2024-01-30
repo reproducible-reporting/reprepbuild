@@ -94,23 +94,29 @@ class BuildGenerator(BaseGenerator):
 
     # A Command sub class
     command: Command = attrs.field(validator=attrs.validators.instance_of(Command))
-    # Whether the output must be built, even when not required by future steps.
-    default: bool = attrs.field(validator=attrs.validators.instance_of(bool))
-    # The variables from the environment
-    constants: dict[str, str] = attrs.field(validator=attrs.validators.instance_of(dict))
     # Input paths
     inp: list[str] = attrs.field(validator=attrs.validators.instance_of(list))
     # Output paths
-    out: list[str] = attrs.field(validator=attrs.validators.instance_of(list))
+    out: list[str] = attrs.field(
+        validator=attrs.validators.instance_of(list), default=attrs.Factory(list)
+    )
+    # The variables from the environment
+    constants: dict[str, str] = attrs.field(
+        validator=attrs.validators.instance_of(dict), default=attrs.Factory(dict)
+    )
     # Arguments
     arg = attrs.field(default=None)
+    # Whether the output must be built, even when not required by future steps.
+    default: bool = attrs.field(converter=bool, default=True)
+    # Whether it is acceptable that not inputs can be matched with self.inp
+    optional: bool = attrs.field(converter=bool, default=False)
+    # When true, only previous outputs are considered as inputs.
+    built_inputs_only: bool = attrs.field(converter=bool, default=False)
     # Phony dependencies, if any
     phony_deps: list[str] | None = attrs.field(
         validator=attrs.validators.optional(attrs.validators.instance_of(list)),
         default=attrs.Factory(list),
     )
-    # When true, only previous outputs are considered as inputs.
-    built_inputs_only: bool = attrs.field(converter=bool, default=False)
 
     # Derived attributes
     re_ignore_safe: re.Pattern = attrs.field(init=False, default=None)
@@ -171,11 +177,17 @@ class BuildGenerator(BaseGenerator):
             yield records, gendeps
 
         if not matched:
-            message = (
-                "Could not find suitable inputs.",
-                f"- Generator: {self}\n" f"No matches found for inputs: {self.inp}",
-            )
-            raise ValueError(message)
+            records = [
+                "Could not find suitable inputs. ",
+                f"- command: {self.command.name}"
+                f"- inp: {self.inp}"
+                f"- out: {self.out}"
+                f"- arg: {self.arg}",
+            ]
+            if self.optional:
+                yield records, []
+            else:
+                raise ValueError("\n".join(records))
 
     def _extend_inp_out(
         self, names: dict[str, str], inp_groups: list[list[str]]

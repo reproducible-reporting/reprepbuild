@@ -25,6 +25,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Previously, the second input file had to be placed first, which is not always convenient.
   (For the copy example, the order is not relevant.)
 
+### Added
+
+- Commands accept a `default: false` option to run the corresponding builds only when needed by
+  other builds. This replaces the underscore prefix of the command, which still works.
+- Commands accept an `optional: true` option to raise no error in case of missing inputs for the
+  command.
+
+
 ## [1.11.1] - 2024-01-22
 
 ### Fixed

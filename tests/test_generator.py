@@ -45,7 +45,7 @@ def test_clean_build():
 
 def test_generate_named_wildcard_inp_out(tmpdir):
     tmpdir = str(tmpdir)
-    gen = BuildGenerator(copy, True, {}, ["foo${*id}.txt"], ["bar${*id}.txt"])
+    gen = BuildGenerator(copy, ["foo${*id}.txt"], ["bar${*id}.txt"])
     previous_outputs = {"foo1.txt", "foo3.txt"}
     with contextlib.chdir(tmpdir):
         results = list(gen(previous_outputs, set()))
@@ -70,9 +70,7 @@ def test_generate_named_wildcard_inp_out(tmpdir):
 
 def test_generate_named_wildcard2_inp_out(tmpdir):
     tmpdir = str(tmpdir)
-    gen = BuildGenerator(
-        copy, True, {}, ["foo${*id1}.txt", "bar${*id2}.txt"], ["f${*id1}/b${*id2}/"]
-    )
+    gen = BuildGenerator(copy, ["foo${*id1}.txt", "bar${*id2}.txt"], ["f${*id1}/b${*id2}/"])
     previous_outputs = {"foo1.txt", "foo2.txt", "bar3.txt", "bar4.txt"}
     with contextlib.chdir(tmpdir):
         results = list(gen(previous_outputs, set()))
@@ -104,7 +102,7 @@ def test_generate_named_wildcard2_inp_out(tmpdir):
 
 def test_generate_anonymous_wildcard_inp_out(tmpdir):
     tmpdir = str(tmpdir)
-    gen = BuildGenerator(copy, True, {}, ["foo*.txt"], ["bar/"])
+    gen = BuildGenerator(copy, ["foo*.txt"], ["bar/"])
     previous_outputs = {"foo1.txt", "foo3.txt"}
     with contextlib.chdir(tmpdir):
         results = list(gen(previous_outputs, set()))
@@ -133,7 +131,7 @@ def test_generate_anonymous_wildcard_inp_out(tmpdir):
 
 def test_generate_named_wildcard_inp_inp_out_mismatch(tmpdir):
     tmpdir = str(tmpdir)
-    gen = BuildGenerator(copy, True, {}, ["foo${*id}.txt", "bar.txt"], ["spam${*id}/"])
+    gen = BuildGenerator(copy, ["foo${*id}.txt", "bar.txt"], ["spam${*id}/"])
     previous_outputs = {"foo1.txt", "foo3.txt"}
     with contextlib.chdir(tmpdir):
         with pytest.raises(ValueError):
@@ -142,7 +140,7 @@ def test_generate_named_wildcard_inp_inp_out_mismatch(tmpdir):
 
 def test_generate_named_wildcard_inp_inp_out_match(tmpdir):
     tmpdir = str(tmpdir)
-    gen = BuildGenerator(copy, True, {}, ["foo${*id}.txt", "bar${*id}.txt"], ["spam${*id}/"])
+    gen = BuildGenerator(copy, ["foo${*id}.txt", "bar${*id}.txt"], ["spam${*id}/"])
     previous_outputs = {"foo3.txt", "bar3.txt"}
     with contextlib.chdir(tmpdir):
         results = list(gen(previous_outputs, set()))
@@ -187,7 +185,7 @@ def test_generate_ignore_missing(tmpdir, ignore):
     with open(os.path.join(tmpdir, "script.py"), "w") as fh:
         fh.write(PYTHON_SCRIPT)
     constants = {"ignore_missing": "foo*"} if ignore else {}
-    gen = BuildGenerator(python_script, True, constants, ["script.py"], [])
+    gen = BuildGenerator(python_script, ["script.py"], [], constants)
     previous_outputs = {}
     with contextlib.chdir(tmpdir):
         results = list(gen(previous_outputs, set()))
@@ -238,10 +236,9 @@ def test_generate_constants(tmpdir):
         fh.write(LOGO_SVG)
     gen = BuildGenerator(
         convert_svg_pdf,
-        True,
-        {"inkscape": "my-special-inkscape"},
         ["template/logo.svg"],
         ["public/logo.pdf"],
+        {"inkscape": "my-special-inkscape"},
     )
     previous_outputs = {"template/logo.svg"}
     with contextlib.chdir(tmpdir):
@@ -265,7 +262,7 @@ def test_generate_constants(tmpdir):
 
 def test_generate_no_defaults(tmpdir):
     tmpdir = str(tmpdir)
-    gen = BuildGenerator(copy, False, {}, ["README.md"], ["public/README.md"])
+    gen = BuildGenerator(copy, ["README.md"], ["public/README.md"], default=False)
     previous_outputs = {"README.md"}
     with contextlib.chdir(tmpdir):
         results = list(gen(previous_outputs, set()))
@@ -296,7 +293,7 @@ def test_generate_not_scanned(tmpdir):
     tmpdir = str(tmpdir)
     with open(os.path.join(tmpdir, "main.tex"), "w") as fh:
         fh.write(MAIN_TEX)
-    gen = BuildGenerator(latex, False, {}, ["main.tex"], [])
+    gen = BuildGenerator(latex, ["main.tex"], [], default=False)
     previous_outputs = {}
     with contextlib.chdir(tmpdir):
         results = list(gen(previous_outputs, set()))
