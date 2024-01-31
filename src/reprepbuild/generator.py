@@ -179,9 +179,9 @@ class BuildGenerator(BaseGenerator):
         if not matched:
             records = [
                 "Could not find suitable inputs. ",
-                f"- command: {self.command.name}"
-                f"- inp: {self.inp}"
-                f"- out: {self.out}"
+                f"- command: {self.command.name}",
+                f"- inp: {self.inp}",
+                f"- out: {self.out}",
                 f"- arg: {self.arg}",
             ]
             if self.optional:
