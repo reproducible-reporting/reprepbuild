@@ -241,22 +241,22 @@ def load_config(
 
 
 def rewrite_paths(
-    paths_string: str, variables: dict[str, str], ignore_wild: bool = False
+    paths_string: str, constants: dict[str, str], ignore_wild: bool = False
 ) -> list[str]:
     """Process paths in the config file: substitute vars and write relative to root."""
-    return [rewrite_path(path, variables, ignore_wild) for path in paths_string.split()]
+    return [rewrite_path(path, constants, ignore_wild) for path in paths_string.split()]
 
 
-def rewrite_path(path: str, variables: dict[str, str], ignore_wild: bool = False) -> str:
+def rewrite_path(path: str, constants: dict[str, str], ignore_wild: bool = False) -> str:
     """Process path in the config file: substitute vars and write relative to root.
 
     Parameters
     ----------
     path
         The path to rewrite.
-    variables
-        The variables to be substituted.
-        Missing variables will raise an error.
+    constants
+        The constants to be substituted.
+        Missing constants will raise an error.
     ignore_wild
         If true, named wildcards like ``${*name}`` are left untouched.
 
@@ -272,13 +272,13 @@ def rewrite_path(path: str, variables: dict[str, str], ignore_wild: bool = False
     if not path_template.is_valid():
         raise ValueError(f"Invalid path template string: {path}")
     if ignore_wild:
-        result = path_template.substitute_nonamed(variables)
+        result = path_template.substitute_nonamed(constants)
     else:
-        result = path_template.substitute(variables)
+        result = path_template.substitute(constants)
     if result.startswith(os.sep):
-        result = os.path.normpath(os.path.relpath(result, variables["root"]))
+        result = os.path.normpath(os.path.relpath(result, constants["root"]))
     else:
-        result = os.path.normpath(os.path.join(variables["here"], result))
+        result = os.path.normpath(os.path.join(constants["here"], result))
     if path.endswith(os.sep):
         result += os.sep
     return result
