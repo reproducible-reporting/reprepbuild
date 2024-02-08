@@ -163,6 +163,8 @@ class BuildGenerator(BaseGenerator):
 
             # Generate the raw build statements
             try:
+                # TODO: self.arg is mutable and may be modified inside generate,
+                # breaking subsequent interations, which expect the same arg.
                 cmd_records, gendeps = self.command.generate(inp, out, self.arg)
             except Exception as exc:
                 exc.add_note(f"- Generator: {self}")
