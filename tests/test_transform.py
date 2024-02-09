@@ -239,7 +239,7 @@ BUILDS_CONVERT_PDF_RASTER = [
         "rule": "pdf_raster",
         "inputs": ["original.pdf"],
         "outputs": ["/public/rastered.pdf"],
-        "variables": {"gs": "gs", "raster_dpi": "150"},
+        "variables": {"raster_dpi": "100", "raster_quality": "50"},
     }
 ]
 

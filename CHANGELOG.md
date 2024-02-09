@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Changed
+
+- The `pdf_raster` now used a built-in script `rr-pdf-raster`, which is implemented with PyMuPDF.
+  Hence, Ghostscript is no longer a dependency of RepRepBuild.
+  This change also introduces the option to control the JPEG compression quality of the rasterized
+  pages.
+
 ### Fixed
 
 - Improved error output

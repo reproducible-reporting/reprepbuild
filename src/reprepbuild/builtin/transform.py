@@ -194,8 +194,7 @@ convert_pdf_png = Transform(
 )
 pdf_raster = Transform(
     "pdf_raster",
-    "${gs} -sDEVICE=pdfimage24 -dNOPAUSE -dBATCH -dSAFER "
-    "-r${raster_dpi} -sOutputFile=${out} ${in} > /dev/null",
-    variables={"gs": "gs", "raster_dpi": "150"},
+    "rr-pdf-raster ${in} ${out} -r ${raster_dpi} -q ${raster_quality}",
+    variables={"raster_dpi": "100", "raster_quality": "50"},
 )
 markdown_pdf = Transform("markdown_pdf", "rr-markdown-pdf ${in} --pdf ${out}", new_ext=".pdf")
