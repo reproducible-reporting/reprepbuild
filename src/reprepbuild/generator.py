@@ -19,6 +19,8 @@
 # --
 """A RepRepBuild Generator can produce multiple build steps for Ninja build."""
 
+import functools
+import operator
 import os
 from collections.abc import Iterator
 
@@ -183,7 +185,7 @@ class BuildGenerator(BaseGenerator):
         self, names: dict[str, str], inp_groups: list[list[str]]
     ) -> tuple[list[str] | None, list[str] | None]:
         """Search for additional inputs (after the first)."""
-        inp = sum(inp_groups, [])
+        inp = functools.reduce(operator.iadd, inp_groups, [])
         out = []
         for out_path in self.out:
             out_template = NoNamedTemplate(out_path)
