@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [1.13.0] - 2024-02-14
+
 ### Added
 
 - When the function `reprepbuild_info` in a Python script returns `None`,
