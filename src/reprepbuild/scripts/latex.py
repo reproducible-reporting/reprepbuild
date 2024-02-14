@@ -106,7 +106,7 @@ def main() -> int:
         )
         if cp.returncode != 0:
             path_log = os.path.join(workdir, f"{stem}.log")
-            _, error_info = parse_latex_log(path_log)
+            error_info = parse_latex_log(path_log)
             error_info.print(path_log)
             return 1
 
@@ -219,7 +219,7 @@ class LatexSourceStack:
                 self.stack.append(bracket[1:])
 
 
-def parse_latex_log(path_log: str) -> tuple[bool, (ErrorInfo | None)]:
+def parse_latex_log(path_log: str) -> ErrorInfo | None:
     """Parse a LaTeX log file.
 
     Parameters
