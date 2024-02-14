@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Added
+
+- When the function `reprepbuild_info` in a Python script returns `None`,
+  the script is not included in the Ninja build file.
+
 ### Changed
 
 - The `pdf_raster` now used a built-in script `rr-pdf-raster`, which is implemented with PyMuPDF.

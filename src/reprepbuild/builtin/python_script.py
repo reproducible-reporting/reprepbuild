@@ -120,6 +120,12 @@ class PythonScript(Command):
                 if "constants" in inspect.signature(reprepbuild_info).parameters:
                     info_kwargs = {"constants": constants.copy()}
                 build_info = reprepbuild_info(*script_args, **info_kwargs)
+                if build_info is None:
+                    builds.append("Skipping build because")
+                    builds.append("reprepbuild_info(*script_args, **info_kwargs) returned None.")
+                    builds.append(f"  script_args = {script_args})")
+                    builds.append(f"  info_kwargs = {info_kwargs})")
+                    continue
                 argstr = format_case_args(script_args, script_prefix, case_fmt)
                 if argstr.startswith("-"):
                     raise ValueError(f"The script argstr cannot sart with a dash, got {argstr}")
