@@ -20,13 +20,12 @@
 """A RepRepBuild Generator can produce multiple build steps for Ninja build."""
 
 import os
-import re
 from collections.abc import Iterator
 
 import attrs
 
 from .command import Command
-from .nameglob import NoNamedTemplate, convert_named_to_regex, glob_named
+from .nameglob import NoNamedTemplate, glob_named
 from .utils import CaseSensitiveTemplate
 
 __all__ = ("BaseGenerator", "BarrierGenerator", "BuildGenerator")
@@ -100,7 +99,7 @@ class BuildGenerator(BaseGenerator):
     out: list[str] = attrs.field(
         validator=attrs.validators.instance_of(list), default=attrs.Factory(list)
     )
-    # The variables from the environment
+    # The variables from constants.json files.
     constants: dict[str, str] = attrs.field(
         validator=attrs.validators.instance_of(dict), default=attrs.Factory(dict)
     )
@@ -118,9 +117,6 @@ class BuildGenerator(BaseGenerator):
         default=attrs.Factory(list),
     )
 
-    # Derived attributes
-    re_ignore_safe: re.Pattern = attrs.field(init=False, default=None)
-
     @inp.validator
     def _validate_inp(self, _attribute, inp):
         if len(inp) == 0:
@@ -135,14 +131,6 @@ class BuildGenerator(BaseGenerator):
     def _validate_out(self, _attribute, out):
         if not all(isinstance(out_path, str) for out_path in out):
             raise TypeError("All output paths must be strings.")
-
-    def __attrs_post_init__(self):
-        self.re_ignore_safe = re.compile(
-            "|".join(
-                convert_named_to_regex(_pattern)
-                for _pattern in self.constants.get("ignore_missing", "").split()
-            )
-        )
 
     def __call__(
         self, outputs: set[str], defaults: set[str]
@@ -221,10 +209,6 @@ class BuildGenerator(BaseGenerator):
             if isinstance(record, str):
                 yield record
             elif isinstance(record, dict):
-                skip_record = self._skip_record(record)
-                if skip_record is not None:
-                    yield skip_record
-                    continue
                 if "outputs" not in record:
                     raise ValueError("Every build must have an output.")
                 _override_variables(record, self.constants)
@@ -239,21 +223,6 @@ class BuildGenerator(BaseGenerator):
             else:
                 # defaults should not be present in command_records.
                 raise NotImplementedError
-
-    def _skip_record(self, build):
-        """Skip build whose inputs are missing that are safe to ignore."""
-        missing_inputs = []
-        for inp in build.get("inputs", []) + build.get("implicit", []):
-            ignore_safe = self.re_ignore_safe.fullmatch(inp) is not None
-            if ignore_safe and not os.path.isfile(inp):
-                missing_inputs.append(inp)
-        if len(missing_inputs) > 0:
-            return {
-                "outputs": build["outputs"],
-                "rule": "error",
-                "variables": {"message": "Missing inputs: " + " ".join(missing_inputs)},
-            }
-        return None
 
 
 def _test_filter_inp(inp) -> None | str:

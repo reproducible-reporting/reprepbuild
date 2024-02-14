@@ -23,7 +23,7 @@ import contextlib
 import os
 
 import pytest
-from reprepbuild.builtin import convert_svg_pdf, copy, latex, python_script
+from reprepbuild.builtin import convert_svg_pdf, copy, latex
 from reprepbuild.generator import BarrierGenerator, BuildGenerator, _clean_build, _split_if_string
 
 
@@ -177,48 +177,6 @@ def reprepbuild_info():
 def main(inputs, outputs):
     pass
 """
-
-
-@pytest.mark.parametrize("ignore", [True, False])
-def test_generate_ignore_missing(tmpdir, ignore):
-    tmpdir = str(tmpdir)
-    with open(os.path.join(tmpdir, "script.py"), "w") as fh:
-        fh.write(PYTHON_SCRIPT)
-    constants = {"ignore_missing": "foo*"} if ignore else {}
-    gen = BuildGenerator(python_script, ["script.py"], [], constants)
-    previous_outputs = {}
-    with contextlib.chdir(tmpdir):
-        results = list(gen(previous_outputs, set()))
-    [[records, ns]] = results
-    if ignore:
-        print(records)
-        assert records == [
-            "command: python_script",
-            "inp: script.py",
-            {
-                "outputs": [".script.log"],
-                "rule": "error",
-                "variables": {"message": "Missing inputs: foo.txt"},
-            },
-            {"inputs": [".script.log"], "rule": "phony", "outputs": ["script"]},
-        ]
-
-    else:
-        assert records == [
-            "command: python_script",
-            "inp: script.py",
-            {
-                "inputs": ["script.py"],
-                "implicit": ["foo.txt"],
-                "rule": "python_script",
-                "implicit_outputs": ["bar.txt"],
-                "outputs": [".script.log"],
-                "variables": {"argstr": "script", "out_prefix": ".script"},
-            },
-            [".script.log"],
-            {"inputs": [".script.log"], "outputs": ["script"], "rule": "phony"},
-        ]
-    assert ns == ["script.py"]
 
 
 LOGO_SVG = """\
