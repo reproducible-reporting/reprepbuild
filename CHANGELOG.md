@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Changed
+
+- Use `pdflatex` when calling `rr-latex` without second argument (the LaTeX binary).
+
 ## [1.13.0] - 2024-02-14
 
 ### Added

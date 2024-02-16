@@ -317,7 +317,7 @@ def parse_args() -> argparse.Namespace:
         description="Compile a LaTeX document and print essence from log file.",
     )
     parser.add_argument("path_tex", help="The main LaTeX source file.")
-    parser.add_argument("latex", help="The LaTeX executable.")
+    parser.add_argument("latex", nargs="?", default="pdflatex", help="The LaTeX executable.")
     parser.add_argument(
         "--bibtex",
         default=None,
