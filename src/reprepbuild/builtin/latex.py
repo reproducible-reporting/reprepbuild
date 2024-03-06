@@ -58,6 +58,7 @@ __all__ = ("scan_latex_deps", "latex", "latex_flat", "latex_diff")
 
 RE_OPTIONS = re.MULTILINE | re.DOTALL
 RE_INPUT = re.compile(r"\\input\s*\{(.*?)}", RE_OPTIONS)
+RE_VERBATIMINPUT = re.compile(r"\\verbatiminput\s*\{(.*?)}", RE_OPTIONS)
 RE_INCLUDEGRAPHICS = re.compile(r"\\includegraphics(?:\s*\[.*?])?\s*\{(.*?)}", RE_OPTIONS)
 RE_BIBLIOGRAPHY = re.compile(r"\\bibliography\s*\{(.*?)}", RE_OPTIONS)
 RE_IMPORT = re.compile(r"\\import\s*\{(.*?)}\s*\{(.*?)}", RE_OPTIONS)
@@ -110,6 +111,8 @@ def iter_latex_references(tex_no_comments):
     """
     for fn_inc in re.findall(RE_INPUT, tex_no_comments):
         yield ".", fn_inc, ".tex"
+    for fn_inc in re.findall(RE_VERBATIMINPUT, tex_no_comments):
+        yield ".", fn_inc, ".txt"
     for fn_inc in re.findall(RE_INCLUDEGRAPHICS, tex_no_comments):
         yield ".", fn_inc, ".pdf"
     for fn_inc in re.findall(RE_BIBLIOGRAPHY, tex_no_comments):

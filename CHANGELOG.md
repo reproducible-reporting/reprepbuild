@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Added
+
+- Also detect `\verbatiminput` commands when scanning a LaTeX source for implicit inputs.
+
 ### Changed
 
 - Use `pdflatex` when calling `rr-latex` without second argument (the LaTeX binary).

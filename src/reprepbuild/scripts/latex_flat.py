@@ -28,11 +28,12 @@ The following commands are rewritten to be consistent with the location of the f
 
 - ``\includegraphics``
 - ``\thebibliography``
+- ``\verbatiminput``
 
 This script is intentionally somewhat limited.
 It expects that ``\input`` and ``\import`` commands are the only ones present on their line,
 to avoid ambiguities. If this is not the case, the script will fail.
-The script als assumes the ``\includgraphics`` and ``\thebibliography``
+The script also assumes the ``\includgraphics`` and ``\thebibliography``
 commands are contained within a single line.
 """
 
@@ -132,7 +133,8 @@ def flatten_latex(path_tex: str, fh_out: TextIO, out_root: str, tex_root: str | 
 
 
 RE_REWRITE = re.compile(
-    r"(?P<comopt>\\(?:includegraphics|thebibliography)(?:\s*\[.*?])?\s*)\{(?P<path>.*?)}"
+    r"(?P<comopt>\\(?:includegraphics|thebibliography|verbatiminput)"
+    r"(?:\s*\[.*?])?\s*)\{(?P<path>.*?)}"
 )
 
 
