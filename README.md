@@ -1,3 +1,15 @@
+----
+
+:rotating_light: **IMPORTANT!** :rotating_light:
+
+The RepRepBuild repository became a public archive on Friday April 26, 2024.
+RepRepBuild will remain available but will no longer be developed.
+It is superseded by the
+[StepUp Core](https://github.com/reproducible-reporting/stepup-core) and
+[StepUp RepRep](https://github.com/reproducible-reporting/stepup-reprep) packages.
+
+----
+
 [![PyPI Upload](https://github.com/reproducible-reporting/reprepbuild/actions/workflows/pypi.yaml/badge.svg)](https://github.com/reproducible-reporting/reprepbuild/actions/workflows/pypi.yaml)
 [![pytest](https://github.com/reproducible-reporting/reprepbuild/actions/workflows/pytest.yaml/badge.svg)](https://github.com/reproducible-reporting/reprepbuild/actions/workflows/pytest.yaml)
 [![PyPI Version](https://img.shields.io/pypi/v/reprepbuild)](https://pypi.org/project/reprepbuild/)
